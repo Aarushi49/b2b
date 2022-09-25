@@ -1,0 +1,49 @@
+<apex:component >
+<script id="ModalProtectionPlanTemplate" type="text/template">
+    <div class="modal fade alx-protection-plan-modal" tabindex="-1" role="dialog" aria-hidden="true" data-sku="{{this.sku}}">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title alx-modal-title pl-4" id="modalTitle">Recommended Services</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    
+                    <div class="row ">
+                        <div class="col">                                
+                            <div style="background-color: #f0f0f0;" class="p-2">
+                                <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-protection.svg')}" style="height: 1rem" class="alx-nav-icon pr-2" />
+                                <b>Protection Plan</b>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col" >
+                            {{this.sfdcName}} - {{price this.price }}
+                        </div>
+                        <div class="col mr-1" style="text-align: right;">
+                            <button type="button" class="btn btn-primary cc_add_item addProtectionPlanModal" data-sku="{{this.sku}}">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col">
+                            {{pageLabelMap 'ProtectionPlanModal'}}                            
+                        </div>                        
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+        </div>
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("ModalProtectionPlanTemplate", document.getElementById("ModalProtectionPlanTemplate").innerHTML);
+</script>
+
+</apex:component>

@@ -1,0 +1,50 @@
+<apex:component >
+  <script id="AB2CBreadCrumbBrowser" type="text/template">
+    <div class="breadcrumbs container-xl alx-breadcrumbs">
+        <div class="breadcrumbs_container row">
+          <div class="col-12">
+            <a href="{{this.home.href}}" title="{{this.home.title}}">{{this.home.label}}</a>
+            {{#each this.siteIndex.breadcrumb}}
+                &#160;/&#160;
+                {{categoryLink this ‘categoryLink’}}
+                {{#if @last}}{{setDocumentTitle this.category.name}}{{/if}}
+            {{/each}}
+
+            {{#if this.productName}}
+                &#160;/&#160;
+                <a href="" title="{{this.productName}}" class="cc-bc-pdp" data-id="{{this.productSku}}">{{this.productName}}</a>
+                {{setDocumentTitle this.productName}}
+            {{/if}}
+
+            {{#if this.displaySearchBreadCrumb}}
+                &#160;/&#160;
+                <a href="#">{{this.searchResultsLabel}}</a>
+                &#160;/&#160;
+                {{this.product.attributes.label}}
+            {{/if}}
+
+            {{#if this.searchResultsLabel}}
+                &#160;/&#160;
+                {{this.searchResultsLabel}}
+                {{setDocumentTitle this.searchResultsLabel}}
+            {{/if}}
+
+            {{#each this.customBreadcrumbs}}
+              &#160;/&#160;
+              {{#if href}}
+              <a href="{{href}}">{{decodeHTML label}}</a>
+              {{else}}
+              <span class="text-muted">{{decodeHTML label}}</span>
+              {{/if}}
+              {{#if @last}}{{setDocumentTitle label}}{{/if}}
+            {{/each}}
+          </div>
+        </div>
+    </div>
+  </script>
+  <script>
+    Handlebars.registerHelper('setDocumentTitle', function (title) {
+      document.title = "Alexanian | " + _.unescape(title);
+    });
+  </script>
+</apex:component>

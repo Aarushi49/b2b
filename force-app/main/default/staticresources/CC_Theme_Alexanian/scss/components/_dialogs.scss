@@ -1,0 +1,30 @@
+@import '../base/variables';
+
+.modal-dialog {
+  .modal-content {
+    border-radius: 0;
+    border: none;
+    .modal-header {
+      padding: 1.25rem;
+      border-bottom: none;
+
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin-bottom: 0;
+      }
+      .close {
+        margin: -1rem;
+      }
+    }
+
+    .modal-body {
+      padding: 0 1.25rem;
+    }
+
+    .modal-footer {
+      padding: 1.25rem;
+      border-top: none;
+    }
+  }
+}

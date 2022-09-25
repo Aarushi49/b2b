@@ -1,0 +1,102 @@
+<apex:component >
+    <!--
+        {
+            productSku: 1085,
+            colorSku: 475-Ink
+        }
+    -->
+    <script id="ProductDetailCarouselPartialTemplate" type="text/template">
+        <div class="alx-product-detail-carousel">
+            <div id="alx-product-carousel" class="carousel slide" data-interval="false">
+                <div class="carousel-inner" data-toggle="modal" data-target="#alx-product-detail-modal">
+                    {{{productDetailImages '#alx-product-carousel' productSku colorSku}}}
+                    <div class="carousel-zoom">
+                        <span class="alx-ic ic-search" aria-hidden="true"></span>
+                        <span class="sr-only">Click to zoom</span>
+                    </div>
+                </div>
+                <p class="pt-3 text-muted">Click on image to zoom</p>
+                <div class="thumbnail-row">
+                    <a href="#" id="thumbnail-row-scroll-left" class="mr-2">
+                        <span class="alx-ic ic-keyboard-left" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    {{{productDetailThumbnails '#alx-product-carousel' productSku colorSku}}}
+                    <a href="#" id="thumbnail-row-scroll-right" class="ml-2">
+                        <span class="alx-ic ic-keyboard-right" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="alx-product-detail-modal" tabindex="-1" role="dialog" aria-labelledby="alx-product-detail-modal" aria-hidden="true">
+            <div class="modal-dialog modal-container container-xl">
+                <div class="d-block">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span class="alx-ic ic-close" aria-hidden="true"></span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                </div>
+                <div class="modal-image-container">
+                    <a class="carousel-control-prev" href="#alx-product-carousel" role="button" data-slide="prev">
+                        <span class="alx-ic ic-keyboard-left" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <div class="alx-product-detail-modal-image">
+                        <img src="" />
+                    </div>
+                    <a class="carousel-control-next" href="#alx-product-carousel" role="button" data-slide="next">
+                        <span class="alx-ic ic-keyboard-right" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        function initializeProductDetailCarousel() {
+            // Initialize thumbnail arrows
+            const carouselIndicatorsWidth = $(".carousel-indicators").width();
+            if ($(".thumbnail-row").width() < carouselIndicatorsWidth + 100) {
+                $("#thumbnail-row-scroll-right").show();
+                $("#thumbnail-row-scroll-left").show();
+                $("#thumbnail-row-scroll-right").click(function (e) {
+                    $(".carousel-indicators").animate({ scrollLeft: "+=" + carouselIndicatorsWidth }, 300);
+                    e.preventDefault();
+                });
+                $("#thumbnail-row-scroll-left").click(function (e) {
+                    $(".carousel-indicators").animate({ scrollLeft: "-=" + +carouselIndicatorsWidth }, 300);
+                    e.preventDefault();
+                });
+            }
+
+            // Update modal image source whenever slide changes
+            $("#alx-product-carousel").on("slid.bs.carousel", function () {
+                updateModalImage();
+            });
+            updateModalImage();
+            function updateModalImage() {
+                const activeMedia = $("#alx-product-carousel .carousel-item.active").children()[0].outerHTML;
+                $("#alx-product-detail-modal .alx-product-detail-modal-image").html(activeMedia);
+            }
+
+            // Add default alt text to product images
+            $("#alx-product-carousel .carousel-indicators img").each(function (index) {
+                const altText = $(this).attr('alt');
+                const productName = $('#productName').text();
+                if ((!altText || altText === "undefined") && productName) {
+                    $(this).attr('alt', 'Thumbnail for ' + productName + ' ' + (index + 1));
+                }
+            });
+            $("#alx-product-carousel .carousel-item img").each(function (index) {
+                const altText = $(this).attr('alt');
+                const productName = $('#productName').text();
+                if ((!altText || altText === "undefined") && productName) {
+                    $(this).attr('alt', productName + ' ' + (index + 1));
+                }
+            });
+        }
+    </script>
+</apex:component>

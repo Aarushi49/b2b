@@ -1,0 +1,174 @@
+<apex:component controller="AB2CSellerController" rendered="{!IF(contains($CurrentPage.Name,'ccrz__SellerListPage'), true, false)}">
+    <script id="Store-Locator-Map" type="text/template">
+        <div class="row">
+            <div class="alx-store-locator-stores col-md-6 mb-4">
+                {{#if showAll}}
+                    {{pageLabelMap 'StoreLocator_Landing'}}
+                    <br/><b class="">Stores</b>
+                    <ul class="pl-4">
+                        {{#each allCities}}
+                        <li><a href="{{getSellerCityUrl .}}">{{.}}</a></li>
+                        {{/each}}
+                    </ul>
+                {{else}}
+                    {{#if sellers}}
+                    {{#each sellers}}
+                    <div id="alx-seller-{{sellerId}}">
+                        <img src="{{getMarkerIcon @index}}"/>
+                        <div class="alx-seller-info">
+                            <h5>{{sfdcName}}</h5>
+                            <p class="mb-3"><br/>
+                            {{AB2CAddress}}<br/>
+                            {{AB2CCity}}, {{AB2CProvince}}<br/>
+                            {{AB2CPostalCode}}<br/>
+                            {{AB2CPhone}}
+                            </p>
+                            {{decodeHTML AB2CHours}}
+                            <p class="mt-3"><a href="https://maps.google.com?q={{AB2CAddress}} {{AB2CCity}}, {{AB2CProvince}}" target="_blank">Get directions</a></p>
+                            <p><a href="/stores/detail?selid={{sellerId}}">Store details</a></p>
+                        </div>
+                        <span>{{distanceRounded}} km</span>
+                    </div>
+                    <hr>
+                    {{/each}}
+                    {{else}}
+                    <div class="alert alert-warning" role="alert">
+                        No locations found close to search area. Please increase search distance.
+                    </div>
+                    {{/if}}
+                {{/if}}
+            </div>
+            <div class="col-md-6 mb-4">
+                <div id="map"></div>
+            </div>
+        </div>
+    </script>
+
+    <script id="Store-Locator-Locations" type="text/template">
+        {{#each sellers}}
+        <div class="alx-seller-info mb-4 col-lg-3 col-md-4 col-sm-6">
+            <h5>{{sfdcName}}</h5>
+            <p class="mb-3"><br/>
+            {{AB2CAddress}}<br/>
+            {{AB2CCity}}, {{AB2CProvince}}<br/>
+            {{AB2CPostalCode}}<br/>
+            {{AB2CPhone}}
+            </p>
+            {{decodeHTML AB2CHours}}
+            <p class="mt-3"><a href="https://maps.google.com?q={{AB2CAddress}} {{AB2CCity}}, {{AB2CProvince}}" target="_blank">Get directions</a></p>
+            <p><a href="/stores/detail?selid={{sellerId}}">Store details</a></p>
+        </div>
+        {{/each}}
+    </script>
+
+    <script id="Store-Locator-Marker-Info" type="text/template">
+        {{#with seller}}
+        <div class="d-flex">
+            <div class="alx-map-info-window">
+                <h5>{{sfdcName}}</h5>
+                <p class="mb-3"><br/>
+                {{AB2CAddress}}<br/>
+                {{AB2CCity}}, {{AB2CProvince}}<br/>
+                {{AB2CPostalCode}}<br/>
+                {{AB2CPhone}}
+                </p>
+                <p><a href="/stores/detail?selid={{sellerId}}">Store details</a></p>
+                <p><a href="https://maps.google.com?q={{AB2CAddress}} {{AB2CCity}}, {{AB2CProvince}}" target="_blank">Get directions</a></p>
+            </div>
+            <span>{{distanceRounded}} km</span>
+        </div>
+        {{/with}}
+    </script>
+
+    <script>
+        Handlebars.registerHelper('getMarkerIcon', function (index) {
+            return "https://res.cloudinary.com/alexanian/image/upload/l_text:Roboto_14_bold:" + (index + 1) + ",co_rgb:FFFFFF,y_-4/prod/static/shared/map-marker.png";
+        });
+
+        Handlebars.registerHelper('getSellerCityUrl', function (city) {
+            return "stores/" + city.replace(/[ ,.]/g, '').toLowerCase();
+        });
+
+        function renderMap(sellers, selectedCity, allCities, userLocation, showAllLocations, distance) {
+            // Calculate the distance to the sellers, filter them by distance (if applicable), sort by distance
+            for (let i = 0; i < sellers.length; i++) {
+                sellers[i].distanceRounded = getDistanceBetweenPointsKm(userLocation.lat, userLocation.lng, sellers[i].location.latitude, sellers[i].location.longitude);
+            }
+            sellers = sellers.filter(function (seller) {
+                const distanceFilter = distance > 0 ? seller.distanceRounded < distance : true;
+                const cityFilter = selectedCity ? seller.AB2CCity === selectedCity : true;
+                return distanceFilter && cityFilter;
+            });
+            sellers = sellers.sort(function (a, b) { return a.distanceRounded - b.distanceRounded });
+            if (!showAllLocations) {
+                sellers = sellers.slice(0, 5);
+            }
+
+            const storeLocatorMap = Handlebars.compile($('#Store-Locator-Map').html());
+            $('#alx-store-locator-map').html(storeLocatorMap({
+                allCities: allCities,
+                sellers: sellers,
+                showAll: showAllLocations
+            }));
+
+            const map = new google.maps.Map(document.getElementById('map'), {
+                center: userLocation,
+                zoom: 10,
+                maxZoom: 12
+            });
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(userLocation);
+            let previousInfoWindow = false;
+            google.maps.event.addListener(map, 'click', function (event) {
+                if (previousInfoWindow) {
+                    previousInfoWindow.close();
+                    previousInfoWindow = false;
+                };
+            });
+
+            // Add seller markers and their info windows
+            for (let i = 0; i < sellers.length; i++) {
+                const infoWindowTemplate = Handlebars.compile($('#Store-Locator-Marker-Info').html());
+                const infoWindowContent = infoWindowTemplate({ seller: sellers[i] });
+                const infowindow = new google.maps.InfoWindow({
+                    content: infoWindowContent
+                });
+                const marker = new google.maps.Marker({
+                    position: {
+                        lat: sellers[i].location.latitude,
+                        lng: sellers[i].location.longitude
+                    },
+                    icon: Handlebars.helpers.getMarkerIcon(i),
+                    title: sellers[i].sfdcName,
+                    map: map
+                });
+                marker.addListener('click', function () {
+                    if (previousInfoWindow) {
+                        previousInfoWindow.close();
+                    }
+                    previousInfoWindow = infowindow;
+                    infowindow.open(map, marker);
+                    const storeContainer = $('.alx-store-locator-stores')
+                    const selectedStore = $('#alx-seller-' + sellers[i].sellerId);
+                    if (selectedStore.offset() != undefined) {
+                        storeContainer.animate({
+                            scrollTop: selectedStore.offset().top - storeContainer.offset().top + storeContainer.scrollTop()
+                        });
+                    }
+                });
+                bounds.extend(marker.position);
+            }
+            map.fitBounds(bounds);
+        }
+
+        // Render a list of static seller information on the "View Stores List" tab
+        function renderSellers(sellers) {
+            sellers = sellers.sort(function (a, b) { return a.sfdcName.localeCompare(b.sfdcName) });
+            const storeLocatorLocations = Handlebars.compile($('#Store-Locator-Locations').html());
+            $('#alx-store-locator-locations').html(storeLocatorLocations({
+                sellers: sellers
+            }));
+        }
+
+    </script>
+</apex:component>

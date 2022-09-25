@@ -1,0 +1,133 @@
+@import "../base/variables";
+
+//order summary
+.alx-order-summary {
+  border: 0.0625rem solid $outline-grey;
+  background-color: $snow;
+
+  .alx-discount-section {
+    .alx-promo-code-applied {
+      font-weight: 500;
+    }
+  }
+
+  .alx-totals-section {
+    table {
+      table-layout: fixed;
+      font-size: 0.8rem;
+      width: 100%;
+      text-align: left;
+      &.alx-totals-prices tr {
+        & :first-child {
+          // price name
+          text-transform: uppercase;
+          text-align: right;
+          padding-right: 1rem;
+        }
+      }
+    }
+
+    .alx-help-text {
+      color: $warm-grey-2;
+      font-weight: 500;
+      font-size: 0.625rem;
+    }
+  }
+}
+
+//cart items list
+.alx-cart-items {
+  .alx-cart-item-list {
+    max-height: 35rem;
+    overflow-y: scroll;
+    overflow-x: hidden;
+
+    .alx-protection-plan {
+      width: 150%;
+      background-color: $snow;
+      position: absolute;
+      bottom: -1rem;
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem;
+      align-items: center;
+    }
+
+    table {
+      table-layout: fixed;
+      width: 100%;
+      font-size: 0.825rem;
+      th {
+        color: $warm-grey;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid $snow;
+      }
+
+      tr {
+        & > :first-child {
+          // product details
+          .alx-product-image {
+            max-width: 100%;
+          }
+          .alx-order-item-details {
+            a {
+              text-transform: uppercase;
+              font-weight: 900;
+              text-decoration: none;
+
+              &:hover {
+                text-decoration: underline;
+              }
+
+              &.alx-view-customizations {
+                text-transform: none;
+                font-weight: normal;
+              }
+            }
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+          }
+        }
+        & > :nth-of-type(2) {
+          // quantity
+          width: 6rem;
+          text-align: left;
+        }
+        & > :nth-of-type(3) {
+          // price
+          width: 6rem;
+          text-align: right;
+          .sale {
+            color: $rouge;
+          }
+        }
+      }
+    }
+
+    .alx-cart-item-info {
+      padding: 0 0 0 2.1875rem;
+      width: 18rem;
+    }
+
+    .alx-cart-item-quantity {
+      width: 5rem;
+      .alx-view-remove-true {
+        display: none;
+      }
+    }
+
+    .alx-cart-item-price {
+      font-size: 1rem;
+    }
+  }
+}
+
+#emailerModal {
+  display: none;
+}
+
+.alx-empty-cart-link {
+  border: 0.0625rem solid $outline-grey;
+}

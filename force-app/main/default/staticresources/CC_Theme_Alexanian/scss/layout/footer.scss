@@ -1,0 +1,170 @@
+@import "../base/variables";
+
+.contentBody {
+  min-height: calc(100vh - 583px);
+}
+
+.footer {
+  background-color: $white;
+  padding-top: 0.875rem;
+  border-top: solid 0.0625rem $outline-grey;
+
+  .ftr-section {
+    margin-bottom: 2.0625rem;
+
+    &.ftr-interactive {
+      margin-bottom: 1rem;
+    }
+
+    &.ftr-social-col {
+      padding: 0rem;
+    }
+
+    li {
+      padding-bottom: 0.5rem;
+    }
+  }
+
+  .dropdown-toggle {
+    border: solid 0.0625rem $outline-grey;
+    text-align: left;
+    text-transform: none;
+    color: $warm-grey;
+    font-weight: normal;
+
+    &:after {
+      float: right;
+      margin-top: 0.3125rem;
+    }
+  }
+  .dropdown-menu {
+    border-radius: 0;
+    border: solid 0.0625rem $rich-black;
+    padding: 0.625rem 0;
+    transform: translate3d(0rem, 2rem, 0rem) !important;
+
+    a {
+      &.dropdown-item {
+        text-align: left;
+        padding: 0 0.875rem;
+        font-weight: normal;
+        line-height: unset;
+        text-transform: none;
+        margin-bottom: 0.4375rem;
+
+        &:last-of-type {
+          margin-bottom: 0;
+        }
+
+        &:hover {
+          background: $snow;
+          border-bottom: none;
+        }
+      }
+    }
+  }
+
+  .alx-trademark {
+    background-color: $snow;
+    height: 1.875rem;
+
+    p {
+      margin-bottom: 0rem;
+    }
+  }
+
+  .alx-newsletter-input {
+    border: solid 0.0625rem $cerulean;
+
+    &:focus {
+      border: solid 0.0625rem $rich-black;
+    }
+  }
+
+  .alx-social-icon-row {
+    padding-bottom: 0.625rem;
+  }
+
+  p {
+    margin-bottom: 0.5rem;
+  }
+
+  ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      &.ftr-text {
+        font-size: 0.8125rem;
+      }
+    }
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  a,
+  a:hover {
+    color: $rich-black;
+
+    &.alx-link-heading {
+      font-weight: bold;
+    }
+  }
+
+  .btn-email {
+    width: 2.375rem;
+    height: 2.375rem;
+    border: none;
+    outline: none;
+    background-color: $cerulean;
+    padding: 0 0 0 0;
+  }
+
+  .social-row {
+    background-color: $white;
+  }
+
+  .social-icon {
+    height: 2rem;
+    width: 2rem;
+    min-width: 2rem;
+    background-color: $brownish-grey;
+    margin-right: 0.525rem;
+  }
+
+  .ic-facebook:hover {
+    background-color: $french-blue;
+  }
+  .ic-instagram:hover {
+    background-color: $strong-pink;
+  }
+  .ic-pinterest:hover {
+    background-color: $cherry-red;
+  }
+  .ic-youtube:hover {
+    background-color: $red;
+  }
+  .ic-houzz:hover {
+    background-color: $frog-green;
+  }
+  .ic-homestars:hover {
+    background-color: $dark-sky-blue;
+  }
+}
+
+.cybersource-payment-img {
+  max-width: 10rem;
+}
+
+.alx-pay-with-credit-cards {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+
+  > *:not(:last-child) {
+    padding-right: 0.5rem;
+  }
+}

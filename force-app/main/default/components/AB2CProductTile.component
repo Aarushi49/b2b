@@ -1,0 +1,17 @@
+<apex:component >
+  <c:AB2CSimpleProduct ></c:AB2CSimpleProduct>
+
+  <script id="Product-Item-Row" type="text/template">
+    {{> SimpleProductPartialTemplate . comparable=true}}
+    {{sendProductListImpression .}}
+  </script>
+
+  <script type="text/javascript">
+    CCRZ.pubSub.on('model:collectionsProductList:fetch', function (theView) {
+      CCRZ.views.ProductItemView = CCRZ.views.ProductItemView.extend({
+        className: "col",
+        tagName: "div",
+      });
+    });
+  </script>
+</apex:component>

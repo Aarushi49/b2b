@@ -1,0 +1,75 @@
+<apex:component >
+    <c:AB2CLeftNav ></c:AB2CLeftNav>
+
+    <script id="RelatedResourcesPartialTemplate" type="text/template">
+        {{#ifEquals (getQueryParam 'operation') 'quickSearch'}}
+            <div class="alx-related-resources">
+                <div class="alx-loading-circle"></div>   
+            </div>
+            {{initializeRelatedResourcesView}}
+        {{/ifEquals}}
+    </script>
+
+    <script>
+        Handlebars.registerPartial("RelatedResourcesPartialTemplate", document.getElementById("RelatedResourcesPartialTemplate").innerHTML);
+
+        Handlebars.registerHelper('initializeRelatedResourcesView', function () {
+            const searchText = Handlebars.helpers.getQueryParam('searchText');
+            $.ajax({
+                url: `https://${CCRZ.getPageConfig('sb.algolia.app.id')}-dsn.algolia.net/1/indexes/*/queries`,
+                type: 'POST',
+                data: JSON.stringify({
+                    requests: [
+                        {
+                            indexName: CCRZ.getPageConfig('sb.algolia.content.index'),
+                            params: `query=${searchText}`,
+                            attributesToRetrieve: "name,imageLink,link",
+                            attributesToHighlight: null,
+                            hitsPerPage: 5
+                        },
+                        {
+                            indexName: CCRZ.getPageConfig('sb.algolia.category.index'),
+                            params: `query=${searchText}`,
+                            attributesToRetrieve: "name,path,link",
+                            attributesToHighlight: null,
+                            hitsPerPage: 5
+                        }
+                    ]
+                }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Algolia-API-Key': CCRZ.getPageConfig('sb.algolia.api.key'),
+                    'X-Algolia-Application-Id': CCRZ.getPageConfig('sb.algolia.app.id')
+                },
+                dataType: 'json',
+                success: function (data) {
+                    $('.alx-related-resources').empty();
+
+                    data.results.map(function (result) {
+                        const children = [];
+                        result.hits.map(function (hit) {
+                            hit['type'] = result.index;
+                            children.push({
+                                displayName: hit.path ? hit.path : hit.name,
+                                linkURL: hit.link,
+                                menuId: hit.index
+                            });
+                        });
+
+                        if (children.length > 0) {
+                            const leftNavMenu = {
+                                displayMenuTitle: true,
+                                displayName: CCRZ.algoliaIndexLabels[result.index],
+                                children: children
+                            };
+                            const leftNavTemplate = Handlebars.compile($("#LeftNavPartialTemplate").html());
+                            $('.alx-related-resources').append(leftNavTemplate(leftNavMenu));
+                        }
+                    });
+
+                    CCRZ.pubSub.trigger("view:productListRelatedResources:refresh", data);
+                }
+            });
+        });
+    </script>
+</apex:component>

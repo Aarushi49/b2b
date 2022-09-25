@@ -1,0 +1,741 @@
+<apex:component controller="AB2CCheckoutController">
+
+	<script id="UserInfo-Desktop" type="text/template">
+		<div class="border p-3">
+			<form id="mainform" class="horizontal_form cc_userInfo_newp-2">
+				<div class="form-row">
+					<div class="form-group col-md-6">
+						<h2>
+							<span class="alx-badge">1</span>
+							Shipping Details
+						</h2>
+					</div>
+					<div class="form-group col-md-6">
+						<small id="emailHelpBlock1" class="form-text text-muted text-right">
+							&#42;&#61; required
+						</small>
+					</div>
+				</div>
+		
+				<div class="main-messagingSection-Error"></div>
+				<p class="text-left h5 pt-1">{{pageLabelMap 'CheckOut_ContactInformation'}}</p>
+		
+				<div class="form-row">
+					<div class="form-group col-md-6">
+						<label for="inputFirstName">{{pageLabelMap 'CheckOut_FirstName'}} *</label>
+						<input type="text" class="form-control" id="inputFirstName" maxlength=100 placeholder="First Name" required
+							name="buyerFirstName" maxlength=40 value="{{this.buyerFirstName}}"  />
+					</div>
+					<div class="form-group col-md-6">
+						<label for="inputLastname">{{pageLabelMap 'CheckOut_LastName'}} *</label>
+						<input type="text" class="form-control" id="inputLastname" maxlength=100 required placeholder="Last Name"
+							name="buyerLastName" maxlength=40 value="{{this.buyerLastName}}" />
+					</div>
+				</div>
+		
+				<div class="form-row">
+					<div class="form-group col-md-6">
+						<label for="homePhoneField">Phone Number &#42;</label>
+						<div class="input-group">
+							<input type="text" class="form-control" id="homePhoneField" name="buyerPhone" placeholder="(555) 555-5555"
+								maxlength=20 value="{{this.buyerPhone}}" required>
+						</div>
+						<small class="form-text text-muted">
+							&#42; Used to contact you with delivery issues, should they arise (mobile preferred).
+						</small>
+					</div>
+					<div class="form-group col-md-6">
+						<label for="emailField">Email &#42;</label>
+						<div class="input-group">
+							<input type="email" class="form-control" id="emailField" name="buyerEmail" placeholder="Email"
+								maxlength=80 value="{{fillEmail}}" required>
+							<div class="input-group-append">
+								<div class="alx-append-btn">
+									<span class="alx-ic ic-email-outline"></span>
+								</div>
+							</div>
+						</div>
+						<small class="form-text text-muted">
+							&#42; Used to send you order confirmation and delivery information.
+						</small>
+					</div>
+				</div>	
+		
+		
+				<p class="text-left h5 pt-2">Shipping Method</p>
+				<div class="form-group">
+					<label for="shippingField">Please select a shipping method.&#42;</label>
+					<div class="col-md-12">
+						<div class="form-check">
+							<input class="form-check-input shippingMethodCheckbox" type="radio" name="radioShipping"
+								id="gridFreeInStore" value="freeInStore">
+							<label class="form-check-label" for="gridFreeInStore">
+								FREE In-Store Pickup
+							</label>
+							<small id="emailHelpBlock3" class="form-text text-muted">
+								&#42; Available for Ontario Residents only.
+							</small>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input shippingMethodCheckbox" type="radio" name="radioShipping"
+								id="gridFreeHomeDelivery" value="HomeDelivery">
+							<label class="form-check-label" for="gridFreeHomeDelivery">
+								Home Delivery
+							</label>
+						</div>
+					</div>
+				</div>
+			</form>
+		
+			<form id="shippingAddressForm" class="horizontal_form cc_userInfo_newp-2">
+				<div class="d-none" id="shippingAddress">
+					{{#if this}}
+   						{{#if this.anonymousId}}
+						<p class="text-left h5 pt-2">Shipping Address</p>
+						<div class="form-group">
+							<label>Country  &#42;</label>
+							{{{selectGeo 'country' this.countryList shippingAddress.countryCode 'countryListing form-control' 'shippingAddress.'}}}
+						</div>
+			
+						<div class="form-group">
+							<label for="address">Address 1 &#42; </label>
+							<input type="text" class="form-control" value="{{shippingAddress.address1}}"
+								name="shippingAddress.address1" id="shippingAddress.address1">
+						</div>
+			
+						<div class="form-row">
+							<div class="form-group col-md-6">
+								<label for="aptSuite">Apt/Suite</label>
+								<input type="text" class="form-control" id="aptSuite" maxlength=40 value="{{this.address2}}"
+									placeholder="(Optional)" name="shippingAddress.address2" />
+							</div>
+							<div class="form-group col-md-6">
+								<label for="city">City &#42;</label>
+								<input type="text" class="form-control" id="city" maxlength=255 value="{{this.city}}"
+									name="shippingAddress.city" />
+							</div>
+						</div>
+			
+						<div class="form-row">
+							<div class="form-group col-md-6">
+								<label for="province" id="addressProvince">Province &#42;</label>
+								<div id="shippingStateSection" class="shippingStateSection"></div>
+							</div>
+							<div class="form-group col-md-6">
+								<label id="addressPostal" for="alx-postal">Postal Code &#42;</label>
+								<input class="form-control" id="alx-postal" maxlength=10 value="{{this.postalCode}}"
+									placeholder="A1B 2C3" type="text" name="shippingAddress.postalCode" />
+							</div>
+						</div>
+
+						{{else}}
+						<div id="addressBlock" class="addressBlock">
+							<p class="text-left h5 pt-2">Shipping Address</p>
+							
+							<div class="form-group">
+								<label for="address">Shipping Address &#42;</label>
+								<div class="d-flex">
+									<select name="addressSelect" id="addressSelect" class="form-control address mr-3"></select>
+									<input id="enterNewAddress" class="btn btn-default w-50 addressAdd enterNewAddress" value="Enter New Address"></input>
+								</div>
+							</div>
+						</div>
+
+						<div id="addAddressUser" class='d-none'>						
+							<p class="text-left h5 pt-2">Shipping Address</p>
+
+							<div class="form-group">
+								<label for="shippingAddress.countryCode">Country  &#42;</label>
+								<div class="d-flex">
+									{{{selectGeo 'country' this.countryList shippingAddress.countryCode 'countryListing form-control mr-3' 'shippingAddress.'}}}
+									<input id="backToDefault" class="btn btn-link addressAdd backToDefault w-50" type="button" value="Back to saved Addresses"/>
+								</div>
+							</div>
+				
+							<div class="form-group">
+								<label for="address">Address 1 &#42; </label>
+								<input type="text" class="form-control" value="{{shippingAddress.address1}}"
+									name="shippingAddress.address1" id="shippingAddress.address1">
+							</div>
+				
+							<div class="form-row">
+								<div class="form-group col-md-6">
+									<label for="aptSuite">Apt/Suite</label>
+									<input type="text" class="form-control" id="aptSuite" maxlength=40 value="{{this.address2}}"
+										placeholder="(Optional)" name="shippingAddress.address2" />
+								</div>
+								<div class="form-group col-md-6">
+									<label for="city">City &#42;</label>
+									<input type="text" class="form-control" id="city" maxlength=255 value="{{this.city}}"
+										name="shippingAddress.city" />
+								</div>
+							</div>
+				
+							<div class="form-row">
+								<div class="form-group col-md-6">
+									<label for="province" id="addressProvince">Province &#42;</label>
+									<div id="shippingStateSection" class="shippingStateSection"></div>
+								</div>
+								<div class="form-group col-md-6">
+									<label id="addressPostal" for="alx-postal">Postal Code &#42;</label>
+									<input class="form-control" id="alx-postal" maxlength=10 value="{{this.postalCode}}"
+										placeholder="A1B 2C3" type="text" name="shippingAddress.postalCode" />
+								</div>
+							</div>
+
+							<div class="form-check">
+								<input name="addThisAddresstoMySavedAddresss" type="checkbox" class="form-check-input" id="addThisAddresstoMySavedAddresss"}>
+								<label class="form-check-label" for="addThisAddresstoMySavedAddresss">Add this address to my saved addresses</label>
+							</div>
+							<div class="form-check">
+								<input name="makeDefaultShippingAddress" type="checkbox" class="form-check-input" id="makeDefaultShippingAddress">
+								<label class="form-check-label" for="makeDefaultShippingAddress">Make this my default shipping address</label>
+							</div>
+						</div>
+						{{/if}}
+					{{/if}}
+				</div>
+			</form>
+		
+			<form id="pickupLocationForm" class="horizontal_form cc_userInfo_newp-2">
+				<div class="d-none" id="pickupLocation">
+					<p class="text-left h5 pt-2">Pickup Location</p>
+					<div class="form-group cold-md-12">
+						<label for="storeField">Store &#42;</label>
+						<div class="input-group" id="storeField">
+							<select class="form-control" id="alx-seller-locator" name="storeLocator">
+							</select>
+						</div>
+					</div>
+		
+					<div class="form-group">
+						<label for="shippingField">Will someone else be picking up this order? &#42;</label>
+						<div class="col-md-12" id="shippingField">
+							<div class="form-check">
+								<input class="form-check-input pickUp" type="radio" name="pickRadio" id="gridRadiosNo"
+									value="pickUp" checked>
+								<label class="form-check-label" for="gridRadiosNo">
+									No
+								</label>
+							</div>
+							<div class="form-check ">
+								<input class="form-check-input pickUp" type="radio" name="pickRadio" id="gridRadiosYes"
+									value="someoneElsePickUP">
+								<label class="form-check-label" for="gridRadiosYes">
+									Yes
+								</label>
+							</div>
+						</div>
+					</div>
+		
+					<div class="form-row d-none" id="pickUpDetails">
+						<div class="form-group col-md-6">
+							<label for="firstName">{{pageLabelMap 'CheckOut_FirstName'}} *</label>
+							<input type="text" class="form-control" id="firstName" maxlength=40 
+								name="shippingAddress.firstName" maxlength=100 value="{{this.firstName}}" />
+						</div>
+						<div class="form-group col-md-6">
+							<label for="inputLastName">{{pageLabelMap 'CheckOut_LastName'}} *</label>
+							<input type="text" class="form-control" id="inputLastName" maxlength=40
+							name="shippingAddress.lastName" maxlength=100 value="{{this.lastName}}" />
+						</div>
+						<small id="emailHelpBlock" class="form-text text-muted">
+							&#42; First and Last name must match government-issued photo ID.
+						</small>
+					</div>
+				</div>
+			</form>
+		
+			<form class="margin_form buttonForm userInformation">
+				<p class="text-center mt-3">
+					<input class="btn btn-default register processUserInfo cc_process_user_info" type="button"
+						value="SAVE &amp; CONTINUE" />
+				</p>
+			</form>
+		</div>
+		
+		<div class="alx-light-bg-section my-3">
+			<h2 class="m-0">
+				<span class="alx-badge">2</span>
+				Payment Details
+			</h2>
+		</div>
+	</script>
+
+	<script type="text/javascript">
+		jQuery(function ($) {
+			CCRZ.pubSub.on("ccrz.views:UserInfoView:defined", function () {
+				CCRZ.views.UserInfoView = CCRZ.views.UserInfoView.extend({
+					templateDesktop: CCRZ.util.template(CCRZ.uiProperties.UserInfoView.desktop.tmpl),
+					model: CCRZ.cartCheckoutModel,
+					className: 'cc_ctrl_CheckoutRD',
+					events: {
+						"change .pickUp": "pickUpOption",
+						"change .shippingMethodCheckbox": "shippingMethodCheckbox",
+						"click .processUserInfo": "processUserInfo",
+						"change .countryListing": "changeStates",
+						"click .enterNewAddress": "enterNewAddress",
+						"click  .backToDefault": "backToDefault",
+						"click .calculateShip": "calculateDistance",
+						"change .shippingStateSection": "calculateDistance",
+						"change #alx-postal": "calculateDistance",
+						"change #addressSelect": "calculateDistance",
+					},
+					calculateDistance: function () {
+						const thisView = this;
+
+						let buyerCity = "";
+						let buyerCountry = "";
+						let buyerDistance = "0";
+						let userInputAddress = "";
+						let province = "";
+
+
+
+						if (!CCRZ.cartCheckoutModel.get('useNewShippingAddress') && !CCRZ.cartCheckoutModel.get('isGuest')) {
+							const shipData = form2js('shippingAddressForm', '.', false, function (node) { }, false, true);
+							const savedAddresses = CCRZ.cartCheckoutModel.get('shippingAddress').addressList;
+							const selectedAddress = savedAddresses.filter(function (addr) { return addr.sfid === shipData.addressSelect });
+							buyerCity = selectedAddress[0].city;
+							buyerCountry = selectedAddress[0].country;
+							userInputAddress = selectedAddress[0].postalCode;
+							const state = _.find(CCRZ.geoCodes.filterStates(selectedAddress[0].countryCode).toJSON(), function (item) {
+								return item.value === selectedAddress[0].stateCode;
+							});
+							province = state ? state.label : null;
+						} else {
+							buyerCity = $('#city').val();
+							buyerCountry = $('select[name="shippingAddress.countryCode"] option:selected').text();
+							userInputAddress = $('#alx-postal').val();
+							province = $('select[name="shippingAddress.stateCode"] option:selected').text();
+						}
+
+						getCoordinates(userInputAddress, buyerCity, buyerCountry)
+							.then(function (location) {
+								thisView.getDistance(location, province);
+							})
+							.catch(function (error) {
+								console.error(error);
+								thisView.getDistance({ lat: 43.7184038, lng: -79.5181407 }, province);
+							});
+
+					},
+					getDistance: function (userLocation, province) {
+						let latitude_CityHall = '43.6525156';
+						let longitude_CityHall = '-79.3815764';
+						let distance = getDistanceBetweenPointsKm(userLocation.lat, userLocation.lng, latitude_CityHall, longitude_CityHall);
+						CCRZ.cartCheckoutModel.set({ shippingDistance: distance });
+						const storeName = CCRZ.pagevars.storefrontName;
+						const cartID = CCRZ.cartCheckoutModel.get('sfid');
+
+						this.calculateShipping(cartID, storeName, distance, province);
+					},
+					calculateShipping: function (cartID, storeName, distance, province) {
+						console.log('in calculateShipping -- ',distance);
+						console.log('in calculateShipping -- ',province);
+						var v = this;
+						Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.AB2CCheckoutController.calculateShipping }', cartID, storeName, distance, province, function (response, event) {
+							let shippingCharge = 0;
+							let shippingMethod = CCRZ.cartCheckoutModel.get('shippingMethod');
+							if (response.success && response.data.length) {
+								const dataShipping = response.data[0];
+								shippingCharge = dataShipping.ccrz__ShippingRate__c;
+								shippingMethod = dataShipping.Name;								
+							}
+							v.setShipping(shippingCharge, shippingMethod);
+						});
+					},
+					setShipping: function (shippingCharge, shippingMethod) {
+						CCRZ.cartCheckoutModel.set('shippingMethod', shippingMethod);
+						CCRZ.cartCheckoutModel.set('shippingCharge', shippingCharge);
+						$('.shippingCost').text(formatPrice(shippingCharge));
+					},
+					backToDefault: function (event) {
+						$('#addAddressUser').toggleClass('d-none');
+						$('#addressBlock').toggleClass('d-none');
+						CCRZ.cartCheckoutModel.set({ useNewShippingAddress: false });
+					},
+					enterNewAddress: function (event) {
+						$('#addAddressUser').toggleClass('d-none');
+						$('#addressBlock').toggleClass('d-none');
+						CCRZ.cartCheckoutModel.set({ useNewShippingAddress: true });
+					},
+					init: function () {
+						Handlebars.registerPartial("addressEntry", $(CCRZ.uiProperties.UserInfoView.partial.addressEntry).html());
+						Handlebars.registerPartial("addressDisplay", $(CCRZ.uiProperties.UserInfoView.partial.addressDisplay).html());
+						var v = this;
+						v.addressBook = new CCRZ.models.AddressBookModel();
+						v.billStateView = new CCRZ.views.StateView();
+						v.shipStateView = new CCRZ.views.StateView();
+						v.stateView = new CCRZ.views.StateView();
+						CCRZ.cartCheckoutModel.set({ isGuest: CCRZ.pagevars.isGuest });
+					},
+					getShippingMethod: function (uid) {
+						var addrConv = _.clone(CCRZ.cartCheckoutModel.get('shippingAddress'));
+						addrConv.addressList = null;
+						addrConv.countryList = null;
+						this.invokeContainerLoadingCtx($('.deskLayout'),
+							'fetchShippingMethods',
+							JSON.stringify(addrConv),
+							function(response){
+								console.log('response', response);							
+							}
+							);
+					},
+					pickUpOption: function (event) {
+						let objLink = $(event.target)
+						if (objLink.val() === "pickUp") {
+							$("#pickUpDetails").addClass('d-none');
+						} else {
+							$("#pickUpDetails").removeClass('d-none');
+						}
+					},
+					shippingMethodCheckbox: function (event) {
+						let objLink = $(event.target);
+						if (objLink.val() === "HomeDelivery") {
+							$("#pickupLocation").addClass('d-none');
+							$("#shippingAddress").removeClass('d-none');
+							this.loadAddress();
+							this.calculateDistance();
+						}
+						if (objLink.val() === "freeInStore") {
+							$("#pickupLocation").removeClass('d-none');
+							$("#shippingAddress").addClass('d-none');
+							
+							this.setShipping(0, freeInStore);
+							this.loadFreeStore();
+						}
+					},
+					renderShippingStateList: function (state, country) {
+						const v = this;
+						const stateList = CCRZ.geoCodes.filterStates(country).toJSON();
+						this.stateView.render('state', state, 'form-control', stateList, 'shippingAddress.', '.shippingStateSection');
+						if (stateList.length === 0) {
+							$('#shippingStateSection input').attr('placeholder', '');
+						}
+					},
+					changeStates: function (event) {
+						const v = this;
+						const countryCode = $(event.target).val();
+						this.handleCountryChange(countryCode);
+						v.renderShippingStateList('', countryCode);
+					},
+					validateInfo: function () {
+						let isValid = false;
+						$('.main-messagingSection-Error').hide();
+						isValid = $("#mainform").valid();
+
+						if (isValid)
+							isValid = isValid && $("#pickupLocationForm").valid();
+						if (isValid)
+							isValid = isValid && $("#shippingAddressForm").valid();
+
+						return isValid;
+					},
+					processUserInfo: function () {
+						if (this.validateInfo()) {
+							var formData = form2js('mainform', '.', false, function (node) { }, false, true);
+							const shippingMethod = $(".shippingMethodCheckbox:checked").val();
+							//formData.shippingMethod = shippingMethod
+							CCRZ.cartCheckoutModel.set(formData);
+
+							if (shippingMethod === "HomeDelivery") {
+								const shipData = form2js('shippingAddressForm', '.', false, function (node) { }, false, true);
+								if (CCRZ.cartCheckoutModel.get('useNewShippingAddress') || CCRZ.cartCheckoutModel.get('isGuest')) {
+									// User entered a custom address
+									shipData.shippingAddress.firstName = $('input[name="buyerFirstName"]').val();
+									shipData.shippingAddress.lastName = $('input[name="buyerLastName"]').val();
+									shipData.shippingAddress.country = $('select[name="shippingAddress.countryCode"] option:selected').text();
+									shipData.shippingAddress.state = $('select[name="shippingAddress.stateCode"] option:selected').text();
+									shipData.shippingAddress.stateCode = $('select[name="shippingAddress.stateCode"] option:selected').val();
+									shipData.shippingAddress.countryCode = $('select[name="shippingAddress.countryCode"] option:selected').val();
+									shipData.shippingAddress.homePhone = $('input[name="buyerPhone"]').val();
+									shipData.shippingAddress.email = $('input[name="buyerEmail"]').val();
+									CCRZ.cartCheckoutModel.set(shipData);
+								} else {
+									// User selected an existing address from dropdown
+									const savedAddresses = CCRZ.cartCheckoutModel.get('shippingAddress').addressList;
+									const selectedAddress = savedAddresses.filter(function (addr) { return addr.sfid === shipData.addressSelect });
+									if (selectedAddress.length > 0) {
+										const shippingAddress = CCRZ.cartCheckoutModel.get('shippingAddress');
+										shippingAddress.firstName = selectedAddress[0].firstName;
+										shippingAddress.lastName = selectedAddress[0].lastName;
+										shippingAddress.homePhone = $('input[name="buyerPhone"]').val();
+										shippingAddress.email = $('input[name="buyerEmail"]').val();
+										shippingAddress.address1 = selectedAddress[0].address1;
+										shippingAddress.address2 = selectedAddress[0].address2;
+										shippingAddress.city = selectedAddress[0].city;
+										shippingAddress.stateCode = selectedAddress[0].stateCode;
+										shippingAddress.postalCode = selectedAddress[0].postalCode;
+										shippingAddress.countryCode = selectedAddress[0].countryCode;
+										shippingAddress.country = selectedAddress[0].country;
+										const state = _.find(CCRZ.geoCodes.filterStates(selectedAddress[0].countryCode).toJSON(), function (item) {
+											return item.value === selectedAddress[0].stateCode;
+										});
+										shippingAddress.state = state ? state.label : null;
+										CCRZ.cartCheckoutModel.set({ 'shippingAddress': shippingAddress });
+									}
+								}
+							} else {
+								// User selected a store to pick up from 
+								const shipData = form2js('pickupLocationForm', '.', false, function (node) { }, false, true);
+								const storeInformation = getSellerLocatorModel().selectInformation($("#alx-seller-locator").val());
+								shipData.shippingAddress.firstName = CCRZ.cartCheckoutModel.get('buyerFirstName');
+								shipData.shippingAddress.lastName = CCRZ.cartCheckoutModel.get('buyerLastName');
+								shipData.shippingAddress.homePhone = $('input[name="buyerPhone"]').val();
+								shipData.shippingAddress.email = $('input[name="buyerEmail"]').val();
+								shipData.shippingAddress.companyName = storeInformation.sfdcName;
+								shipData.shippingAddress.address1 = storeInformation.AB2CAddress;
+								shipData.shippingAddress.address2 = null;
+								shipData.shippingAddress.address3 = storeInformation.AB2CPhone;
+								shipData.shippingAddress.city = storeInformation.AB2CCity;
+								shipData.shippingAddress.state = storeInformation.AB2CProvince;
+								shipData.shippingAddress.stateCode = storeInformation.AB2CProvinceCode;
+								shipData.shippingAddress.postalCode = storeInformation.AB2CPostalCode;
+								shipData.shippingAddress.country = storeInformation.AB2CCountry;
+								shipData.shippingAddress.countryCode = storeInformation.AB2CCountryCode;
+								CCRZ.cartCheckoutModel.set(shipData);
+							}
+
+							var tmpModel = CCRZ.cartCheckoutModel.clone();
+							//Clean Model
+							tmpModel.unset('countryList');
+							tmpModel.unset('terms');
+							tmpModel.unset('shippingMethods');
+							tmpModel.unset('requestedDate');
+							if (tmpModel.attributes.billingAddress) {
+								tmpModel.attributes.billingAddress.countryList = undefined;
+							}
+
+							if (tmpModel.attributes.shippingAddress) {
+								tmpModel.attributes.shippingAddress.countryList = undefined;
+							}
+							const view = this;
+							$('.processUserInfo').attr('disabled', true);
+							tmpModel.save(function (results) {
+								if (results) {
+									view.fetchTaxes();
+								}
+							});
+						} else {
+							window.scrollTo(0, 0);
+						}
+					},
+					fetchTaxes() {
+						const v = this;
+						const shipping = CCRZ.cartCheckoutModel.get('shippingAddress')
+
+						const objShipping = {
+							stateCode: shipping.stateCode,
+							countryCode: shipping.countryCode
+						};
+						var cartjson = JSON.stringify(objShipping);
+
+						if (objShipping) {
+							v.invokeContainerLoadingCtx(
+								$('.deskLayout'),
+								'fetchTax',
+								cartjson,
+								CCRZ.cartCheckoutModel.get('sfid'),
+								function (response) {
+									if (response && response.success && !_.isUndefined(response.data)) {
+										CCRZ.cartCheckoutModel.set('tax', response.data);
+										CCRZ.cartCheckoutView.slideRight();
+									} else {
+										if (response.messages && response.messages.length > 0) {
+											$('.processUserInfo').attr('disabled', false);
+											CCRZ.cartCheckoutModel.set('messages', response.messages);
+										}
+									}
+								}, { buffer: false });
+						}
+					},
+					setupValidation: function () {
+						$('#homePhoneField').mask('(000) 000-0000');
+						$('#shippingAddressForm').validate({
+							invalidHandler: function (event, validator) { },
+							rules: {
+								"shippingAddress.address1": {
+									required: true
+								},
+								"shippingAddress.city": {
+									required: true
+								},
+								"shippingAddress.postalCode": {
+									required: true
+								}
+							},
+							messages: {
+								"shippingAddress.address1": {
+									required: "Address is required"
+								},
+								"shippingAddress.city": {
+									required: "City is required"
+								},
+								"shippingAddress.postalCode": {
+									required: 'Postal/Zip code is required'
+								}
+							},
+							errorPlacement: function (error, element) {
+								error.addClass('invalid-feedback');
+								element.closest('.form-group').append(error);
+							}
+						});
+
+						$("#pickupLocationForm").validate({
+							invalidHandler: function (event, validator) { },
+							rules: {
+								storeLocator: {
+									required: true
+								},
+								"shippingAddress.firstName": {
+									required: true
+								},
+								"shippingAddress.lastName": {
+									required: true
+								}
+							},
+							messages: {
+								storeLocator: {
+									required: "Please select a store"
+								},
+								"shippingAddress.firstName": {
+									required: 'First name is required'
+								},
+								"shippingAddress.lastName": {
+									required: 'Last name is required'
+								}
+							},
+							errorPlacement: function (error, element) {
+								error.addClass('invalid-feedback');
+								element.closest('.form-group').append(error);
+							}
+						});
+
+						$("#mainform").validate({
+							invalidHandler: function (event, validator) { },
+							rules: {
+								buyerFirstName: {
+									required: true
+								},
+								buyerLastName: {
+									required: true
+								},
+								buyerEmail: {
+									required: true,
+									email: true
+								},
+								buyerPhone: {
+									required: true,
+								},
+								radioShipping: {
+									required: true
+								}
+							},
+							messages: {
+								buyerFirstName: {
+									required: "First name is required"
+								},
+								buyerLastName: {
+									required: "Last name is required"
+								},
+								buyerEmail: {
+									required: "Email address is required",
+									email: "Wrong Email format"
+								},
+								buyerPhone: {
+									required: "Phone number is required"
+								},
+								radioShipping: {
+									required: "Please select a shipping method"
+								}
+							},
+							errorPlacement: function (error, element) {
+								error.addClass('invalid-feedback');
+								element.closest('.form-group').append(error);
+							}
+						});
+					},
+					handleCountryChange: function (countryCode) {
+						$('#alx-postal').val(null);
+						if (!countryCode || countryCode === 'CA') {
+							$('#addressProvince').text('Province *');
+							$('#addressPostal').text('Postal Code *');
+							$('#alx-postal').attr('placeholder', 'A1B 2C3');
+							$('#alx-postal').mask('S0S 0S0');
+						} else if (countryCode === 'US') {
+							$('#addressProvince').text('State *');
+							$('#addressPostal').text('Zip Code *');
+							$('#alx-postal').attr('placeholder', '12345');
+							$('#alx-postal').mask('00000');
+						} else {
+							$('#addressProvince').text('State/Province *');
+							$('#addressPostal').text('Postal/Zip Code *');
+							$('#alx-postal').attr('placeholder', '');
+							$('#alx-postal').unmask();
+						}
+					},
+					renderStateLists: function () {
+						const v = this;
+						const shippingAddress = CCRZ.cartCheckoutModel.attributes.shippingAddress;
+						v.renderShippingStateList(shippingAddress.state, shippingAddress.countryCode);
+					},
+					loadFreeStore: function () {
+						getSellerLocatorModel().fetch(function (response) {
+							$('#alx-seller-locator').empty().append('<option selected="selected" value="">--Select--</option>');
+							if (response.sellerList) {
+								for (let seller of response.sellerList) {
+									$('#alx-seller-locator').append('<option value="' + seller.sellerId + '">' + seller.sfdcName + '</option>');
+								}
+							}
+						});
+					},
+					loadAddress: function () {
+						let shippingAddress = CCRZ.cartCheckoutModel.attributes.shippingAddress.addressList;
+						$('#addressSelect').empty();
+						if (shippingAddress) {
+							shippingAddress.forEach(function (address) {
+								let composeAddress = address.address1;
+								composeAddress = composeAddress.concat(', ', address.city, ', ', address.stateCode, ', ', address.postalCode, ', ', address.countryCode);
+								if (address.default) {
+									$('#addressSelect').append('<option selected="selected" value="' + address.sfid + '">' + composeAddress + '</option>');
+								}
+								else {
+									$('#addressSelect').append('<option value="' + address.sfid + '">' + composeAddress + '</option>');
+								}
+							});
+							//this.calculateDistance();
+						}
+					},
+					fetchAllNavData: function (state, formdata, callback) {
+						var coll = this;
+						this.invokeContainerLoadingCtx($('.deskLayout'), "fetchAddressBooks",
+							formdata, function (response) {
+								if (response && response.success) {
+									callback(response.data);
+								} else {
+									CCRZ.pubSub.trigger("pageMessage", response);
+								}
+							}, { escape: false });
+					},
+					render: function () {
+						var v = this;
+						v.$el.html('');
+						v.setShipping(0, freeInStore);
+						v.$el.html(v.templateDesktop(CCRZ.cartCheckoutModel.toJSON()));
+						this.handleCountryChange(CCRZ.cartCheckoutModel.attributes.shippingAddress.countryCode);
+						v.renderStateLists();
+						v.setupValidation();
+						sendCheckoutEvent(1);
+						sendCheckoutOptionEvent(1, CCRZ.cartCheckoutModel.get('radioShipping'));
+					}
+				});
+			});
+
+			Handlebars.registerHelper('fillEmail', function () {
+				const urlEmail = Handlebars.helpers.getQueryParam('email');
+				return urlEmail || this.buyerEmail;
+			});
+		});
+	</script>
+</apex:component>

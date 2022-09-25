@@ -1,0 +1,82 @@
+<apex:component controller="AB2CHomeController" rendered="{!IF(contains(UPPER($CurrentPage.Name),UPPER('ccrz__HomePage')), true, false)}">
+    <c:AB2CHeroBanner ></c:AB2CHeroBanner>
+    <c:AB2CQuickLinks ></c:AB2CQuickLinks>
+    <c:AB2CFeatureBanner ></c:AB2CFeatureBanner>
+    <c:AB2CSquarePromo ></c:AB2CSquarePromo>
+
+    <script id="Spotlight-Desktop" type="text/template">
+        <div class="container-xl">
+            {{#if heroBanner}}
+                {{> HeroBannerPartialTemplate heroBanner}}
+            {{/if}}
+            
+            {{> QuickLinksPartialTemplate (getMenuById 'QuickLinksMenu')}}
+
+            {{#if squarePromoTile}}
+                {{> SquarePromoPartialTemplate squarePromoTile}}
+            {{/if}}
+            {{#if featureBannerBottom}}
+                {{> FeatureBannerPartialTemplate featureBannerBottom}}
+            {{/if}}
+        </div>
+    </script>
+
+    <script>
+        jQuery(function ($) {
+            CCRZ.pubSub.on('view:Menu:refresh', function (theView) {
+                if (!CCRZ.models.HomeModel) {
+                    CCRZ.models.HomeModel = CCRZ.CloudCrazeModel.extend({
+                        className: 'AB2CHomeController',
+                        fetch: function (callback) {
+                            this.invokeCtx('getHomeDetails', function (response, event) {
+                                if (!response.success) {
+                                    console.error(response.data);
+                                }
+                                callback(response.data);
+                            }, { nmsp: false, buffer: false });
+                        }
+                    });
+
+                    CCRZ.views.HomeView = CCRZ.CloudCrazeView.extend({
+                        viewName: "HomeView",
+                        templateDesktop: CCRZ.util.template('Spotlight-Desktop'),
+                        templateSelector: '.featured-prod',
+                        init: function (options) {
+                            const thisView = this;
+                            thisView.HomeDetails = new CCRZ.models.HomeModel();
+                            thisView.HomeDetails.fetch(function (response) {
+                                if (response.promotions) {
+                                    thisView.model = {};
+                                    thisView.model.heroBanner = {
+                                        items: response.promotions.filter(function (p) {
+                                            return p.ccrz__LocationType__c === 'heroBanner';
+                                        })
+                                    }
+                                    thisView.model.featureBannerBottom = {
+                                        items: response.promotions.filter(function (p) {
+                                            return p.ccrz__LocationType__c === 'featureBannerBottom';
+                                        })
+                                    }
+                                    thisView.model.squarePromoTile = {
+                                        breakAt: 'small',
+                                        items: response.promotions.filter(function (p) {
+                                            return p.ccrz__LocationType__c === 'squarePromoTile';
+                                        })
+                                    }
+                                    thisView.render();
+                                } else {
+                                    console.error('Error fetching home content.');
+                                }
+                            });
+                        },
+                        renderDesktop: function () {
+                            this.setElement(this.templateSelector);
+                            this.$el.html(this.templateDesktop(this.model));
+                        }
+                    });
+                    CCRZ.HomeView = new CCRZ.views.HomeView({});
+                }
+            });
+        });
+    </script>
+</apex:component>

@@ -1,0 +1,423 @@
+<apex:component controller="AB2CAccountController" rendered="{!IF(contains($CurrentPage.Name,'ccrz__StoredPaymentDetail'), true, false)}">
+    <c:AB2CLeftNav ></c:AB2CLeftNav>
+
+    <script id="Edit-Credit-Card-Container" type="text/template">
+        <div class="container-xl">
+            <div class="row">
+                <div class="col-lg-2 col-md-3 col-sm-12">
+                    {{> LeftNavPartialTemplate (getMyAccountMenu)}}
+                </div>
+                <div class="col-lg-10 col-md-9 col-sm-12">
+                    <h1 class="text-center">{{#if isEdit}}Edit{{else}}Add{{/if}} Credit Card</h1>
+                    <div class="paymentContainer">
+                        <div class="alx-loading-circle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="MyAccount-MyWalletSOPCC-Both" type="text/template">
+        <div class="alx-act-card">
+            <div class="ccpgcs-messagingSection-Error" style="display:none;"></div>
+            <form id="sopccEdit" action="#">
+                <fieldset>
+                    <input type="hidden" name="accountType" value="sopcc"/>
+    
+                    <div class="d-flex alc-act-card-header">
+                        <legend>Credit Card Details</legend>
+                        <p class="alx-form-text alx-no-wrap ml-auto">* = required</p>
+                    </div>
+    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="first_name">First Name</label>
+                            <input type="text" name="firstName" class="form-control firstName" value="{{this.firstName}}"/>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="last_name">Last Name</label>
+                            <input type="text" name="lastName" class="form-control lastName" value="{{this.lastName}}"/>
+                        </div>
+                    </div>
+    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="card_number">Credit Card Number *</label>
+                            <input type="number" name="card_number" class="form-control cardNumber"/>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="card_type">Card Type</label>
+                            <select name="card_type" class="form-control cardType">
+                                <option value="">Select Card Type</option>
+                            </select>
+                        </div>
+                    </div>
+    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="first_name">Expiry Date *</label>
+                            <div class="form-row">
+                                <div class="form-group col-sm-6">
+                                    <select name="card_expirationMM" class="form-control cardExpirationMM">
+                                        <option>MM</option>
+                                        <option value="01">01</option>
+                                        <option value="02">02</option>
+                                        <option value="03">03</option>
+                                        <option value="04">04</option>
+                                        <option value="05">05</option>
+                                        <option value="06">06</option>
+                                        <option value="07">07</option>
+                                        <option value="08">08</option>
+                                        <option value="09">09</option>
+                                        <option value="10">10</option>
+                                        <option value="11">11</option>
+                                        <option value="12">12</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <select name="card_expirationYYYY" class="form-control cardExpirationYYYY">
+                                        <option>YYYY</option>
+                                        {{#each (getCreditCardExpiryYears)}}
+                                        <option value={{this}}>{{this}}</option>
+                                        {{/each}}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="card_cvn">CVN</label>
+                            <input type="num" class="form-control cardCvn" name="card_cvn" disabled="disabled" />
+                        </div>
+                    </div>
+                    <div class="addressBlock" />
+                    <div class="form-check mt-3">
+                        <input type="checkbox" class="form-check-input" id="alx-set-default-payment" value="" />
+                        <label class="form-check-label" for="alx-set-default-payment">Make this my default payment method</label>
+                      </div>
+                </fieldset>
+            </form>
+            {{> sopccModalEdit }}
+            <div id="sopccAddress"></div>
+        </div>
+
+        <div class="d-flex">
+            <input type="button" class="btn btn-primary sopccSave " name="sopccSave" id="sopccSave" data-id="sopccEdit" value="Save Changes" />
+            <input type="button" class="btn btn-link sopccCancel" id="sopccCancel" value="{{pageLabelMap 'MyWallet_Cancel'}}" />
+        </div>
+    </script>
+
+    <script id="AddressSOPCC-Both" type="text/template">
+        <div class="addressBlock">
+            <div class="alx-billing-address-select form-group">
+				<label for="address">Address *</label>
+				<div class="d-flex">
+					<select name="address" id="address" class="form-control address mr-3">
+						<option value="">{{pageLabelMap 'MyWallet_Address_Select_sopcc'}}</option>
+                    </select>
+                    <a href="#" class="btn btn-default addressAdd w-50" data-toggle="modal" data-target="#cc_pgcs_sopcc_modal_Address">Enter New Address</a>
+				</div>
+			</div>
+        </div>
+        
+        <!--a class="modalLauncher" style="display:none" href="#cc_pgcs_sopcc_modal_Address" data-backdrop="static" data-toggle="modal">&#160;</a-->&#160;
+        <div id="cc_pgcs_sopcc_modal_Address" class="modal fade alx-modal" tabindex="-1" role="dialog" aria-labelledby="cc_pgcs_sopcc_modal_Address">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+                        <h3 class="modal-title w-100 text-center" id="sopccModalLabel">
+                            {{pageLabelMap 'MyWallet_AddAddress_sopcc'}}
+                        </h3>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="{{pageLabelMap 'Modal_Aria_Close'}}">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+					</div>
+					<div class="modal-body">
+                        <div class="ccpgcs-Address-messagingSection-Error" style="display:none;"></div>
+                        <form id="sopcc_FormAddressAdd" class="addressForm modal-body">
+                            <div class="form-group">
+                                <label for="Address.country">{{pageLabelMap 'MyWallet_Country_sopcc'}} *</label>
+                                {{{selectGeo 'country' this.countryList 'CA' 'form-control countryListing' 'Address.'}}}
+                            </div>
+                            <div class="form-group">
+                                <label for="Address.firstName">{{pageLabelMap 'MyWallet_FirstName_sopcc'}} *</label>
+                                <input type="text" class="form-control" placeholder="{{pageLabelMap 'MyWallet_FirstName_sopcc'}}" maxLength="100" value="" name="Address.firstName"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="Address.lastName">{{pageLabelMap 'MyWallet_LastName_sopcc'}} *</label>
+                                <input type="text" class="form-control" placeholder="{{pageLabelMap 'MyWallet_LastName_sopcc'}}" maxLength="100" value="" name="Address.lastName"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="Address.addressFirstline">{{pageLabelMap 'MyWallet_Address_sopcc'}}</label>
+                                <input type="text" class="form-control" placeholder="{{pageLabelMap 'MyWallet_Address_sopcc'}}" maxLength="255" value="" name="Address.addressFirstline"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="Address.addressSecondline">Apt/Suite</label>
+                                <input type="text" class="form-control" placeholder="(Optional)" maxLength="255" value="" name="Address.addressSecondline"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="Address.city">{{pageLabelMap 'MyWallet_City_sopcc'}} *</label>
+                                <input type="text" class="form-control" placeholder="{{pageLabelMap 'MyWallet_City_sopcc'}}" maxLength="255" value="" name="Address.city"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="Address.stateCode">{{pageLabelMap 'MyWallet_State_sopcc'}} *</label>
+                                <div class="stateSection"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="Address.postalCode">{{pageLabelMap 'MyWallet_PostalCode_sopcc'}}</label>
+                                <input type="text" class="form-control" placeholder="{{pageLabelMap 'MyWallet_PostalCode_sopcc'}}" maxLength="10" value="" name="Address.postalCode"/>
+                            </div>
+                            <input type="hidden" name="Address.addressType" value="Billing"/>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="button" class="btn btn-primary saveAddress" value="{{pageLabelMap 'Save'}}"/>
+                        <input type="button" class="btn btn-link cancelAddress" value="{{pageLabelMap 'Cancel'}}"/>
+                    </div>
+				</div>
+			</div>
+        </div>
+    </script>
+
+    <script id="SOPCC-Modal-Edit" type="text/template">
+        <div id="sopccModalEdit" class="modal fade alx-modal" tabindex="-1" role="dialog" aria-labelledby="sopccModalLabel" data-backdrop="static">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+                        <h4 class="modal-title alx-modal-title" id="sopccModalLabel">
+                            {{pageLabelMap 'MyWallet_ProcessingEdit_sopcc'}}
+                        </h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="{{pageLabelMap 'Modal_Aria_Close'}}">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+					</div>
+					<div class="modal-body alx-modal-body">
+                        <iframe id="sopccFrame" class="sopccFrameHide" src="/apex/ccrz__CCBridge?pageKey=ccpgcsf&action={{pageConfigMap 'pgcs.urltokencreate'}}&selector=sopccFields&signed=access_key,amount,bill_to_address_city,bill_to_address_country,bill_to_address_line1,bill_to_address_line2,bill_to_address_postal_code,bill_to_address_state,bill_to_email,bill_to_forename,bill_to_phone,bill_to_surname,currency,locale,merchant_defined_data1,merchant_defined_data10,merchant_defined_data11,merchant_defined_data12,merchant_defined_data13,merchant_defined_data14,merchant_defined_data15,merchant_defined_data16,merchant_defined_data17,merchant_defined_data18,merchant_defined_data19,merchant_defined_data2,merchant_defined_data20,merchant_defined_data21,merchant_defined_data22,merchant_defined_data23,merchant_defined_data24,merchant_defined_data25,merchant_defined_data26,merchant_defined_data27,merchant_defined_data28,merchant_defined_data29,merchant_defined_data3,merchant_defined_data30,merchant_defined_data31,merchant_defined_data32,merchant_defined_data33,merchant_defined_data34,merchant_defined_data35,merchant_defined_data36,merchant_defined_data37,merchant_defined_data38,merchant_defined_data39,merchant_defined_data4,merchant_defined_data40,merchant_defined_data41,merchant_defined_data42,merchant_defined_data43,merchant_defined_data44,merchant_defined_data45,merchant_defined_data46,merchant_defined_data47,merchant_defined_data48,merchant_defined_data49,merchant_defined_data5,merchant_defined_data6,merchant_defined_data7,merchant_defined_data8,merchant_defined_data9,override_custom_receipt_page,payment_method,profile_id,reference_number,signed_date_time,signed_field_names,transaction_type,transaction_uuid,unsigned_field_names&unsigned=card_cvn,card_expiry_date,card_number,card_type&store=AlexanianStore" border="0"></iframe>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+				</div>
+			</div>
+		</div>
+    </script>
+
+    <script>
+        Handlebars.registerHelper('getCreditCardExpiryYears', function () {
+            const startYear = new Date().getFullYear();
+            const allYears = [];
+            for (let i = 0; i < 20; i++) allYears.push(startYear + i);
+            return allYears;
+        });
+
+        Handlebars.registerHelper('getMyAccountMenu', function () {
+            return {
+                displayName: "My Account",
+                menuId: "my-account",
+                displayMenuTitle: true,
+                children: [{
+                    displayName: "Overview",
+                    linkURL: "/my-account?viewState=overview",
+                    menuId: "my-account-overview",
+                }, {
+                    displayName: "Edit My Profile",
+                    linkURL: "/my-account?viewState=editAccount",
+                    menuId: "my-account-edit",
+                }, {
+                    displayName: "View My Orders",
+                    linkURL: "/my-account?viewState=myOrders",
+                    menuId: "my-account-orders",
+                }, {
+                    displayName: "View My Lists",
+                    linkURL: "/my-account?viewState=myWishlists",
+                    menuId: "my-account-wishlists",
+                }]
+            };
+        });
+
+        CCRZ.pubSub.on("ccrz.views:StoredPaymentsSOPCCView:defined", function () {
+            CCRZ.views.StoredPaymentsSOPCCView = CCRZ.views.StoredPaymentsSOPCCView.extend({
+                className: "AB2CAccountController",
+                postRender: function () {
+                    CCRZ.views.StoredPaymentsSOPCCView.__super__.postRender.call(this);
+
+                    const model = CCRZ.paymentViews.sopcc.model;
+                    if (model.get('expMonth') && model.get('expYear')) {
+                        $('select[name="card_expirationMM"]').val(model.get('expMonth'));
+                        $('select[name="card_expirationYYYY"]').val(model.get('expYear'));
+                    }
+
+                    const iframeUrl = $('#sopccFrame').attr('src');
+                    $('#sopccFrame').attr('src', window.location.origin + iframeUrl);
+
+                    myWallet = function () {
+                        document.location = "/my-account?viewState=editAccount&cartID=" + CCRZ.pagevars.currentCartID + getCSRQueryString();
+                    }
+                },
+                setDefaultPayment: function (accountNumber, callback) {
+                    const isDefault = $('#alx-set-default-payment').prop("checked");
+                    this.invokeCtx("setDefaultStoredPayment", accountNumber, isDefault, function (r) {
+                        if (r && r.success && callback) {
+                            callback();
+                        }
+                    }, { nmsp: false, buffer: false, escape: false });
+                },
+                validateInfo: function (formSel) {
+                    $(formSel).validate({
+                        invalidHandler: function (event, validator) {
+                            $('input.sopccSave').attr('disabled', false);
+                        },
+                        rules: {
+                            firstName: { required: true },
+                            lastName: { required: true },
+                            address: { required: true, minlength: 1 },
+                            card_type: { required: true, minlength: 1 },
+                            card_number: { required: true, digits: true },
+                            card_expirationMM: { required: true, digits: true },
+                            card_expirationYYYY: { required: true, digits: true },
+                            card_cvn: { required: ('true' == $('form#sopccEdit select[name=card_type] option:selected').attr('data-verification')), digits: true }
+                        },
+                        messages: {
+                            firstName: { required: 'First name is required' },
+                            lastName: { required: 'Last name is required' },
+                            address: { required: 'Address is required' },
+                            card_type: { required: 'Card type is required', minlength: 'Card type is too short' },
+                            card_number: { required: 'Card number is required' },
+                            card_expirationMM: { required: 'Card expiration month is required' },
+                            card_expirationYYYY: { required: 'Card expiration year is required' },
+                            card_cvn: { required: 'Card CVN is required' }
+                        },
+                        errorPlacement: function (error, element) {
+                            error.addClass('invalid-feedback');
+                            element.closest('.form-group').append(error);
+                        }
+                    });
+                    return $(formSel).valid();
+                },
+                updateCardExpiration: function (event) {
+                    var _this = this;
+                    var mm = $('form#sopccEdit select[name=card_expirationMM]').val();
+                    var yyyy = $('form#sopccEdit select[name=card_expirationYYYY]').val();
+                    if (mm && yyyy) {
+                        if (mm.length < 2) mm = "0" + mm;
+                        _this.model.frameSet(_this.iframe(), 'card_expiry_date', mm + "-" + yyyy);
+                    }
+                    return _this;
+                },
+                handleSaveResponse: function (event) {
+                    var _this = this;
+                    var iframe = document.getElementById('sopccFrame');
+                    var eventMethod = window.addEventListener ? "removeEventListener" : "detachEvent";
+                    var eventerRemove = window[eventMethod];
+                    var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+                    eventerRemove(messageEvent, this, false);
+                    $('input.sopccSave').prop('disabled', false).removeClass('disabled');
+                    if (event.origin !== window.location.origin) return;
+                    var response = JSON.parse(event.data);
+                    if (response && response.success) {
+                        const accountNumber = response.data.req_card_number;
+                        if (accountNumber) {
+                            CCRZ.paymentViews.sopcc.setDefaultPayment(accountNumber, function () {
+                                myWallet();
+                            });
+                        } else {
+                            myWallet();
+                        }
+                        $('input.sopccSave').prop('disabled', false).removeClass('disabled');
+                    } else if (response && response.messages
+                        && _.isArray(response.messages)
+                        && (response.messages.length > 0)) {
+                        CCRZ.pubSub.trigger('pageMessage', response);
+                        $('input.sopccSave').prop('disabled', false).removeClass('disabled');
+                    }
+                    iframe.src = iframe.src; // reload iframe
+                    $('#sopccFrame').removeClass('sopccFrameShow').addClass('sopccFrameHide').animate({ height: '0px' }, 500, 'linear');
+                    $('#sopccModalEdit').modal('hide');
+                    CCRZ.pubSub.trigger('action:sopccFrame:hide', this);
+                },
+            });
+        });
+
+        CCRZ.pubSub.on("ccrz.models:AddressModel:defined", function () {
+            CCRZ.models.AddressModel = CCRZ.models.AddressModel.extend({
+                initialize: function (dataList) {
+                    this.set(this.parse(dataList));
+                    this.set({
+                        countryList: _.filter(CCPGCS.geoCodes.countryList.toJSON(), function (m) {
+                            if (m.value === "CA" || m.value === "US") {
+                                return m;
+                            }
+                        }),
+                        stateList: CCPGCS.geoCodes.stateList.toJSON(),
+                        defaultCountry: 'CA',
+                        address: ''
+                    });
+                }
+            });
+        });
+
+        CCRZ.pubSub.on("ccrz.views:AddressSOPCCView:defined", function () {
+            CCRZ.views.AddressSOPCCView = CCRZ.views.AddressSOPCCView.extend({
+                validateInfo: function (formSel, fieldData) {
+                    $(formSel).validate({
+                        invalidHandler: function (event, validator) { },
+                        rules: {
+                            "Address.addressFirstline": { required: true, minlength: 1 },
+                            "Address.city": { required: true, minlength: 1 },
+                            "Address.postalCode": { required: true, minlength: 1 },
+                            "Address.countryCode": { required: true, minlength: 1 },
+                            "Address.stateCode": { required: $('form#sopcc_FormAddressAdd select'), minlength: 1 }
+                        },
+                        messages: {
+                            "Address.addressFirstline": { required: 'Address is required' },
+                            "Address.city": { required: 'City is required' },
+                            "Address.postalCode": { required: 'Postal/Zip code is required' },
+                            "Address.countryCode": { required: 'Country is required' },
+                            "Address.stateCode": { required: 'Province/State is required' }
+                        },
+                        errorPlacement: function (error, element) {
+                            error.addClass('invalid-feedback');
+                            element.closest('.form-group').append(error);
+                        }
+                    });
+                    return $(formSel).valid();
+                },
+                renderStates: function (stateVal, countryVal) {
+                    this.stateView.render('state', stateVal, 'form-control', CCPGCS.geoCodes.filterStates(countryVal).toJSON(), '', '.stateSection');
+
+                    const postalCodeInput = $('input[name="Address.postalCode"]');
+                    const provinceLabel = $('label[for="Address.stateCode"]');
+                    const postalCodeLabel = $('label[for="Address.postalCode"]');
+                    postalCodeInput.val(null);
+                    if (!countryVal || countryVal === 'CA') {
+                        provinceLabel.text('Province *');
+                        postalCodeLabel.text('Postal Code *');
+                        postalCodeInput.attr('placeholder', 'A1B 2C3');
+                        postalCodeInput.mask('S0S 0S0');
+                    } else if (countryVal === 'US') {
+                        provinceLabel.text('State *');
+                        postalCodeLabel.text('Zip Code *');
+                        postalCodeInput.attr('placeholder', '12345');
+                        postalCodeInput.mask('00000');
+                    } else {
+                        provinceLabel.text('State/Province *');
+                        postalCodeLabel.text('Postal/Zip Code *');
+                        postalCodeInput.attr('placeholder', '');
+                        postalCodeInput.unmask();
+                    }
+                }
+            });
+        });
+
+        jQuery(function ($) {
+            $('.phoneLayout > .home_slider').remove();
+            const isEdit = Handlebars.helpers.getQueryParam('mode') === 'edit';
+            renderCustomBreadcrumb([
+                { label: "My Account", href: '/my-account' },
+                { label: "Edit My Profile", href: "/my-account?viewState=editAccount" },
+                { label: (isEdit ? "Edit" : "Add") + " Credit Card" },
+            ]);
+            const cardContainerTemplate = Handlebars.compile($("#Edit-Credit-Card-Container").html());
+            $('.contentBody').html(cardContainerTemplate({ isEdit: isEdit }));
+        });
+    </script>
+</apex:component>

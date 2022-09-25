@@ -1,0 +1,142 @@
+<apex:page id="AB2CCategoryLanding" controller="AB2CCategoryLandingController" docType="html-5.0" sidebar="false" showHeader="false"
+    standardStylesheets="false" applyHtmlTag="false">
+    <c:AB2CHeroBanner ></c:AB2CHeroBanner>
+    <c:AB2CFeatureBanner ></c:AB2CFeatureBanner>
+    <c:AB2CSquarePromo ></c:AB2CSquarePromo>
+    <c:AB2CCategoryProductCarousel ></c:AB2CCategoryProductCarousel>
+    <c:AB2CLeftNav ></c:AB2CLeftNav>
+    <c:AB2CCategoryLandingServicesMenu ></c:AB2CCategoryLandingServicesMenu>
+
+    <script id="CategoryLandingTemplate" type="text/template">
+        <div id="breadcrumb_desktop_container"></div>
+
+        {{> HeroBannerPartialTemplate heroBanner}}
+
+        <div class="row pt-3">
+            <div class="col-lg-2 col-md-3 col-sm-12">
+                <div class="alx-left-nav-menu"></div>
+                <div class="alx-services-menu"></div>
+            </div>
+            <div class="col-lg-10 col-md-9 col-sm-12 static-content-section">
+                <!-- Category Landing Description -->
+                <div>
+                    {{decodeHTML shortDesc}}
+                </div>
+                
+                <div class="text-center m-4">
+                    <a class="btn btn-default btn-sm" href="/{{seoId}}">SHOP {{categoryName}}</a>
+                </div>
+                
+                {{> SquarePromoPartialTemplate squarePromoTile}}
+                <hr>
+                {{> FeatureBannerPartialTemplate featureBannerBottom}}
+                {{> CategoryProductCarouselPartialTemplate categoryId}}
+
+                <!-- Category Landing Types -->
+                <div>
+                    {{decodeHTML longDesc}}
+                </div>
+            </div>
+        </div>
+
+    </script>
+    <div class="container-xl category-landing-section">
+        <div class="alx-loading-circle"></div>
+    </div>
+
+    <script>
+        Handlebars.registerPartial("CategoryProductCarouselPartialTemplate", document.getElementById("CategoryProductCarouselPartialTemplate").innerHTML);
+        const categorySeoId = window.location.pathname.includes('/overview') ? window.location.pathname.split('/')[1] : null;
+
+        CCRZ.pubSub.on('view:Menu:refresh', function (theView) {
+            // Render left nav
+            const leftNav = getMenuById('category-landing-left-nav');
+            if (leftNav && leftNav.children) {
+                const leftNavSubMenu = leftNav.children.find(function (c) {
+                    return c.menuId == categorySeoId + "-left-nav";
+                });
+                if (leftNavSubMenu && leftNavSubMenu.children) {
+                    // Build menu model for left nav
+                    const leftNavMenu = {
+                        displayMenuTitle: true,
+                        displayName: leftNavSubMenu.displayName,
+                        children: leftNavSubMenu.children
+                    };
+                    const leftNavTemplate = Handlebars.compile($("#LeftNavPartialTemplate").html());
+                    $('.alx-left-nav-menu').html(leftNavTemplate(leftNavMenu));
+                }
+            }
+
+            // Render services menu
+            const servicesMenu = getMenuById('category-landing-services-menu');
+            if (servicesMenu && servicesMenu.children) {
+                const servicesSubMenu = servicesMenu.children.find(function (c) {
+                    return c.menuId == categorySeoId + "-more-services";
+                });
+                if (servicesSubMenu && $('.alx-services-menu').children().length === 0) {
+                    const servicesMenuTemplate = Handlebars.compile($("#CategoryServicesPartialTemplate").html());
+                    servicesSubMenu.categoryName = categorySeoId;
+                    $('.alx-services-menu').html(servicesMenuTemplate(servicesSubMenu));
+                }
+            }
+        });
+
+        jQuery(function ($) {
+            CCRZ.models.CategoryLandingModel = CCRZ.CloudCrazeModel.extend({
+                className: 'AB2CCategoryLandingController',
+                fetch: function (callback) {
+                    this.invokeCtx('getCategoryLandingDetails', categorySeoId, function (response, event) {
+                        callback(response.data);
+                    }, { nmsp: false, buffer: false });
+                }
+            });
+
+            CCRZ.views.CategoryLandingView = CCRZ.CloudCrazeView.extend({
+                viewName: "CategoryLandingView",
+                templateDesktop: CCRZ.util.template('CategoryLandingTemplate'),
+                templateSelector: '.category-landing-section',
+                init: function (options) {
+                    const thisView = this;
+                    thisView.categoryLandingDetails = new CCRZ.models.CategoryLandingModel();
+                    thisView.categoryLandingDetails.fetch(function (response) {
+                        if (response) {
+                            response.seoId = categorySeoId;
+                            renderCustomBreadcrumb([{ label: response.categoryName }]);
+
+                            // Build promotions model
+                            if (response.promotions) {
+                                response.heroBanner = {
+                                    items: response.promotions.filter(function (p) {
+                                        return p.ccrz__LocationType__c === 'heroBanner';
+                                    })
+                                }
+                                response.featureBannerBottom = {
+                                    items: response.promotions.filter(function (p) {
+                                        return p.ccrz__LocationType__c === 'featureBannerBottom';
+                                    })
+                                }
+                                response.squarePromoTile = {
+                                    breakAt: 'large',
+                                    items: response.promotions.filter(function (p) {
+                                        return p.ccrz__LocationType__c === 'squarePromoTile';
+                                    })
+                                }
+                            }
+
+                            thisView.model = response;
+                            thisView.render();
+                        } else {
+                            console.error('Error fetching category landing page.');
+                        }
+                    });
+                },
+                renderDesktop: function () {
+                    this.setElement(this.templateSelector);
+                    this.$el.html(this.templateDesktop(this.model));
+                },
+            });
+
+            CCRZ.CategoryLandingView = new CCRZ.views.CategoryLandingView({});
+        });
+    </script>
+</apex:page>

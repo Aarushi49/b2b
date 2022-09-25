@@ -1,0 +1,12 @@
+@import '../base/variables';
+
+.alx-breadcrumbs {
+  padding: 0.3125rem 0.9375rem 0.375rem;
+  font-size: 0.8125rem;
+  color: $warm-grey;
+
+  a {
+    color: $charcoal;
+    text-decoration: underline;
+  }
+}

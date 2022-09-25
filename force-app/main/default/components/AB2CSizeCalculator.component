@@ -1,0 +1,317 @@
+<apex:component >
+  <c:AB2CModal ></c:AB2CModal>
+
+  <script id="SizeCalculatorPartialTemplate" type="text/template">
+    
+    <div class="alx-calculator">
+    
+      <!-- Tab menu -->
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-square-footage-tab" data-toggle="tab" href="#nav-square-footage" role="tab" aria-controls="nav-square-footage" aria-selected="true">
+            <span class="d-block d-lg-inline">Square Footage </span><span>Calculator</span>
+          </a>
+          <a class="nav-item nav-link" id="nav-area-multi-room-tab" data-toggle="tab" href="#nav-area-multi-room" role="tab" aria-controls="nav-area-multi-room" aria-selected="false">
+            <span class="d-block d-lg-inline">Area Calculator </span><span>(Multi-Room)</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="tab-content" id="nav-tabContent">
+        
+        <div class="tab-pane fade show active" id="nav-square-footage" role="tabpanel" aria-labelledby="nav-square-footage-tab">
+          
+          <div class="container alx-content-pane">
+            <p class="alx-calc-helper-text text-muted">
+              * Enter your square footage, including the calculated waste allowance. Open areas require an additional 5% added to your actual net measurements.
+            </p>
+            <div class="alx-calc-input">
+              <span class="alx-calc-text">Total Square Footage *</span>
+              <div class="input-group mb-3 w-75">
+                <input type="number" class="form-control" min="0" placeholder="Square Footage" aria-label="Square Footage" id="alx-square-footage-input">
+                <div class="input-group-append">
+                  <span class="input-group-text" id="unit">FT.</span>
+                </div>
+                <a type="button" class="btn btn-default ml-3" id="alx-square-footage-calc-button">
+                  Calculate
+                </a>
+              </div>
+
+              <div class="alx-calc-output text-center text-md-left" id="alx-calc-output"></div>
+
+            </div>
+          </div>
+
+        </div>
+        
+        <div class="tab-pane fade" id="nav-area-multi-room" role="tabpanel" aria-labelledby="nav-area-multi-room-tab">
+          <div class="container alx-content-pane">
+            <div class="alx-calc-helper-text">
+              * Enter your measurements for each room, including the calculated waste allowance. Room angles, narrow spaces or running your
+              flooring on a diagonal will demand a waste allowance greater than 5%, while wide open spaces require less allowance. Learn more 
+              about <a href="#">suggested waste allowances</a>. 
+            </div>
+            
+            <div class="alx-rooms mt-3" id="alx-rooms"></div>
+
+            <div class="row text-center text-md-right py-1">
+              <div class="col-12 ml-lg-1">
+                <a type="button" class="btn btn-default" id="alx-add-room-button">
+                  + Add Room
+                </a>  
+              </div>
+            </div>
+            
+            <div class="row no-gutters py-1 align-items-center">
+              <div class="col-md-2 d-none d-md-flex d-lg-none"></div>
+              <div class="col-12 col-md-4 col-lg-9 text-center text-lg-right pr-lg-2 alx-head-text">
+                Enter overall waste allowance amount:
+              </div>
+              <div class="col-4 d-md-none"></div>
+              <div class="col-4 col-md-5 col-lg-3">
+                <div class="input-group align-items-center pl-lg-2">
+                  <input type="number" class="form-control" aria-label="Waste Allowance Amount" id="alx-area-waste-percent"  min="0" value="0">
+                  <div class="input-group-append">
+                    <span class="input-group-text" id="unit">%</span>
+                  </div>
+                  <a class="alx-ic ic-info ml-1" data-toggle="modal" data-target="#alx-waste-allowance-modal" href="#"></a>
+                </div>  
+              </div>
+            </div>
+
+            <div class="row text-center text-md-right pt-1">
+              <div class="col-12 ml-lg-1">
+                <a type="button" class="btn btn-primary" id="alx-area-calc-button">
+                  Calculate
+                </a>                
+              </div>
+            </div>
+
+            <div class="alx-calc-output text-center text-md-left" id="alx-area-calc-output"></div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+    {{> ModalPartialTemplate (modalData 'alx-waste-allowance-modal' 'Waste Allowance' 'WasteAllowanceModalContent')}}
+  </script>
+
+  <!-- Size Calculator output template -->
+  <script type="text/x-handlebars-template" id="alx-calc-output-template">
+    <p>
+      <div class="alx-head-text">{{totalAmount}} cartons required * </div>
+      <div>Amount per carton = {{amountPerUnit}} sq. ft. </div>
+      <div>Total = {{totalSquareFootage}} sq. ft. </div>
+    </p>
+    <div class="alx-calc-price">
+      <div><span class="text-muted">Price:</span></div>
+      {{#if salePrice}}
+        <span class="alx-calc-sale-price-text">{{price calcPrice}}</span>
+      {{else}}
+        <span class="alx-calc-price-text">{{price calcPrice}}</span>
+      {{/if}}
+      <span class="text-muted"> for {{totalAmount}} cartons</span>
+    </div>
+  </script>
+
+  <!-- Area Calculator room template -->
+  <script type="text/x-handlebars-template" id="alx-room-template">
+    <div class="row no-gutters d-none d-lg-flex">
+      <div class="col-2"></div>
+      <div class="col-5 alx-head-text text-muted">Length*</div>
+      <div class="col-5 alx-head-text text-muted">Width*</div>
+    </div>
+    {{#each rooms}}
+    <div class="row no-gutters">
+      <div class="alx-room-num col-12 text-center text-md-left col-lg-2 pt-lg-2">
+        <span class="alx-head-text">
+          {{roomText @index}}:
+        </span>
+      </div>
+      <div class="col-12 col-lg-5">
+        <div class="row no-gutters my-1">
+          <div class="col-3 col-md-2 d-lg-none alx-head-text text-muted pt-2">
+            Length*
+          </div>
+          <div class="col-3 col-md-4 col-lg-5 input-group">
+            <div class="input-group">
+              <input type="number" class="form-control" aria-label="Room Length (ft)" id="alx-area-lengthFt-input{{@index}}" min="0" value="{{this.lengthFt}}">
+              <div class="input-group-append">
+                <span class="input-group-text px-2" id="unit">FT.</span>
+              </div>  
+            </div>
+          </div>
+          <div class="col-3 col-md-4 col-lg-5 pl-1">
+            <div class="input-group">
+              <input type="number" class="form-control" aria-label="Room Length (in)" id="alx-area-lengthIn-input{{@index}}" min="0" value={{this.lengthIn}}>
+              <div class="input-group-append">
+                <span class="input-group-text px-2" id="unit">IN.</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-3 col-md-2 col-lg-2 text-center text-md-right pt-1">
+            <span class="alx-multiply">×</span>
+          </div>            
+        </div>
+      </div>
+      <div class="col-12 col-lg-5">
+        <div class="row no-gutters my-1">
+          <div class="col-3 col-md-2 d-lg-none alx-head-text text-muted pt-2">
+            Width*
+          </div>        
+          <div class="col-3 col-md-4 col-lg-5">
+            <div class="input-group">
+              <input type="number" class="form-control" aria-label="Room Width (ft)" id="alx-area-widthFt-input{{@index}}" min="0" value="{{this.widthFt}}">
+              <div class="input-group-append">
+                <span class="input-group-text px-2" id="unit">FT.</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-3 col-md-4 col-lg-5 pl-1">
+            <div class="input-group">
+              <input type="number" class="form-control" aria-label="Room Width (in)" id="alx-area-widthIn-input{{@index}}" min="0" value="{{this.widthIn}}">
+              <div class="input-group-append">
+                <span class="input-group-text px-2" id="unit">IN.</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-3 col-md-2 col-lg-2 text-center text-md-right">
+            {{#if (first @index)}}
+            {{else}}
+            <a type="button" class="btn btn-default alx-calc-delete px-2 ml-lg-1" onClick="deleteRoom(this.name)" name="{{@index}}" id="alx-calc-delete-btn{{@index}}">&nbsp;—&nbsp;</a>            
+            {{/if}}
+          </div>  
+        </div>
+      </div>
+    </div>
+    {{/each}}
+  </script>
+
+  <script>
+    function initCalculator(model) {
+      //-- init data model --//
+      CCRZ.views.ProductDetailView.calculator = {};
+      CCRZ.views.ProductDetailView.calculator.roomModel = [];
+      CCRZ.views.ProductDetailView.calculator.prodModel = model;
+
+      //-- size calculator --//
+      const calcTemplate = $('#alx-calc-output-template').html();
+      let compiled = Handlebars.compile(calcTemplate);
+
+      $('#alx-square-footage-calc-button').click(function () {
+        const squareFootageAmt = +$('#alx-square-footage-input').val();
+        const quantityPerUnit = CCRZ.views.ProductDetailView.calculator.prodModel.quantityperunit;
+        const price = CCRZ.views.ProductDetailView.calculator.prodModel.price;
+
+        if (quantityPerUnit) {
+          const requiredUnits = Math.ceil(squareFootageAmt / quantityPerUnit);
+          const totalSqrFt = requiredUnits * quantityPerUnit;
+          const totalPrice = requiredUnits * price;
+
+          $('#alx-calc-output').html(compiled({
+            totalAmount: requiredUnits,
+            amountPerUnit: quantityPerUnit,
+            totalSquareFootage: totalSqrFt,
+            calcPrice: totalPrice,
+            salePrice: CCRZ.views.ProductDetailView.calculator.prodModel.savings
+          }));
+
+          CCRZ.pubSub.trigger('view:squarefootageCalc:calculate', requiredUnits);
+        }
+      });
+
+
+      //-- area calculator --//
+      CCRZ.views.ProductDetailView.calculator.roomModel.push({
+        lengthFt: 0,
+        lengthIn: 0,
+        widthFt: 0,
+        widthIn: 0
+      });
+      const roomTemplate = $('#alx-room-template').html();
+      let compiledRoomTemp = Handlebars.compile(roomTemplate);
+      $('#alx-rooms').html(compiledRoomTemp({ rooms: CCRZ.views.ProductDetailView.calculator.roomModel }));
+
+
+      $('#alx-add-room-button').click(function () {
+        CCRZ.views.ProductDetailView.calculator.roomModel = captureRoomInput(CCRZ.views.ProductDetailView.calculator.roomModel);
+        CCRZ.views.ProductDetailView.calculator.roomModel.push({
+          lengthFt: 0,
+          lengthIn: 0,
+          widthFt: 0,
+          widthIn: 0
+        });
+
+        $('#alx-rooms').html(compiledRoomTemp({ rooms: CCRZ.views.ProductDetailView.calculator.roomModel }));
+      });
+
+      $('#alx-area-calc-button').click(function () {
+        const product = CCRZ.views.ProductDetailView.calculator.prodModel;
+        const totalAreaSqrFt = calculateArea(CCRZ.views.ProductDetailView.calculator.roomModel);
+        const requiredUnits = Math.ceil(totalAreaSqrFt / product.quantityperunit);
+        const totalSqrFt = requiredUnits * product.quantityperunit;
+        const totalPrice = requiredUnits * product.price;
+
+        $('#alx-area-calc-output').html(compiled({
+          totalAmount: requiredUnits,
+          amountPerUnit: product.quantityperunit,
+          totalSquareFootage: totalSqrFt,
+          calcPrice: totalPrice,
+          salePrice: CCRZ.views.ProductDetailView.calculator.prodModel.savings
+        }));
+
+        CCRZ.pubSub.trigger('view:squarefootageCalc:calculate', requiredUnits);
+      });
+    }
+
+    function deleteRoom(ind) {
+      const roomTemplate = $('#alx-room-template').html();
+      let compiledRoomTemp = Handlebars.compile(roomTemplate);
+
+      const roomIndex = ind;
+      CCRZ.views.ProductDetailView.calculator.roomModel = captureRoomInput(CCRZ.views.ProductDetailView.calculator.roomModel);
+      CCRZ.views.ProductDetailView.calculator.roomModel.splice(roomIndex, 1);
+
+      $('#alx-rooms').html(compiledRoomTemp({ rooms: CCRZ.views.ProductDetailView.calculator.roomModel }));
+    }
+
+    function captureRoomInput(rooms) {
+      for (let i = 0; i < rooms.length; i++) {
+        rooms[i].lengthFt = +$('#alx-area-lengthFt-input' + i).val();
+        rooms[i].lengthIn = +$('#alx-area-lengthIn-input' + i).val();
+        rooms[i].widthFt = +$('#alx-area-widthFt-input' + i).val();
+        rooms[i].widthIn = +$('#alx-area-widthIn-input' + i).val();
+      }
+      return rooms;
+    }
+
+    function calculateArea(rooms) {
+      let totalSqrFt = 0;
+      for (let i = 0; i < rooms.length; i++) {
+        rooms[i].lengthFt = +$('#alx-area-lengthFt-input' + i).val();
+        rooms[i].lengthIn = +$('#alx-area-lengthIn-input' + i).val();
+        rooms[i].widthFt = +$('#alx-area-widthFt-input' + i).val();
+        rooms[i].widthIn = +$('#alx-area-widthIn-input' + i).val();
+
+        rooms[i].sqrFt = ((rooms[i].lengthFt * 12) + rooms[i].lengthIn) * ((rooms[i].widthFt * 12) + rooms[i].widthIn) / 144;
+        totalSqrFt += rooms[i].sqrFt;
+      }
+      const wastePercentage = +$('#alx-area-waste-percent').val() / 100 * totalSqrFt;
+      return totalSqrFt + wastePercentage;
+    }
+
+    Handlebars.registerHelper('first', function (index) {
+      return index == '0';
+    });
+
+    Handlebars.registerHelper('roomText', function (index) {
+      return 'Room ' + (index + 1);
+    });
+
+    Handlebars.registerHelper('modalData', function (modalID, title, contentPageLabel) {
+      return { modalID: modalID, title: title, contentPageLabel: contentPageLabel };
+    });
+  </script>
+</apex:component>

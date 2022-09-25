@@ -1,0 +1,426 @@
+<apex:component controller="AB2CProductController">
+  <script id="SimpleProductPartialTemplate" type="text/template">
+    <!-- 
+      Simple product display template used in feature product carousel and product list
+    -->
+    {{sortSpecs .}}
+    <div id="alx-feature-product-{{getParentSku SKU productSpecsS AB2CIsComponent}}" class="alx-feature-product">
+      <!-- Main image & Product Badge (cloudinary.js) -->
+      <a href="{{#if (hasSingleSize .)}} {{getProductDetailUrl .}} {{else}} {{getProductDetailUrlNoSizeSpec .}} {{/if}}" class="alx-product-image">
+        {{#if (swatchSpecs productSpecsS)}}
+          {{#each (swatchSpecs productSpecsS)}}
+            <div id="alx-detail-{{AB2CProductSpecSKU}}" class="{{#unless @first}} d-none {{/unless}}">
+            {{{productListImage ../this.SKU AB2CProductSpecSKU}}}
+            </div>
+          {{/each}}
+        {{else}}
+          <div>
+            {{{productListImage this.SKU null}}}
+          </div>
+        {{/if}}
+      </a>
+
+      {{#if selectable}}
+        {{initializeSelectable .}}
+        <!-- Other product info & links -->
+        <a href="{{getProductDetailUrl .}}" class="alx-featured-product-name">{{decodeHTML sfdcName}}</a>
+        <p class="alx-featured-product-sku">{{decodeHTML SKU}}</p>
+        
+        <div class="alx-spec-selections-container">
+          <!-- select swatch -->
+          <div class="form-group">
+            <label id="alx-selected-swatch-label{{SKU}}" class="alx-select-label">Selected Swatch: *</label>
+            <select id="alx-swatch-selection{{SKU}}" class="form-control" onchange="swatchSelected(event, '{{SKU}}')">
+              <option disabled selected>--Select--</option>
+              {{#each (swatchSpecs productSpecsS)}}
+                <option value="{{AB2CProductSpecSKU}}" data-skuname="{{specValue}}">{{decodeHTML specValue}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <!-- select size -->
+          <div class="form-group">
+            <label id="alx-selected-size-label{{SKU}}" class="alx-select-label">Selected Size: *</label>
+            <select class="form-control" onchange="sizeSelected(event, '{{SKU}}')">
+              <option disabled selected>--Select--</option>
+              {{#each (sizeSpecs . '')}}
+                <option value="{{AB2CProductSpecSKU}}">{{decodeHTML specValue}}</option>
+              {{/each}}
+            </select>
+          </div>
+
+          <!-- Price -->
+          <label>Price:</label>
+          <div id="alx-price-output{{SKU}}">
+            <p class="alx-featured-price-range {{#if serviceFlag}} alx-sale-price{{/if}}" >
+              {{#if this.price}}
+                {{price (priceToDisplay this.price)}}{{displayUnits}}
+              {{else}}
+                {{#ifEquals minPrice maxPrice}}
+                  {{price (priceToDisplay maxPrice)}}{{displayUnits}}
+                {{else}}
+                  {{price (priceToDisplay minPrice)}} - {{price (priceToDisplay maxPrice)}}{{displayUnits}}
+                {{/ifEquals}}
+            {{/if}}
+            </p>
+          </div>
+
+          <!-- Quantity -->
+          <label>Quantity:</label>
+          <div class="form-group">
+            <div class="input-group">
+              <input type="number" class="form-control" min="0" value="1" placeholder="Quantity" aria-label="Quantity" id="alx-quantity-input{{SKU}}">
+              <div class="input-group-append">
+                <a type="button" class="btn btn-primary" id="alx-add-to-cart-btn" onclick="addToCartClicked('{{SKU}}')">
+                  Add to Cart
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {{else}}
+        <!-- Selected style -->
+        <p class="alx-selected-style">
+            {{#if (hasSingleStyle productSpecsS)}}
+                Only 1 Style Available
+            {{else}}
+                Selected Style: <span class="alx-default-style">{{defaultStyleName productSpecsS}}</span><span class="alx-hover-style d-none"></span>
+            {{/if}}
+        </p>
+
+        <!-- Swatches -->
+        {{#if (swatchSpecs productSpecsS)}}
+          <div class="alx-swatch-container d-flex justify-content-center">
+              {{#each (swatchSpecs productSpecsS)}}
+                  {{#if AB2CPSIsSwatch}}
+                      {{#ifLessThan @index 3}}
+                        <a id="alx-swatch-{{AB2CProductSpecSKU}}" href="{{#if (hasSingleSize ../this)}} {{getProductDetailUrl ../this AB2CProductSpecSKU}} {{else}} {{getProductDetailUrlNoSizeSpec ../this AB2CProductSpecSKU}} {{/if}}" class="{{returnClass @first 'active'}}alx-swatch alx-swatch-{{AB2CColourFamily}}"
+                          onmouseenter="togglePreviewThumbnail(event, '{{AB2CProductSpecSKU}}', '{{decodeHTML specValue}}')" onmouseleave="togglePreviewThumbnail(event, null, null)">
+                          {{{productSwatchImage ../this.SKU AB2CProductSpecSKU}}}
+                        </a>
+                      {{/ifLessThan}}
+                      {{#ifEquals @index 4}}
+                        <a class="alx-swatch see-more alx-swatch-{{AB2CColourFamily}}" href="{{#if (hasSingleSize ../this)}} {{getProductDetailUrl ../this AB2CProductSpecSKU}} {{else}} {{getProductDetailUrlNoSizeSpec ../this AB2CProductSpecSKU}} {{/if}}"
+                          onmouseenter="togglePreviewThumbnail(event, '{{AB2CProductSpecSKU}}', '{{decodeHTML specValue}}')" onmouseleave="togglePreviewThumbnail(event, null, null)"></a>
+                      {{/ifEquals}}
+                  {{/if}}
+              {{/each}}
+          </div>
+        {{/if}}
+
+        <!-- Other product info & links -->
+        <a href="{{#if (hasSingleSize .)}} {{getProductDetailUrl .}} {{else}} {{getProductDetailUrlNoSizeSpec .}} {{/if}}" class="alx-featured-product-name">{{decodeHTML sfdcName}}</a>
+        <p class="alx-featured-product-sku">{{decodeHTML SKU}}</p>
+        <!-- Price -->
+        {{# if this.AB2CInStoreOnly}}
+          <p>In-Store Only</p>
+        {{else}}
+          <p class="alx-featured-price-range {{#if serviceFlag}} alx-sale-price{{/if}}">
+            {{#if this.price}}
+              {{price (priceToDisplay this.price)}}{{displayUnits}}
+            {{else}}
+              {{#ifEquals minPrice maxPrice}}
+                {{price (priceToDisplay maxPrice)}}{{displayUnits}}
+              {{else}}
+                {{price (priceToDisplay minPrice)}} - {{price (priceToDisplay maxPrice)}}{{displayUnits}}
+              {{/ifEquals}}
+            {{/if}}
+          </p>
+        {{/if}}
+        
+      {{/if}}
+
+      <!-- Compare functionality -->
+      {{#if comparable}}
+        {{#ifEquals this.productType 'Aggregated'}}
+
+          <div class="cc_compare form-group d-none d-lg-block">
+            {{#ifDisplay 'PCP.Enabled'}}
+              <!-- {{#ifEquals this.productType 'Product'}} -->
+                <p class="cc_product_row_actions">
+                  <button type="button" class="btn btn-link add_to_compare_desktop_button cc_addto_compare text-dark {{#if inCompareTray}}active{{else}}{{#if compareTrayFull}}disabled{{/if}}{{/if}}">
+                    {{#if inCompareTray}}
+                      {{pageLabelMap 'ProductCompare_RemoveFromCompare'}}
+                    {{else}}
+                      {{pageLabelMap 'ProductCompare_AddToCompare'}}
+                    {{/if}}
+                  </button>
+                </p>  
+              <!-- {{/ifEquals}} -->
+            {{/ifDisplay}}
+          </div>
+        {{/ifEquals}}
+      {{/if}}
+      
+    </div>
+
+    <!-- add confirm modal -->
+    <div class="modal fade alx-modal" id="alx-add-to-cart-sp-confirm" tabindex="-1" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+          <div class="modal-content">
+              <div class="modal-header d-flex justify-content-center">
+                  <div class="flex-grow-1 d-flex justify-content-center">
+                      <h5 class="modal-title alx-modal-title" id="modalTitle">Added to Cart</h5>
+                  </div>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+              </div>
+              <div class="modal-body alx-modal-body d-flex align-items-center justify-content-center">
+                  <span class="alx-ic ic-cerulean ic-check-circle pr-3"></span>
+                  <span id="alxSimpleProductConfirm" class="pl-2"></span>
+              </div>
+              <div class="modal-footer d-flex align-items-center justify-content-center">
+                  <button type="button" class="btn btn-primary" data-dismiss="modal">Continue Shopping</button>
+                  <button type="button" class="btn btn-default alx-go-to-cart" data-dismiss="modal" onclick="goToCart()">Go to Cart</button>
+              </div>
+          </div>
+      </div>
+    </div>
+  </script>
+
+  <script type="text/x-handlebars-template" id="alx-selected-prod-price-output-template">
+    <!-- Price re-render template -->
+    <p class="alx-featured-price-range {{#if this.savings}} alx-sale-price{{/if}}" >
+      {{#if this.price}}
+        {{price (priceToDisplay this.price)}}{{displayUnits}}
+      {{else}}
+        {{#ifEquals minPrice maxPrice}}
+          {{price (priceToDisplay maxPrice)}}{{displayUnits}}
+        {{else}}
+          {{price (priceToDisplay minPrice)}} - {{price (priceToDisplay maxPrice)}}{{displayUnits}}
+        {{/ifEquals}}
+      {{/if}}
+    </p>
+  </script>
+
+  <script>
+    Handlebars.registerPartial("SimpleProductPartialTemplate", document.getElementById("SimpleProductPartialTemplate").innerHTML);
+
+    Handlebars.registerHelper('priceToDisplay', function (priceAmt) {
+      if (this.AB2CShowSquareFootageCalculator) {
+        const pricePerCarton = +priceAmt;
+        const sqrFtPerCarton = +this.quantityperunit;
+        return pricePerCarton / Math.max(1, sqrFtPerCarton);
+      } else {
+        return priceAmt;
+      }
+    });
+
+    Handlebars.registerHelper('sortSpecs', function (product) {
+      // Transfer sequence number from composite products to specs so we can sort the specs by sequence
+      if (product.compositeProductsS && product.productSpecsS) {
+        for (let spec of product.productSpecsS) {
+          for (let composite of product.compositeProductsS) {
+              //Added by Divs on 05/04/2022
+            if (composite.compositeProductId != undefined && composite.compositeProductId.includes("-"+spec.AB2CProductSpecSKU+"-")) {
+              spec.sequence = composite.sequence;
+            }
+          }
+        }
+      }
+    });
+
+    Handlebars.registerHelper('displayUnits', function () {
+      if (this.AB2CShowSquareFootageCalculator || (this.productType === 'Dynamic Kit')) {
+        return ' per sq. ft.';
+      } else if (this.AB2CShowPerLinearFoot) {
+        return ' per linear ft.';
+      }
+      return '';
+    });
+
+    // Received images from cloudinary, update SimpleProduct images
+    CCRZ.pubSub.on("view:simpleProduct:imageRefresh", function (sku, cloudinaryResources) {
+      cloudinaryResources.forEach(function (resource) {
+        const context = getCloudinaryMediaContext(resource);
+        if (context.is_swatch === "true" && context.spec_sku) {
+          $("div#alx-feature-product-" + sku + " a#alx-swatch-" + context.spec_sku).html(cl.image(resource.public_id, {
+            width: 37,
+            height: 37,
+            crop: "fill"
+          }));
+        } else if (context.spec_sku) {
+          const detailImage = $("div#alx-feature-product-" + sku + " div#alx-detail-" + context.spec_sku + " > img");
+          if (detailImage.length > 0 && detailImage.attr("src").includes("placeholder")) {
+            detailImage.attr("src", cl.url(resource.public_id, {
+              width: 186,
+              height: 220,
+              crop: 'fill',
+              fetchFormat: "auto",
+              quality: "auto"
+            }));
+            const productName = $("div#alx-feature-product-" + sku + " .alx-featured-product-name").first().text();
+            detailImage.attr("alt", context.alt || productName);
+
+            if (context.badge) {
+              const badgeImg = cl.image(ENV + "/badges/" + context.badge);
+              badgeImg.className = "alx-product-badge";
+              badgeImg.alt = context.alt;
+              $(badgeImg).insertAfter(detailImage);
+            }
+          }
+        }
+      });
+    });
+
+    function togglePreviewThumbnail(event, specSKU, specName) {
+      const defaultSpan = $(event.target).parent().siblings('.alx-selected-style').children('.alx-default-style');
+      const hoverSpan = $(event.target).parent().siblings('.alx-selected-style').children('.alx-hover-style');
+      const thumbnails = $(event.target).parent().siblings('.alx-product-image').children();
+      const swatches = $(event.target).parent().children();
+      if (specSKU && specName) {
+        swatches.each(function (index, swatch) {
+          $(swatch).removeClass('active');
+        });
+        thumbnails.each(function (index, thumbnail) {
+          $(thumbnail).attr('id').indexOf('alx-detail-' + specSKU) > -1 ? $(thumbnail).removeClass('d-none') : $(thumbnail).addClass('d-none');
+        });
+        defaultSpan.addClass('d-none');
+        hoverSpan.text(specSKU);
+        hoverSpan.removeClass('d-none');
+      } else {
+        swatches.each(function (index, swatch) {
+          (index === 0) ? $(swatch).addClass('active') : $(swatch).removeClass('active');
+        });
+        thumbnails.each(function (index, thumbnail) {
+          (index === 0) ? $(thumbnail).removeClass('d-none') : $(thumbnail).addClass('d-none');
+        });
+        defaultSpan.removeClass('d-none');
+        hoverSpan.addClass('d-none');
+        hoverSpan.text('');
+      }
+    }
+
+    Handlebars.registerHelper('initializeSelectable', function (product) {
+      //init selectable product model
+      if (!CCRZ.pagevars.alxSelectableProds) {
+        CCRZ.pagevars.alxSelectableProds = [];
+      }
+      CCRZ.pagevars.alxSelectableProds[product.SKU] = product;
+
+      CCRZ.models.SelectableSimpleProductModel = CCRZ.CloudCrazeModel.extend({
+        className: 'AB2CProductController',
+        fetch: function (sku, styleSku, sizeSku, callback) {
+          this.invokeCtx('getProductDetailBySkuSizeColour', sku, styleSku, sizeSku, function (response, event) {
+            if (!response.success) {
+              console.error(response.data);
+            }
+            callback(response.data);
+          }, { nmsp: false, buffer: false });
+        },
+        addToCart: function (sku, qty, sfdcName) {
+          if (!qty)
+            qty = 1;
+          this.className = 'cc_RemoteActionController';
+          $('.overlay').modal('toggle');
+          this.invokeContainerLoadingCtx(
+            null
+            , 'addItem'
+            , sku
+            , qty
+            , null
+            , null
+            , null
+            , null
+            , function (response) {
+              $('.overlay').modal('toggle');
+              if (response.success && response.data) {
+                const cartId = response.data;
+                CCRZ.pagevars.currentCartID = cartId;
+                //cart change will update cookie
+                CCRZ.pubSub.trigger('cartChange', cartId);
+                if (CCRZ.pagevars.currentPageName === "ccrz__ProductCompare") {
+                  $('#alx-add-to-cart-sp-confirm').modal('toggle');
+                  $('#alxSimpleProductConfirm').text(sfdcName + ' has been successfully added to your cart.')
+                }
+              }
+              //trigger cart refresh
+              $('.getExtPricingButton').click();
+
+            }
+          );
+        },
+      });
+    });
+
+    function addToCartClicked(baseSKU) {
+      const product = CCRZ.pagevars.alxSelectableProds[baseSKU];
+      const qty = +$('#alx-quantity-input' + baseSKU).val();
+      const skuToAdd = findSku(product);
+      if (skuToAdd) {
+        const selectableProductModel = new CCRZ.models.SelectableSimpleProductModel();
+        selectableProductModel.addToCart(skuToAdd, qty, product.sfdcName);
+      } else {
+        renderAddToCartErrors(product);
+      }
+    }
+
+    function renderAddToCartErrors(product) {
+      if (!product.alxSelectedSwatchSKU) {
+        $("#alx-selected-swatch-label" + product.SKU).addClass("error-text");
+      }
+      if (!product.alxSelectedSizeSKU) {
+        $("#alx-selected-size-label" + product.SKU).addClass("error-text");
+      }
+    }
+
+    function findSku(product) {
+      if (product.alxSelectedSizeSKU && product.alxSelectedSwatchSKU) {
+        for (const comProd of product.compositeProductsS) {
+          if (comProd.componentR && comProd.componentR.SKU
+            && comProd.componentR.SKU.indexOf(product.alxSelectedSizeSKU) > -1
+            && comProd.componentR.SKU.indexOf(product.alxSelectedSwatchSKU) > -1) {
+            return comProd.componentR.SKU;
+          }
+        }
+      }
+    }
+
+    function swatchSelected(event, baseSKU) {
+      $("#alx-selected-swatch-label" + baseSKU).removeClass("error-text");
+      let product = CCRZ.pagevars.alxSelectableProds[baseSKU];
+      const swatchSpecSKU = $(event.target).find('option:selected').val();
+      product.alxSelectedSwatchSKU = swatchSpecSKU;
+
+      changePreviewThumbnail(event, swatchSpecSKU);
+      renderPrice(product);
+    }
+
+    function sizeSelected(event, baseSKU) {
+      $("#alx-selected-size-label" + baseSKU).removeClass("error-text");
+      let product = CCRZ.pagevars.alxSelectableProds[baseSKU];
+      const sizeSpecSKU = $(event.target).find('option:selected').val();
+      product.alxSelectedSizeSKU = sizeSpecSKU;
+
+      renderPrice(product);
+    }
+
+    function renderPrice(product) {
+      const fullSku = findSku(product);
+      if (fullSku) {
+        const selectableProductModel = new CCRZ.models.SelectableSimpleProductModel();
+        selectableProductModel.fetch(product.SKU, product.alxSelectedSwatchSKU, product.alxSelectedSizeSKU, function (response) {
+          console.log(response);
+          if (response) {
+            const priceTemplate = $('#alx-selected-prod-price-output-template').html();
+            let compiled = Handlebars.compile(priceTemplate);
+            const prodWithPrice = returnDisplayedProduct(response);
+            $('#alx-price-output' + product.SKU).html(compiled(prodWithPrice));
+          }
+        });
+      }
+    }
+
+    function changePreviewThumbnail(event, specSKU) {
+      const thumbnails = $(event.target).parent().parent().siblings('.alx-product-image').children()
+      thumbnails.each(function (index, thumbnail) {
+        $(thumbnail).attr('id').indexOf(specSKU) > -1 ? $(thumbnail).removeClass('d-none') : $(thumbnail).addClass('d-none');
+      });
+    }
+
+    function goToCart() {
+      window.location.href = "/cart" + CCRZ.buildQueryString('');
+    }
+
+  </script>
+</apex:component>

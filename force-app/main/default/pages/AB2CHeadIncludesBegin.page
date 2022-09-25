@@ -1,0 +1,5 @@
+<apex:page id="AB2CHeadIncludesBegin" docType="html-5.0" sidebar="false" showHeader="false" standardStylesheets="false" applyHtmlTag="false">
+    <!-- 2021-11-03 Charles 22364: Moved Google Tag Manager to AB2CUserInterface -->
+    <!-- Zendesk Widget script -->
+    <script id="ze-snippet" async="true" src="https://static.zdassets.com/ekr/snippet.js?key=d4a56703-d6a6-44f5-874a-4f303e4a74d9"> </script>
+</apex:page>

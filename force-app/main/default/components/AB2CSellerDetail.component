@@ -1,0 +1,117 @@
+<apex:component controller="AB2CSellerController" rendered="{!IF(contains($CurrentPage.Name,'ccrz__SellerDetail'), true, false)}">
+    <c:AB2CLeftNav ></c:AB2CLeftNav>
+
+    <script id="sellerDetail-Both" type="text/template">
+        <div class="container-xl alx-seller-detail">
+            <div class="row">
+                <div class="col-lg-2 col-md-3 col-sm-12">
+                    {{> LeftNavPartialTemplate menu}}
+                </div>
+                <div class="col-lg-10 col-md-9 col-sm-12">
+                    <h1 class="text-center">{{sfdcName}}</h1>
+                    <div id="map"></div>
+                    <div class="row text-center mb-4">
+                        <div class="col-md-6">
+                            <h3>Where To Find Us</h3>
+                            <p class="mb-4">Call us: <a href="tel:{{AB2CPhone}}">{{AB2CPhone}}</a></p>
+                            <p class="mb-4">{{AB2CAddress}}</br>
+                            {{AB2CCity}}, {{AB2CProvince}}</br>
+                            {{AB2CPostalCode}}</p>
+                            <p><a href="https://maps.google.com?q={{AB2CAddress}} {{AB2CCity}}, {{AB2CProvince}}" target="_blank">Get directions</a></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h3>Hours</h3>
+                            <div class="alx-store-hours">
+                                {{decodeHTML AB2CHours}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        jQuery(function ($) {
+            CCRZ.pubSub.on("ccrz.views:SellerLocatorDetailView:defined", function () {
+                CCRZ.views.SellerLocatorDetailView = CCRZ.views.SellerLocatorDetailView.extend({
+                    templateSelector: '.contentBody',
+                    init: function (options) {
+                        const thisView = this;
+                        getSellerLocatorModel().fetch(function (response) {
+                            if (response.sellerList) {
+                                const sellerId = Handlebars.helpers.getQueryParam('selid');
+                                const seller = response.sellerList.filter(function (s) {
+                                    return s.sellerId === sellerId;
+                                });
+                                if (seller.length === 0) {
+                                    window.location.href = '/not-found';
+                                }
+                                thisView.model = seller[0];
+                                thisView.model.menu = getMenuItems(response.sellerList, response.cities);
+                                thisView.render();
+                                renderMap(seller[0]);
+                            } else {
+                                console.error('Error fetching sellers.');
+                            }
+                        });
+                    },
+                    renderDesktop: function () {
+                        this.setElement(this.templateSelector);
+                        this.$el.html(this.templateDesktop(this.model));
+                    },
+                    postRender: function () {
+                        renderCustomBreadcrumb([{ label: "Store Locator", href: "/stores" }, { label: this.model.sfdcName }]);
+                    }
+                });
+            });
+
+            function renderMap(seller) {
+                const sellerLocation = { lat: seller.location.latitude, lng: seller.location.longitude };
+                const map = new google.maps.Map(document.getElementById('map'), {
+                    center: sellerLocation,
+                    zoom: 10
+                });
+                const marker = new google.maps.Marker({
+                    position: sellerLocation,
+                    icon: 'https://res.cloudinary.com/alexanian/image/upload/v1584328857/prod/static/shared/map-marker.png',
+                    title: seller.sfdcName,
+                    map: map
+                });
+            }
+
+            function getMenuItems(sellers, cities) {
+                const parentMenu = {
+                    displayName: "Find a Store",
+                    menuId: "seller-locator-auto",
+                    sequence: 1,
+                    displayMenuTitle: true,
+                    children: []
+                };
+                for (let i = 0; i < cities.length; i++) {
+                    const cityMenu = {
+                        displayName: cities[i],
+                        menuId: "seller-locator-city-" + cities[i],
+                        sequence: i + 1
+                    };
+                    const sellersByCity = sellers.filter(function (seller) { return seller.AB2CCity === cities[i] });
+                    if (sellersByCity.length < 2) {
+                        cityMenu.linkURL = "/stores/detail?selid=" + sellersByCity[0].sellerId;
+                    } else {
+                        cityMenu.children = [];
+                        for (let j = 0; j < sellersByCity.length; j++) {
+                            cityMenu.children.push({
+                                displayName: sellersByCity[j].sfdcName,
+                                linkURL: "/stores/detail?selid=" + sellersByCity[j].sellerId,
+                                menuId: "seller-locator-" + sellersByCity[j].sellerId,
+                                sequence: j + 1
+                            });
+                        }
+                    }
+                    parentMenu.children.push(cityMenu);
+                }
+                return parentMenu;
+            }
+        });
+    </script>
+</apex:component>

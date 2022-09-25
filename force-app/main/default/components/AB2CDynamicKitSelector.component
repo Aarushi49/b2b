@@ -1,0 +1,565 @@
+<apex:component controller="AB2CDynamicKitService">
+
+  <script id="ProductDetail-DynamicFlowSection-Desktop" type="text/template">
+    
+    <div class="alx-dynamic-kit">
+      <div class="container">
+        <div class="alx-dk-header">
+          Custom Size Details
+        </div>
+        <div class="alx-dk-content form-group">
+          {{initDK .}}
+          {{#each .}}
+            {{#if (selectable .)}}
+            <div class="row pb-3">
+
+              <div class="alx-option-name col-3">{{name}}: *</div>
+
+              <div class="col-9">
+                <select class="form-control" id="{{safeName name}}" onchange="DKoptionSelected(this.selectedIndex - 1, this.id)">
+                  <option disabled selected>-- Select --</option>
+                  {{#each relProducts}}
+                    <option id="{{safeName grouping}}{{@index}}" data-price="{{product.price}}">{{product.prodBean.sfdcName}}</option>
+                  {{/each}}
+                </select>
+              </div>
+
+            </div>
+            {{/if}}
+          {{/each}}
+          <!-- size input -->
+          <div class="row pb-3" id="alx-dk-size-input">
+            
+            <div class="alx-option-name col-3">Size: *</div>
+            <div class="col-9">
+              
+              <div class="d-flex flex-row align-items-center">
+
+                <div class="col-5"><div class="row">
+                  <div class="alx-head-text">Length *</div>
+                  <div class="d-flex flex-row">
+                
+                    <select class="form-control mr-1" id="alx-len-ft" >
+                      <option disabled selected>-- FT --</option>
+                    </select>
+                    
+                    <select class="form-control" id="alx-len-in" >
+                      <option disabled selected>-- IN --</option>
+                    </select>
+                
+                </div>
+                <span class="text-muted alx-foot-text">* Maximum length 24 ft.</span>
+              </div></div>
+
+                <div class="col-1"><div class="row">
+                <span class="alx-head-text alx-x">&times;</span>
+                </div></div>
+                
+                <div class="col-5"><div class="row">
+                  <div class="alx-head-text">Width *</div>
+                  <div class="d-flex flex-row">
+
+                    <select class="form-control mr-1" id="alx-wid-ft" >
+                      <option disabled selected>-- FT --</option>
+                    </select>
+                    
+                    <select class="form-control" id="alx-wid-in" >
+                      <option disabled selected>-- IN --</option>
+                    </select>
+
+                </div>
+                <span class="text-muted alx-foot-text">* Maximum width 12 ft.</span>
+              </div></div>
+
+              </div>
+            </div>
+            
+          </div> <!-- alx-dk-size-input -->
+          <!-- /size input -->
+
+          <div class="alx-dk-output" id="alx-dk-output"></div>
+        </div> <!-- content row -->
+      </div> <!-- container -->
+    </div> <!-- alx-dynamic-kit -->
+
+  </script>
+
+  <!-- dynamic kit calculation output template -->
+  <script type="text/x-handlebars-template" id="alx-dk-price-output-template">
+    {{#if loading}}
+      <div class="alx-loading-circle"></div>
+    {{else}}
+      <div class="alx-calc-price">
+        <div><span class="text-muted">Price:</span></div>
+        {{#if salePrice}}
+          <span class="alx-calc-sale-price-text">{{price calcPrice}}</span>
+        {{else}}
+          <span class="alx-calc-price-text">{{price calcPrice}}</span>
+        {{/if}}
+        <span class="text-muted"> based on selected options</span>
+      </div>
+    {{/if}}
+  </script>
+  
+  <!-- size input template -->
+  <script type="text/x-handlebars-template" id="alx-dk-size-input-template">
+
+    <div class="alx-option-name col-3">Size</div>
+    <div class="col-9">
+      
+      <div class="d-flex flex-row align-items-center">
+
+        <div class="col-5"><div class="row">
+          <div class="alx-head-text">{{lengthLabelFor shape}} *</div>
+          <div class="d-flex flex-row">
+        
+            <select class="form-control mr-1" id="alx-len-ft" onchange="sizeSelected(this.selectedIndex - 1, this.id)">
+              <option disabled selected>-- FT --</option>
+              {{#each lengths}}
+                <option >{{.}}</option>
+              {{/each}}
+            </select>
+            
+            <select class="form-control" id="alx-len-in" onchange="sizeSelected(this.selectedIndex - 1, this.id)">
+              <option disabled selected>-- IN --</option>
+              {{#each inches}}
+                <option >{{.}}</option>
+              {{/each}}
+            </select>
+        
+        </div>
+        <span class="text-muted alx-foot-text">* Maximum length {{maxLength}} ft.</span>
+      </div></div>
+
+      {{#if (hasWidth shape)}}
+        <div class="col-1"><div class="row">
+        <span class="alx-head-text alx-x">X</span>
+        </div></div>
+        
+        <div class="col-5"><div class="row">
+          <div class="alx-head-text">Width *</div>
+          <div class="d-flex flex-row">
+
+            <select class="form-control mr-1" id="alx-wid-ft" onchange="sizeSelected(this.selectedIndex - 1, this.id)">
+              <option disabled selected>-- FT --</option>
+              {{#each widths}}
+                <option >{{.}}</option>
+              {{/each}}
+            </select>
+            
+            <select class="form-control" id="alx-wid-in" onchange="sizeSelected(this.selectedIndex - 1, this.id)">
+              <option disabled selected>-- IN --</option>
+              {{#each inches}}
+                <option >{{.}}</option>
+              {{/each}}
+            </select>
+
+        </div>
+        <span class="text-muted alx-foot-text">* Maximum width {{maxWidth}} ft.</span>
+      </div></div>
+      {{/if}}
+
+      </div>
+
+    </div>
+  </script>
+
+
+  <script>
+    function initAlxDynamicKit(model) {
+      //-- init data model --//
+      CCRZ.views.ProductDetailView.alxDynamicKit = {};
+      CCRZ.views.ProductDetailView.alxDynamicKit.prodModel = model;
+    }
+
+    function DKoptionSelected(index, id) {
+      captureSelection(index, id);
+      renderPrice();
+    }
+
+    function sizeSelected(value, id) {
+      captureSizeSelection(value, id);
+      renderPrice();
+    }
+
+    function captureSizeSelection(value, id) {
+      const options = CCRZ.views.ProductDetailView.alxDynamicKit.options;
+      let sizeOption, shapeOption;
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].name == 'Size') {
+          sizeOption = options[i];
+        }
+      }
+      if (sizeOption) {
+        if (!sizeOption.selectedOption) {
+          sizeOption.selectedOption = {};
+        }
+        if (id == 'alx-len-ft') {
+          sizeOption.selectedOption.selectedLengthFt = value;
+        } else if (id == 'alx-len-in') {
+          sizeOption.selectedOption.selectedLengthIn = value;
+        } else if (id == 'alx-wid-ft') {
+          sizeOption.selectedOption.selectedWidthFt = value;
+        } else if (id == 'alx-wid-in') {
+          sizeOption.selectedOption.selectedWidthIn = value;
+        }
+        
+      }
+    }
+
+    function captureSelection(index, id) {
+      const dkModel = CCRZ.views.ProductDetailView.alxDynamicKit.dkModel;
+      const options = CCRZ.views.ProductDetailView.alxDynamicKit.options;
+      for (let i = 0; i < dkModel.length; i++) {
+        if (dkModel[i].safeName == id) {
+          options[i].selectedOption = dkModel[i].relProducts[index];
+          if (id == 'Shape') {
+            handleShapeSelection(options[i].selectedOption);
+            clearSizeSelections(options);
+          }
+        }
+      }
+    }
+
+    function clearSizeSelections(options) {
+      options.forEach(opt => {
+        if (opt.name == 'Size') {
+          opt.selectedOption = undefined;
+        }
+      });
+    }
+
+    function handleShapeSelection(selectedShape) {
+
+      const shape = getShapeProps(selectedShape);
+
+      const sizeInputTemplate = $('#alx-dk-size-input-template').html();
+      let compiled = Handlebars.compile(sizeInputTemplate);
+      $('#alx-dk-size-input').html(compiled({
+        shape: shape.name,
+        maxLength: shape.maxLength,
+        lengths: shape.lengths,
+        maxWidth: shape.maxWidth,
+        widths: shape.widths,
+        inches: shape.inches
+      }));
+
+
+    }
+
+    function getShapeProps(shapeModel) {
+      let shape = {};
+      shape.name = shapeModel["product"]["prodBean"]["sfdcName"];
+
+      const dkModel = CCRZ.views.ProductDetailView.alxDynamicKit.dkModel;
+      dkModel.forEach(element => {
+        if (element.safeName == 'Size') {
+          element.relProducts.forEach(spec => {
+            if        (shape.name == 'Rectangle' && spec['product']['prodBean']['sku'] == 'rectangle_max_length') {
+              shape.maxLength = spec['product']['minQty'];
+            } else if (shape.name == 'Rectangle' && spec['product']['prodBean']['sku'] == 'rectangle_max_width') {
+              shape.maxWidth = spec['product']['minQty'];
+            } else if (shape.name == 'Circle' && spec['product']['prodBean']['sku'] == 'circle_max_length') {
+              shape.maxLength = spec['product']['minQty'];
+              shape.maxWidth = undefined;
+            } else if (shape.name == 'Square' && spec['product']['prodBean']['sku'] == 'square_max_length') {
+              shape.maxLength = spec['product']['minQty'];
+              shape.maxWidth = undefined;
+            } else if (shape.name == 'Oval' && spec['product']['prodBean']['sku'] == 'oval_max_length') {
+              shape.maxLength = spec['product']['minQty'];
+            } else if (shape.name == 'Oval' && spec['product']['prodBean']['sku'] == 'oval_max_width') {
+              shape.maxWidth = spec['product']['minQty'];
+            } else if (shape.name == 'Octagon' && spec['product']['prodBean']['sku'] == 'octagon_max_length') {
+              shape.maxLength = spec['product']['minQty'];
+              shape.maxWidth = undefined;
+            }
+          });
+        }
+      });
+      getAvailSelects(shape);
+      return shape;
+    }
+
+    function getAvailSelects(shape) {
+      let lengths = [];
+      for (let i = 1; i <= shape.maxLength; i++) {
+        lengths.push(i);
+      }
+      shape.lengths = lengths;
+
+      let widths = []
+      if (shape.name == 'Rectangle' || shape.name == 'Oval') {
+        for (let i = 0; i <= shape.maxWidth; i++) {
+          widths.push(i);
+        }
+      }
+      shape.widths = widths;
+
+      let inches = [];
+      for (let i = 0; i < 12; i++) {
+        inches.push(i);
+      }
+      shape.inches = inches;
+    }
+
+    function renderPrice() {
+      const options = CCRZ.views.ProductDetailView.alxDynamicKit.options;
+      if (allOptionsSelected(options)) {
+        calcPriceCall(options);
+      }
+    }
+
+    function calcPriceCall(options) {
+      const dkPriceModel = new CCRZ.models.DynamicKitSelectionModel();
+      const sku = CCRZ.views.ProductDetailView.alxDynamicKit.prodModel.SKU;
+      const label = generateLabel(options);
+
+      const dkPriceReq = getDkPriceRequest(options);
+      CCRZ.pubSub.trigger('view:dynamicKitCalc:renderPrice', 0, true);
+      dkPriceModel.fetch(sku, dkPriceReq.shape, dkPriceReq.lenIn, dkPriceReq.widIn, dkPriceReq.selectedSkus, function (response) {
+        if (response) {
+          CCRZ.pubSub.trigger('view:dynamicKitCalc:renderPrice', response.data, false);
+          const skuMap = getSkuMap(options);
+          CCRZ.pubSub.trigger('view:dynamicKitCalc:selectedSkus', {skuMap: skuMap, label: label});
+        } else {
+          console.warn('Price could not be calculated for this configuration.');
+          console.warn(response.data);
+        }
+      });
+    }
+
+    function getSkuMap(options) {
+      let skyQtyMap = new Object();
+      skyQtyMap[CCRZ.views.ProductDetailView.alxDynamicKit.prodModel.SKU] = 1;
+      $.each(options, function( index, value ) {
+        if (value.name != 'Size') {
+          skyQtyMap[value.selectedOption.product.prodBean.SKU] = parseInt(value.selectedOption.product.minQty);
+        }
+      });
+      return skyQtyMap;
+    }
+
+    function getDkPriceRequest(options) {
+      const selectedOpts = parseSelectedOptions(options);
+      const shape = getShapeCode(selectedOpts);
+      const lenIn = getLenIn(selectedOpts);
+      const widIn = getWidIn(selectedOpts);
+      const compSKUs = getCompSkus(selectedOpts);
+      return {
+        shape: shape,
+        lenIn: lenIn,
+        widIn: widIn,
+        selectedSkus: compSKUs
+      };
+    }
+
+    function generateLabel(options) {
+      const NUM_STR_SIZE = 4;
+      const selectedOpts = parseSelectedOptions(options);
+
+      //shape label
+      const shapeLabel = getShapeCode(selectedOpts) + '-';
+      
+      //size label
+      let lenLabel = padNumStr('' + getLenIn(selectedOpts), NUM_STR_SIZE);
+      let widLabel = '';
+      if (getShapeName(selectedOpts.selectedShape) == 'Rectangle'
+        || getShapeName(selectedOpts.selectedShape) == 'Oval') {
+        widLabel = '' + getWidIn(selectedOpts);
+      }
+      widLabel = padNumStr(widLabel, NUM_STR_SIZE);
+      const sizeLabel = lenLabel + 'x' + widLabel;
+      
+      //component skus label
+      let compSkuLabel = '';
+      selectedOpts.selectedSkus.forEach(prod => {
+        compSkuLabel += '-' + prod.selectedOption.product.prodBean.SKU;
+      });
+
+      const finalLabel = shapeLabel + sizeLabel + compSkuLabel;
+      return finalLabel;
+    }
+
+    function getLenIn(selectedOpts) {
+      return (selectedOpts.selectedSize.selectedOption.selectedLengthFt * 12 + selectedOpts.selectedSize.selectedOption.selectedLengthIn);
+    }
+
+    function getWidIn(selectedOpts) {
+      return (selectedOpts.selectedSize.selectedOption.selectedWidthFt * 12 + selectedOpts.selectedSize.selectedOption.selectedWidthIn);
+    }
+
+    function getShapeCode(selectedOpts) {
+      let shapeLabel = '';
+      if (getShapeName(selectedOpts.selectedShape) == 'Rectangle') {
+        shapeLabel = 'RECT';
+      } else if (getShapeName(selectedOpts.selectedShape) == 'Circle') {
+        shapeLabel = 'CIRC';
+      } else if (getShapeName(selectedOpts.selectedShape) == 'Square') {
+        shapeLabel = 'SQUA';
+      } else if (getShapeName(selectedOpts.selectedShape) == 'Oval') {
+        shapeLabel = 'OVAL';
+      } else if (getShapeName(selectedOpts.selectedShape) == 'Octagon') {
+        shapeLabel = 'OCTA';
+      }
+      return shapeLabel;
+    }
+
+    function getCompSkus(selectedOpts) {
+      let compSKUs = [];
+      selectedOpts.selectedSkus.forEach(prod => {
+        compSKUs.push(prod.selectedOption.product.prodBean.SKU);
+      });
+      return compSKUs;
+    }
+
+    function parseSelectedOptions(options) {
+      let selectedOpts = {};
+      selectedOpts.selectedSkus = [];
+      //add non-shape/size options
+      options.forEach(opt => {
+        if (opt.name == 'Size') {
+          selectedOpts.selectedSize = opt;
+        } else if (opt.name == 'Shape') {
+          selectedOpts.selectedShape = opt;
+        } else {
+          selectedOpts.selectedSkus.push(opt);
+        }
+      });
+      return selectedOpts;
+    }
+
+    function padNumStr(numStr, maxStrSize) {
+      const padStr = '0';
+      while (numStr.length < maxStrSize) {
+        numStr = padStr + numStr;
+      }
+      return numStr;
+    }
+
+    function getBaseSqrFtPrice() {
+      return CCRZ.views.ProductDetailView.alxDynamicKit.prodModel.price;
+    }
+
+    function getShapeName(selectedShape) {
+      return selectedShape.selectedOption.product.prodBean.sfdcName;
+    }
+    
+    function allOptionsSelected(options) {
+      for (let i = 1; i < options.length; i++) {
+        if (!options[i].selectedOption) {
+          return false;
+        }
+      }
+      
+      return checkSizeSelections(options);
+    }
+
+    function checkSizeSelections(options) {
+      let shapeSelection, sizeSelection;
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].name == 'Shape') {
+          shapeSelection = options[i];
+        } else if (options[i].name == 'Size') {
+          sizeSelection = options[i];
+        }
+      }
+      if (shapeSelection && shapeSelection.selectedOption) {
+        if (shapeSelection.selectedOption.product.prodBean.SKU == 'RECTANGLE'
+          || shapeSelection.selectedOption.product.prodBean.SKU == 'OVAL') {
+          return sizeSelection && sizeSelection.selectedOption
+                  && (sizeSelection.selectedOption.selectedLengthFt != undefined)
+                  && (sizeSelection.selectedOption.selectedLengthIn != undefined)
+                  && (sizeSelection.selectedOption.selectedWidthFt != undefined)
+                  && (sizeSelection.selectedOption.selectedWidthIn != undefined);
+        } else { // square, circle that only has length component
+          return sizeSelection && sizeSelection.selectedOption
+                  && (sizeSelection.selectedOption.selectedLengthFt != undefined)
+                  && (sizeSelection.selectedOption.selectedLengthIn != undefined);
+        }
+      }
+    }
+
+    Handlebars.registerHelper('selectable', function (model) {
+      return model['safeName'] != 'Size';
+    });
+
+    Handlebars.registerHelper('safeName', function (name) {
+      return name.replace(' ', '-');
+    });
+
+    Handlebars.registerHelper('hasWidth', function (shape) {
+      return shape == 'Rectangle' || shape == 'Oval';
+    });
+
+    Handlebars.registerHelper('lengthLabelFor', function (shape) {
+      if (shape == 'Circle') {
+        return 'Diameter';
+      } else {
+        return 'Length';
+      }
+    });
+
+    function safeName(name) {
+      return name.replace(' ', '-');
+    }
+
+    Handlebars.registerHelper('initDK', function (dkModel) {
+      CCRZ.views.ProductDetailView.alxDynamicKit.dkModel = dkModel;
+
+      let dk = CCRZ.views.ProductDetailView.alxDynamicKit;
+      dk.options = [];
+      dk.dkModel.forEach(element => {
+        element.safeName = safeName(element.name);
+        dk.options.push({
+          name:element.safeName
+        });
+      });
+
+      CCRZ.models.DynamicKitSelectionModel = CCRZ.CloudCrazeModel.extend({
+        className: 'AB2CDynamicKitService',
+        fetch: function (sku, shape, lenIn, widIn, compSKUs, callback) {
+          this.invokeCtx('getPriceForConfig', sku, shape, lenIn, widIn, compSKUs, function (response, event) {
+            if (!response.success) {
+                console.error(response.data);
+            } else {console.log(response.data);}
+            callback(response);
+          }, { nmsp: false, buffer: false });
+        },
+        updateCart: function (cartId, label, callback) {
+          this.invokeCtx('setDynamicKitPricingOnCart', cartId, label, function (response, event) {
+            if (!response.success) {
+                console.error(response.data);
+            }
+            callback(response);
+          }, { nmsp: false, buffer: false });
+        }
+      });
+
+      CCRZ.pubSub.on('view:dynamicKitCalc:renderPrice', function (price, loading) {
+        const calcTemplate = $('#alx-dk-price-output-template').html();
+        let compiled = Handlebars.compile(calcTemplate);
+        $('#alx-dk-output').html(compiled({
+            loading: loading,
+            calcPrice: price,
+            salePrice: CCRZ.views.ProductDetailView.alxDynamicKit.prodModel.savings
+        }));
+      });
+
+      CCRZ.pubSub.on('alx_updateCartPrice', function (cartId, label) {
+        const dkPriceModel = new CCRZ.models.DynamicKitSelectionModel();
+        dkPriceModel.updateCart(cartId, label, function (response) {
+          if (response) {
+            console.log('update cart response:' + response.data);
+          } else {
+            console.warn('Price could not be calculated for this configuration.');
+            console.warn(response.data);
+          }
+        });
+      });
+
+    }); //initDK helper
+
+    function updateCart(cartId) {}
+  </script>
+    
+</apex:component>

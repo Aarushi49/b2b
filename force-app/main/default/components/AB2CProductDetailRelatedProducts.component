@@ -1,0 +1,62 @@
+<apex:component controller="AB2CProductController" rendered="{!IF(contains($CurrentPage.Name,'ccrz__ProductDetails'), true, false)}">
+    <c:AB2CFeaturedProduct ></c:AB2CFeaturedProduct>
+    <c:AB2CFeaturedProductCarousel ></c:AB2CFeaturedProductCarousel>
+
+    <script id="RelatedProductsPartialTemplate" type="text/template">
+        {{#if .}}
+            <div class="alx-related-products">
+                <div class="alx-loading-circle"></div>   
+            </div>
+            {{initializeRelatedProducts .}}
+        {{/if}}
+    </script>
+
+    <script id="ProductDetailRelatedProductsTemplate" type="text/template">
+        <h2 class="text-center mt-3 mb-4">Similar Products</h2>
+        {{> FeaturedProductsPartialTemplate .}}
+    </script>
+
+    <script>
+        Handlebars.registerHelper('initializeRelatedProducts', function (relatedProducts) {
+            if (relatedProducts && relatedProducts.length > 0) {
+                const relatedProductIds = relatedProducts.map(function (rp) { return rp.relatedProduct });
+                CCRZ.models.PdpRelatedProductsModel = CCRZ.CloudCrazeModel.extend({
+                    className: 'AB2CProductController',
+                    fetch: function (callback) {
+                        this.invokeCtx('getProducts', relatedProductIds, function (response, event) {
+                            if (!response.success) {
+                                console.error(response.data);
+                            }
+                            callback(response.data);
+                        }, { nmsp: false, buffer: false });
+                    }
+                });
+
+                CCRZ.views.ProductDetailRelatedProductsView = CCRZ.CloudCrazeView.extend({
+                    viewName: "ProductDetailRelatedProductsView",
+                    templateDesktop: CCRZ.util.template('ProductDetailRelatedProductsTemplate'),
+                    templateSelector: '.alx-related-products',
+                    init: function (options) {
+                        const thisView = this;
+                        thisView.pdpRelatedProducts = new CCRZ.models.PdpRelatedProductsModel();
+                        thisView.pdpRelatedProducts.fetch(function (response) {
+                            if (response) {
+                                thisView.model = response;
+                                thisView.render();
+                            } else {
+                                console.warn('No featured products found for this category.');
+                                $(thisView.templateSelector).html('');
+                            }
+                        });
+                    },
+                    renderDesktop: function () {
+                        this.setElement(this.templateSelector);
+                        this.$el.html(this.templateDesktop(this.model));
+                    },
+                });
+
+                CCRZ.ProductDetailRelatedProductsView = new CCRZ.views.ProductDetailRelatedProductsView({});
+            }
+        });
+    </script>
+</apex:component>

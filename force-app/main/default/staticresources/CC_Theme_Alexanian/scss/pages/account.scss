@@ -1,0 +1,80 @@
+@import '../base/variables';
+
+.alx-act-nav {
+  h2 {
+    font-size: 0.875rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 0;
+    margin-top: 1.625rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+
+    li {
+      margin-top: 1.25rem;
+      a {
+        font-size: 0.875rem;
+        text-decoration: none;
+        color: $charcoal;
+        &:hover {
+          text-decoration: underline;
+          color: $charcoal;
+        }
+      }
+    }
+    
+  }
+}
+
+.alx-act-card {
+  background: $snow;
+  border: 1px solid $outline-grey;
+  padding: 0.9375rem 0.9375rem 0.875rem;
+  margin-bottom: 0.9375rem;
+
+  .alc-act-card-header {
+    margin-bottom: 1.25rem;
+
+    legend, h2 {
+      margin-bottom: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+  }
+
+
+  .gotoSectionContactInfoEdit {
+    white-space: nowrap;
+  }
+
+  .alx-act-field {
+    display: flex;
+    align-items: center;
+
+    .alx-pd-label {
+      margin-bottom: 0;
+    }
+    
+    p {
+      margin-left: 0.25rem;
+      margin-bottom: 0;
+      font-size: 0.8125rem;
+      line-height: 1.77;
+    }
+  }
+
+  button {
+    &.alx-hidden-btn {
+      visibility: hidden;
+      height: 1px;
+      width: 1px;
+      padding: 0;
+      border: none;
+      position: absolute;
+    }
+  }
+
+}

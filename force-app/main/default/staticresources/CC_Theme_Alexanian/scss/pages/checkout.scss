@@ -1,0 +1,158 @@
+@import "../base/variables";
+
+.alx-light-bg-section {
+  padding: 1rem;
+  background: $snow;
+  border: 1px solid $outline-grey;
+  min-height: 2rem;
+}
+
+// Order summary/totals widget
+.alx-totals-section {
+  height: fit-content;
+
+  table {
+    margin: 1rem 0;
+    table-layout: fixed;
+    font-size: 0.8rem;
+    width: 100%;
+    text-align: left;
+
+    &.alx-totals-products tr {
+      & :first-child {
+        // numbering
+        color: $warm-grey;
+        width: 1.2rem;
+      }
+      & :nth-of-type(2) {
+        // product name
+        width: auto;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      & :nth-of-type(3) {
+        // quantity
+        width: 3rem;
+      }
+      & :last-child {
+        // price
+        width: 4rem;
+        text-align: right;
+        &.sale {
+          color: $rouge;
+        }
+      }
+    }
+
+    &.alx-totals-prices tr {
+      & :first-child {
+        // price name
+        text-transform: uppercase;
+        text-align: right;
+        padding-right: 1rem;
+      }
+    }
+  }
+}
+
+table.alx-order-items {
+  table-layout: fixed;
+  width: 100%;
+  font-size: 0.825rem;
+  th {
+    color: $warm-grey;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid $snow;
+  }
+
+  tr {
+    & > :first-child {
+      // product details
+      .alx-product-image {
+        max-width: 100%;
+      }
+      .alx-order-item-details {
+        a {
+          text-transform: uppercase;
+          font-weight: 900;
+        }
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+      }
+    }
+    & > :nth-of-type(2) {
+      // quantity
+      width: 6rem;
+      text-align: right;
+    }
+    & > :nth-of-type(3) {
+      // price
+      width: 6rem;
+      text-align: right;
+      .sale {
+        color: $rouge;
+      }
+    }
+  }
+}
+
+.alx-checkout-review-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  overflow: hidden;
+}
+
+.alx-badge {
+  color: $white;
+  border-radius: 50%;
+  background: $black;
+  display: inline-block;
+  padding: 0.5rem 0.7rem;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  line-height: 0.9;
+  vertical-align: top;
+}
+
+// Payment page, stored payments
+.alx-stored-payments {
+  .alx-payment-method-container {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: -1px;
+    border: 1px solid $outline-grey;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    input[type="radio"] {
+      width: 0;
+
+      &::after {
+        background: $snow;
+        content: "";
+        width: 3rem;
+        height: 3rem;
+        position: absolute;
+        right: 3rem;
+        margin-top: -1rem;
+        border-radius: 50%;
+      }
+
+      &:checked::after {
+        background: url(../../images/icons/ic-check-circle.svg);
+        background-size: contain;
+        filter: invert(40%) sepia(85%) saturate(425%) hue-rotate(94deg)
+          brightness(98%) contrast(93%);
+      }
+    }
+  }
+}

@@ -1,0 +1,575 @@
+<apex:component >
+  <c:AB2CAddress ></c:AB2CAddress>
+  <script id="AccountsAddressesPartialTemplate" type="text/template">
+    {{#if (initializeAccountsAddresses .)}}
+      <div class="alx-address-book">
+          <div class="alx-loading-circle"></div>   
+      </div>
+    {{/if}}
+  </script>
+
+  <script id="AccountsAddressesTemplate" type="text/template">
+    <div class="alx-act-card cc_myaccount_changePassword">
+      <div class="messagingSection-addressBook-Error" style="display: none"></div>
+      <div class="messagingSection-addressBook-Warning" style="display: none"></div>
+      <div class="messagingSection-addressBook-Info" style="display: none"></div>      
+      
+      <div class="d-flex alc-act-card-header">
+        <h2>{{pageLabelMap 'MyAccount_AddressBook'}}</h2>
+      </div>
+      <p class="cc_add_address mb-3">
+        {{#if preventAddrEdit}} {{else}} <button type="button" class="addAddress btn btn-primary cc_add_address_btn" data-id="">{{pageLabelMap 'AddressBook_Add_New_Address'}}</button>{{/if}}
+      </p>
+      <p class="alx-pd-label">{{addressList.length}} result{{#ifGreater addressList.length 1}}s{{/ifGreater}} found.</p>
+
+      <table class="table table-responsive-sm">
+        <thead>
+          <tr>
+            <th>{{pageLabelMap 'Address'}}</th>
+            <th>
+              {{pageLabelMap 'ProductDetails_DocumentTab_Type'}}
+            </th>
+            <th class="w-25">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each this.addressList}}
+            <tr>
+              <td>
+                {{> AddressPartialTemplate this.addressBean}}
+              </td>
+              <td>
+                {{#each addressTypes}}
+                <p>
+                  {{#if isDefault}}
+                    Default {{toLowerCase addressType}} address
+                  {{else}}
+                    {{addressType}} address
+                  {{/if}}
+                </p>
+                {{/each}}
+              </td>
+              <td>
+                <button type="button" class="openModalAddr btn btn-default btn-sm mr-3 cc_open_modal_addr" data-id="{{sfid}}">{{pageLabelMap 'Action_Edit'}}</button>
+                <button type="button" class="deleteAddress btn btn-default btn-sm cc_delete_addr" data-id="{{sfid}}">{{pageLabelMap 'Action_Remove'}}</button>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      <div id="AB2CmodalSec"></div>
+    </div>
+  </script>
+
+  <script id="AB2CAddressEditDialog" type="text/template">
+    <div id="editMod_{{sfid}}" class="modal fade cc_modal cc_addressbook_edit_modal" tabindex="-1" role="dialog" aria-hidden="true">
+     <div class="modal-dialog" role="document">
+      <div class="modal-content cc_modal_content">
+
+       <div class="modal-header justify-content-between">
+          <span></span>
+          {{#if sfid}}
+            <h3 id="myModalLabel">{{pageLabelMap 'Edit'}} {{pageLabelMap 'Address'}}</h3>
+          {{else}}
+            <h3 id="myModalLabel">{{pageLabelMap 'AddressBook_Add_New_Address'}}</h3>
+          {{/if}}
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+            <span class="alx-ic ic-close"></span>
+            <span class="sr-only">Close</span>
+          </button>
+       </div>
+
+       <div class="modal-body cc_modal-body">
+        <div class="addrModal-messagingSection-Error" style="display: none"></div>
+
+        <form id="editAddressForm">
+          <input type="hidden" name="bookSfid" value="{{this.bookSfid}}" />
+          <input type="hidden" name="sfid" value="{{addressBean.sfid}}" />
+          <input type="hidden" name="addressBean.partnerId" value="{{addressBean.partnerId}}" />
+          <input type="hidden" name="addressBean.sfid" value="{{addressBean.sfid}}" />
+          <input class="cc_companyName" type="hidden" value="{{addressBean.companyName}}" name="addressBean.companyName"/>
+          <input class="cc_address3" type="hidden" value="{{addressBean.address3}}" name="addressBean.address3"/>
+
+          {{#if addressBean.addrReadOnly}}
+            <input type="checkbox" name="addressBean.addrReadOnly" value="{{addressBean.addrReadOnly}}" checked="checked" style="display:none" />
+          {{else}}
+            <input type="checkbox" name="addressBean.addrReadOnly" value="false" style="display:none" />
+          {{/if}}
+
+          <div class="row">
+            <div class="form-group col-12">
+              <label>{{pageLabelMap 'MyAccount_CountryPH'}}*</label>
+              <select name="addressBean.countryCode" class="countryListing form-control addressBean.Field addressBean.country">
+                <option>--Select--</option>
+                {{#each countryList}}
+                  <option value="{{value}}">{{label}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div class="form-group col-12">
+              <label>{{pageLabelMap 'MyAccount_FirstNamePH'}}*</label>
+              <input class="form-control cc_firstName" type="text" value="{{addressBean.firstName}}" name="addressBean.firstName"/>
+            </div>
+            <div class="form-group col-12">
+              <label>{{pageLabelMap 'MyAccount_LastNamePH'}}*</label>
+              <input class="form-control cc_lastName" type="text" value="{{addressBean.lastName}}" name="addressBean.lastName"/>
+            </div>
+
+            <div class="form-group col-12">
+              <label>{{pageLabelMap 'MyAccount_Address1PH'}}*</label>
+              <input class="form-control cc_address1" type="text" value="{{addressBean.address1}}" name="addressBean.address1"/>
+            </div>
+            <div class="form-group col-12">
+              <label>{{pageLabelMap 'MyAccount_Address2PH'}}</label>
+              <input class="form-control cc_address2" type="text" value="{{addressBean.address2}}" placeholder="(Optional)" name="addressBean.address2"/>
+            </div>
+            <div class="form-group col-12">
+              <label>{{pageLabelMap 'MyAccount_CityPH'}}*</label>
+              <input class="form-control cc_city" type="text" value="{{addressBean.city}}" name="addressBean.city"/>
+            </div>
+            <div class="form-group col-12">
+              <label id="addressProvince">Province*</label>
+              <div class="stateSection"></div>
+            </div>
+            <div class="form-group col-12">
+              <label id="addressPostal">{{pageLabelMap 'MyAccount_PostalPH'}}</label>
+              <input class="form-control alx-postal cc_postal text-uppercase" type="text" value="{{addressBean.postalCode}}" name="addressBean.postalCode"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="form-group col-12">
+              <div class="form-check">
+                <input type="checkbox" id="addressShippingDefault" name="addressShippingDefault" value="true" class="form-check-input shipping_options shippingBox" {{isDefaultType 'Shipping'}} />
+                <label class="form-check-label" for="addressShippingDefault">Make this my default shipping address</label>
+              </div>
+            </div>
+
+            <div class="form-group col-12">
+              <div class="form-check">
+                <input type="checkbox" id="addressBillingDefault" name="addressBillingDefault" value="true" class="form-check-input shipping_options billingBox" {{isDefaultType 'Billing'}} />
+                <label class="form-check-label" for="addressBillingDefault">Make this my default billing address</label>
+              </div>
+            </div>
+          </div>
+
+        </form>
+        <p class="alx-form-text alx-no-wrap  ml-auto">* = required</p>
+      </div>
+      <div class="modal-footer justify-content-start">
+        <input type="button" class="btn btn-primary saveAddr cc_save_addr" data-id="{{sfid}}" value="{{pageLabelMap 'Save'}}"/>
+        <input type="button" class="btn btn-link cc_cancel_addr cancelAddr" data-id="{{sfid}}" value="{{pageLabelMap 'Cancel'}}"/>
+      </div>
+     </div>
+    </div>
+  </script>
+
+  <script>
+    Handlebars.registerPartial("AddressPartialTemplate", document.getElementById("AddressPartialTemplate").innerHTML);
+
+    Handlebars.registerHelper('isDefaultType', function (type) {
+      if (!this.addressTypes) {
+        return '';
+      }
+      const addressType = this.addressTypes.find((address) => address.addressType === type);
+      if (addressType && addressType.isDefault) {
+        return 'checked'
+      } else {
+        return ''
+      }
+    });
+
+    Handlebars.registerHelper('initializeAccountsAddresses', function (context) {
+      if (context) {
+        CCRZ.models.AddressModel = CCRZ.CloudCrazeModel.extend({
+          className: 'cc_ctrl_myaccountRD',
+          initialize: function (dataList) {
+            this.set(this.parse(dataList));
+          },
+          idAttribute: "sfid"
+        });
+
+        CCRZ.collections.AddressList = CCRZ.CloudCrazePageable.extend({
+          mode: "client",
+          state: {
+            firstPage: 1,
+            pageSize: parseInt(CCRZ.getPageConfig('pgbl.ord', true) ? CCRZ.getPageConfig('pgbl.pageSize', '3') : '2000')
+          },
+          model: CCRZ.models.AddressModel,
+          className: 'cc_ctrl_myaccountRD',
+          initialize: function (dataList) {
+            this.reset(dataList);
+          },
+          fetchAllNavData: function (state, formdata, callback) {
+            var coll = this;
+            this.invokeContainerLoadingCtx($('.deskLayout'), "fetchAddressBooks",
+              formdata, function (response) {
+                if (response && response.success) {
+                  callback(response.data);
+                } else {
+                  CCRZ.pubSub.trigger("pageMessage", response);
+                }
+              }, { escape: false });
+          },
+          filter: function (value) {
+            var col = this;
+            $.each(col, function (index) {
+              var address = col.at(index);
+              if (value == 'All' || value == address.get("defaultAddressType") || address.get("addressTypes").length == 2) {
+                address.set('hide', false);
+              } else {
+                address.set('hide', true);
+              }
+            });
+          },
+          editEntity: function (addressId, updatedData, callback) {
+            var coll = this;
+            var jsonData = JSON.stringify(updatedData);
+            this.invokeContainerLoadingCtx($('.deskLayout'), 'saveAddress', jsonData, function (response) {
+              if (response && response.success) {
+                coll.fetch(callback);
+              } else {
+                CCRZ.pubSub.trigger("pageMessage", response);
+              }
+            });
+          },
+          deleteEntity: function (addressId, callback) {
+            var coll = this;
+            this.invokeContainerLoadingCtx($('.deskLayout'), 'deleteAddress', addressId, function (response) {
+              coll.fetch(callback);
+            });
+          }
+        });
+
+        CCRZ.views.addressEditModal = CCRZ.CloudCrazeView.extend({
+          templateBoth: CCRZ.util.template('AB2CAddressEditDialog'),
+          viewName: "addressEditModal",
+          events: {
+            "change .countryListing": "changeStates"
+          },
+          initialize: function () {
+            this.stateView = new CCRZ.views.StateView();
+          },
+          render: function (modelData, callback) {
+            this.dataSet = modelData;
+            this.setElement($('#AB2CmodalSec'));
+            var v = this;
+            v.$el.html(v.templateBoth(this.dataSet.toJSON()));
+            if (this.dataSet.attributes.addressBean && this.dataSet.attributes.addressBean.stateCode) {
+              $('.countryListing').val(this.dataSet.attributes.addressBean.countryCode);
+              this.renderStates(this.dataSet.attributes.addressBean.stateCode, this.dataSet.attributes.addressBean.countryCode);
+            } else if (this.dataSet.attributes.addressBean && this.dataSet.attributes.addressBean.state) {
+              $('.countryListing').val(this.dataSet.attributes.addressBean.countryCode);
+              this.renderStates(this.dataSet.attributes.addressBean.state, this.dataSet.attributes.addressBean.countryCode);
+            } else {
+              var countryModel = CCRZ.geoCodes.countryList.find(function (item) {
+                return item.attributes.value === 'CA';
+              });
+              if (countryModel) {
+                $('.countryListing').val('CA');
+                this.renderStates('', countryModel.attributes.value);
+              } else {
+                this.renderStates('', '');
+              }
+            }
+            if (!CCRZ.disableAdaptive) {
+              CCRZ.handleModalDisplay();
+            }
+            if (this.dataSet.attributes.addressBean) {
+              this.handleCountryChange(this.dataSet.attributes.addressBean.countryCode)
+            } else {
+              this.handleCountryChange('CA');
+            }
+            callback();
+            CCRZ.pubSub.trigger("view:" + this.viewName + ":refresh", this);
+          },
+          changeStates: function (event) {
+            var selectedCountry = $(event.target).val();
+            this.renderStates('', selectedCountry);
+            this.handleCountryChange(selectedCountry);
+          },
+          renderStates: function (stateVal, countryVal) {
+            this.stateView.render('state', stateVal, 'form-control', CCRZ.geoCodes.filterStates(countryVal).toJSON(), 'addressBean.', '.stateSection', CCRZ.processPageLabelMap('MyAccount_StatePH').toString());
+            $('.stateSection select').prepend('<option value="">--Select--</option>');
+            if (!stateVal) {
+              $('.stateSection select').val("");
+            }
+          },
+          handleCountryChange: function (countryCode) {
+            if (!countryCode || countryCode === 'CA') {
+              $('#addressProvince').text('Province*');
+              $('#addressPostal').text('Postal Code');
+              $('.alx-postal').val(null);
+              $('.alx-postal').attr('placeholder', 'A1B 2C3');
+              $('.alx-postal').mask('S0S 0S0');
+            } else if (countryCode === 'US') {
+              $('#addressProvince').text('State*');
+              $('#addressPostal').text('Zip Code');
+              $('.alx-postal').val(null);
+              $('.alx-postal').attr('placeholder', '12345');
+              $('.alx-postal').mask('00000');
+            } else {
+              $('#addressProvince').text('State/Province');
+              $('#addressPostal').text('Postal/Zip Code');
+              $('.alx-postal').val(null);
+              $('.alx-postal').attr('placeholder', '');
+              $('.stateSection input').attr('placeholder', '');
+              $('.alx-postal').unmask();
+            }
+          }
+        });
+
+        CCRZ.views.myAddressBookView = CCRZ.CloudCrazeView.extend({
+          templateDesktop: CCRZ.util.template('AccountsAddressesTemplate'),
+          templateSelector: '.alx-address-book',
+          viewName: "myAddressBookView",
+          managedSubView: true,
+          events: {
+            "click .openModalAddr": "editEntity",
+            "click .cancelAddr": "cancelEdit",
+            "click .addAddress": "createEntity",
+            "click .saveAddr": "saveEntity",
+            "click .deleteAddress": "deleteAddress",
+            "change #addressView": "setView"
+          },
+          init: function () {
+            // Handlebars.registerPartial("addressDisplay", $("#AddressDisplay").html());
+            this.listenTo(this.model, "reset", this.ready);
+            //this.model.fetch();
+            this.dataLoadStarted = false;
+            this.dataReady = false;
+            this.dataModel = this.model;
+            //this.addressList = new CCRZ.collections.AddressList();
+            this.dataSet = new Object();
+            this.render();
+          },
+          ready: function (addressList, args) {
+            this.addressList = addressList;
+            this.dataReady = true;
+            this.render();
+          },
+          preRender: function () {
+            if (!this.dataLoadStarted) {
+              this.dataModel.fetch();
+              this.dataLoadStarted = true;
+            }
+          },
+          renderDesktop: function () {
+            if (this.dataReady) {
+              var v = this;
+              v.dataSet.addressList = v.addressList.toJSON();
+              v.dataSet.preventAddrEdit = CCRZ.myaccountModel.attributes.preventAddrEdit;
+              v.setElement(this.templateSelector);
+              v.$el.html(v.templateDesktop(v.dataSet));
+            }
+          },
+          postRender: function () {
+            if (this.dataReady) {
+              this.trigger('pagination:host:rendered', this, {
+                hostView: this.viewName
+              });
+            }
+          },
+          createEntity: function () {
+            var newBean = new CCRZ.models.AddressModel();
+            newBean.set('sfid', '');
+            this.openModal(newBean);
+          },
+          saveEntity: function (event) {
+            var objLink = $(event.target);
+            var id = objLink.data("id");
+            var v = this;
+            var formData = form2js('editAddressForm', '.', false, function (node) { }, false, true);
+            // Set addressTypes
+            let newAddressTypes = [];
+            if (formData.addressShippingDefault) {
+              newAddressTypes.push({
+                addressType: "Shipping", isDefault: true
+              });
+            }
+            if (formData.addressBillingDefault) {
+              newAddressTypes.push({
+                addressType: "Billing", isDefault: true
+              });
+            }
+            formData.addressTypes = newAddressTypes;
+            formData.addressBean.country = $('select.countryListing option:selected').text();
+            var isValid = false;
+            isValid = $("#editAddressForm").valid();
+            if (isValid) {
+              this.closeModal(id);
+              this.addressList.editEntity(id, formData, function (id) {
+                v.addressList.fetch(function () { v.render(); });
+              });
+            }
+          },
+          editEntity: function (event) {
+            var objLink = $(event.target);
+            var id = objLink.data("id");
+            var selList = this.addressList.get(id);
+            this.openModal(selList);
+          },
+          cancelEdit: function (event) {
+            var objLink = $(event.target);
+            var id = objLink.data("id");
+            this.closeModal(id);
+          },
+          openModal: function (addrBean) {
+            addrBean.set({
+              countryList: getAvailableCountryList()
+            });
+            var v = this;
+            var modalView = new CCRZ.views.addressEditModal();
+            modalView.render(addrBean, function () {
+              if (CCRZ.disableAdaptive) {
+                $('#editMod_' + addrBean.attributes.sfid).modal();
+              } else {
+                $('#editMod_' + addrBean.attributes.sfid).modal("show");
+              }
+            });
+            v.initValidation();
+          },
+          closeModal: function (idVal) {
+            $("#editMod_" + idVal).modal("hide");
+          },
+          deleteAddress: function (event) {
+            var objLink = $(event.target);
+            var id = objLink.data("id");
+            var v = this;
+            this.addressList.deleteEntity(id, function () {
+              v.addressList.fetch(function () { v.render(); });
+            });
+          },
+          setView: function (event) {
+            var viewValue = $(event.currentTarget).val();
+            this.addressList.filter(viewValue);
+            this.renderPhone();
+          },
+          initValidation: function () {
+            $('#editAddressForm').validate({
+              invalidHandler: function (event1, validator1) {},
+              rules: {
+                "addressBean.firstName": {
+                  required: true
+                },
+                "addressBean.lastName": {
+                  required: true
+                },
+                "addressBean.address1": {
+                  required: true
+                },
+                "addressBean.countryCode": {
+                  required: true
+                },
+                "addressBean.stateCode": {
+                  required: true
+                },
+                // If there is no PickList to choose from, the addressBean uses state instead of stateCode
+                "addressBean.state": {
+                  required: true
+                },
+                "addressBean.city": {
+                  required: true
+                },
+                "addressBean.postalCode": {
+                  maxlength: 10,
+                  required: true
+                }
+              },
+              messages: {
+                "addressBean.firstName": {
+                  required: "First name is required"
+                },
+                "addressBean.lastName": {
+                  required: "Last name is required"
+                },
+                "addressBean.address1": {
+                  required: "Address is required"
+                },
+                "addressBean.countryCode": {
+                  required: "Country code is required"
+                },
+                "addressBean.stateCode": {
+                  required: "State is required"
+                },
+                "addressBean.state": {
+                  required: "State is required"
+                },
+                "addressBean.city": {
+                  required: "City is required"
+                },
+                "addressBean.postalCode": {
+                  maxlength: "POSTAL_CODE_LENGTH_ERROR",
+                  required: "Postal code is required"
+                }
+              },
+              errorPlacement: function (error, element) {
+                error.addClass('invalid-feedback');
+                element.closest('.form-group').append(error);
+              }
+            });
+          }
+        });
+
+        const addressBookList = new CCRZ.collections.AddressList(null, {
+          comparator: function (item1, item2) {
+            const sortBy = CCRZ.getPageConfig('addr.srtBy', 'sfdcName');
+            //set defaults to whatever column names are passed in
+            let sortAttr1 = sortBy;
+            let sortAttr2 = sortBy;
+
+            //CCRZ-2163 special logic to determine if we need to sort on state, or state code because only one column will be populated.
+            if ('state' === sortBy || 'stateCode' === sortBy) {
+              //first item determine which column to use... US and CA counties use stateCode
+              if ('US' === item1.attributes.addressBean['countryCode']) {
+                sortAttr1 = 'stateCode';
+              } else if ('CA' === item1.attributes.addressBean['countryCode']) {
+                sortAttr1 = 'stateCode';
+              } else {
+                //non US and CA states are just the state name
+                sortAttr1 = 'state';
+              }
+
+              //second item determine which column to use... US and CA counties use stateCode
+              if ('US' === item2.attributes.addressBean['countryCode']) {
+                sortAttr2 = 'stateCode';
+              } else if ('CA' === item2.attributes.addressBean['countryCode']) {
+                sortAttr2 = 'stateCode';
+              } else {
+                //non US and CA states are just the state name
+                sortAttr2 = 'state';
+              }
+            }
+            var asc = CCRZ.getPageConfig('addr.srtAsc', true) ? 1 : 0;
+            var aAttr = item1.attributes.addressBean[sortAttr1];
+            var bAttr = item2.attributes.addressBean[sortAttr2];
+            if (!aAttr || !bAttr) {
+              aAttr = item1.attributes.addressBean['sfdcName'];
+              bAttr = item2.attributes.addressBean['sfdcName'];
+            }
+            if (aAttr && bAttr) {
+              if (aAttr === bAttr) {
+                return 0;
+              }
+              if (asc) {
+                return aAttr > bAttr ? 1 : -1;
+              }
+              else {
+                return aAttr < bAttr ? 1 : -1;
+              }
+            } else {
+              return 0;
+            }
+          },
+          full: true
+        });
+
+        CCRZ.MyAccount.addressBooks = new CCRZ.views.myAddressBookView({
+          model: addressBookList
+        });
+        return true;
+      }
+      return false
+    });
+  </script>
+</apex:component>

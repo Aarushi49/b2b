@@ -1,0 +1,145 @@
+<apex:component rendered="{!IF(contains($CurrentPage.Name,'ccrz__CheckoutNew'), true, false)}">
+    <c:AB2CCheckoutShippingDetails ></c:AB2CCheckoutShippingDetails>
+    <c:AB2CCheckoutPayment ></c:AB2CCheckoutPayment>
+    <c:AB2CCheckoutReview ></c:AB2CCheckoutReview>
+    <c:AB2CCheckoutTotals ></c:AB2CCheckoutTotals> 
+    <c:AB2CPaymentsAcceptedFooter ></c:AB2CPaymentsAcceptedFooter>
+
+    <script id="Cart-OrderAttributeItems" type="text/template">
+        <!-- Not being used -->
+    </script>
+
+    <script id="CheckoutHeader-Desktop" type="text/template">
+        <div id="breadcrumb_desktop_container"></div>
+    </script>
+
+    <script id="Checkout-Container" type="text/template">
+        <div class="container-xl">
+            <h1 class="text-center">Checkout</h1>
+            <div class="row">
+                <div class="col-md-8 checkoutContent">
+                    <div class="alx-loading-circle"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="alx-totals-section alx-light-bg-section"></div>
+                </div>
+            </div>
+            {{> PaymentsAcceptedPartialTemplate}}
+        </div>
+    </script>
+
+    <script>
+        jQuery(function ($) {
+            console.log('in checkout -- ', this.shippingcharge);
+            $('.phoneLayout > .home_slider').remove();
+            renderCustomBreadcrumb([{ label: "Checkout" }]);
+
+            // Update the totals section
+            const totalsTemplate = Handlebars.compile($("#TotalSection").html());
+            CCRZ.pubSub.on("view:cartCheckoutView:refresh", function (theView) {
+                $('.alx-totals-section').html(totalsTemplate(CCRZ.cartCheckoutModel.attributes));
+                renderCustomBreadcrumb([{ label: "Checkout" }]);
+            });
+
+            const checkoutContainerTemplate = Handlebars.compile($("#Checkout-Container").html());
+            $('.contentBody').html(checkoutContainerTemplate());
+
+            // Change required subviews on checkout page
+            CCRZ.pubSub.on("view:cartCheckoutView:awaitingSubViewInit", function (theView) {
+                // Original views are: [0] user info, [1] shipping, [2] order review, [3] payment. 
+                // We need: [0] user info, [1] payment
+                theView.subViewArray[1] = theView.subViewArray[3];
+                theView.subViewArray.pop();
+                theView.subViewArray.pop();
+                CCRZ.pubSub.trigger("view:cartCheckoutView:subViewInit", theView);
+            });
+
+            CCRZ.pubSub.on("ccrz.models:CartCheckout:defined", function () {
+                CCRZ.models.CartCheckout = CCRZ.models.CartCheckout.extend({
+                    fetch: function (cartId, callback) {
+                        var model = this;
+                        this.invokeContainerLoadingCtx($('body'), 'fetchCart', function (response) {
+                            if (response && response.success && response.data) {
+                                if (response.data.attributeList) {
+                                    model.attributeList = model.parseAttributes(response.data);
+                                }
+                                model.set(model.parse(response.data));
+                            }
+                            callback();
+                        }, { escape: false });
+                    },
+                });
+            });
+
+            // Extend/Modify the CartCheckoutView
+            CCRZ.pubSub.on("ccrz.views:cartCheckoutView:defined", function () {
+                CCRZ.views.cartCheckoutView = CCRZ.views.cartCheckoutView.extend({
+                    init: function () {
+                        var v = this;
+                        this.subViewArray = new Array();
+                        this.errorView = new CCRZ.views.ErrorView();
+                        this.navView = new CCRZ.views.Nav({
+                            model: {
+                                locale: CCRZ.pagevars.userLocale,
+                                views: this.subViewArray
+                            }
+                        });
+
+                        this.model.fetch(CCRZ.pagevars.currentCartID, function () {
+                            if (v.model.attributes.messages && v.model.attributes.messages.length > 0) {
+                                v.subView = v.errorView;
+                                v.subView.initSetup(function () {
+                                    v.render();
+                                });
+                            } else {
+                                CCRZ.geoCodes.fetch(function () {
+                                    v.model.set({
+                                        countryList: getAvailableCountryList(),
+                                        shippingAddress: {
+                                            countryCode: 'CA',
+                                            state: 'ON',
+                                            countryList: getAvailableCountryList()
+                                        }
+                                    });
+                                    if (CCRZ.pagevars.pageConfig.isTrue('CO.useDef')) {
+                                        v.loadDefaultViews();//TEJ
+                                    }
+                                    if (CCRZ.pagevars.pageConfig.isTrue('CO.overrideFlow')) {
+                                        CCRZ.pubSub.on("view:cartCheckoutView:subViewInit", function (data) {
+                                            v.preProcessViews();
+                                            v.navView.model.views = v.subViewArray;
+                                            v.subView = v.subViewArray[0].view;
+                                            v.subView.initSetup(function () {
+                                                v.render();
+                                            });
+                                        });
+                                        CCRZ.pubSub.trigger("view:cartCheckoutView:awaitingSubViewInit", v);
+                                    }
+                                    else {
+                                        v.subView = v.subViewArray[0].view;
+                                        v.subView.initSetup(function () {
+                                            v.render();
+                                        });
+                                    }
+                                });
+                            }
+                        });
+
+                    },
+                    loadDesktopView: function () {
+                        if (this.subViewArray.length || this.subView) {
+                            if (this.subView)
+                                this.subView.setElement(this.$el);
+                            else {
+                                this.subView = this.subViewArray[0];
+                                this.subView.setElement(this.$el);
+                            }
+                            this.subView.render();
+                            this.updateNav();
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</apex:component>

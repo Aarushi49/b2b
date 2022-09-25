@@ -1,0 +1,173 @@
+<apex:component controller="AB2CAccountController">
+
+  <script id="MyAccountOrderListPartialTemplate" type="text/template">
+    {{#if (initializeOrderList .)}}
+      <div class="alx-order-list">
+        <div class="alx-loading-circle"></div>   
+      </div>
+    {{/if}}
+  </script>
+
+  <script id="MyAccountOrderListTemplate" type="text/template">
+
+    <p class="alx-pd-label">{{orderList.length}} result{{#ifLessThan orderList.length 1}}s{{/ifLessThan}} found.</p>
+    <table class="table table-responsive-sm">
+      <thead>
+        <tr>
+          <th>{{pageLabelMap 'MyOrdersInc_OrderDate'}}</th>
+          <th>{{pageLabelMap 'MyOrdersInc_AllOrderStatus'}}</th>
+          <th>{{pageLabelMap 'MyOrdersInc_OrderAmount'}}</th>
+          <th>{{pageLabelMap 'MyOrdersInc_OrderNumber'}}</th>
+          <th class="text-right">View Order Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each this.orderList}}
+          <tr class="alx-ord {{status}}">
+            <td>
+              <p>{{orderDateStr}}</p>
+            </td>
+            <td>
+              <p>{{pageLabelMap status}}</p>
+            </td>
+            <td>
+              <p>{{price totalAmount currencyIsoCode}}</p>
+            </td>
+            <td>
+              <p>{{name}}</p>
+            </td>
+            <td class="text-right">
+              <a href="#" data-id="{{encryptedId}}" class="gotoOrderDetails cc_goto_order_detailss">
+                <span class="alx-ic ic-keyboard-right"></span>
+              </a>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </script>
+
+  <script>
+
+
+    Handlebars.registerHelper('initializeOrderList', function (context) {
+      if (context) {
+
+        CCRZ.models.OrderSummaryModel = Backbone.Model.extend({
+          className: 'cc_ctrl_myaccountRD',
+          idAttribute: "sfid",
+          initialize: function (orderSummary) {
+            this.set(this.parse(orderSummary));
+          }
+        });
+
+        CCRZ.collections.AB2COrderList = CCRZ.CloudCrazePageable.extend({
+          mode: "client",
+          state: {
+            firstPage: 1,
+            pageSize: parseInt(CCRZ.getPageConfig('pgbl.ord', true) ? CCRZ.getPageConfig('pgbl.pageSize', '3') : '2000'),
+          },
+          searchFormData: {
+            ascending: "false"
+          },
+          model: CCRZ.models.OrderSummaryModel,
+          className: "cc_ctrl_myaccountRD",
+          initialize: function (dataList) {
+            this.reset(dataList);
+          },
+          fetchNavData: function (state, formData, callback) {
+            var coll = this;
+            this.invokeContainerLoadingCtx($('.deskLayout'), "performOrderSearch",
+              formdata, function (response) {
+                if (response && response.success) {
+                  callback(response.data);
+                } else {
+                  CCRZ.pubSub.trigger("pageMessage", response);
+                }
+              });
+          },
+          fetchAllNavData: function (state, formdata, callback) {
+            var coll = this;
+            this.invokeContainerLoadingCtx($('.deskLayout'), "performOrderSearch",
+              formdata, function (response) {
+                if (response && response.success) {
+                  callback(response.data);
+                } else {
+                  CCRZ.pubSub.trigger("pageMessage", response);
+                }
+              });
+          },
+          searchOrder: function (formdata, sortCriteria, ascending, callback) {
+            var coll = this;
+            this.invokeContainerLoadingCtx($('.deskLayout'), "performOrderSearch", "", "", formdata, sortCriteria, ascending, function (response) {
+              callback(response);
+            });
+          }
+        });
+
+        CCRZ.views.MyAccountOrderListView = CCRZ.CloudCrazeView.extend({
+          viewName: 'MyAccountOrderListView',
+          templateDesktop: CCRZ.util.template('MyAccountOrderListTemplate'),
+          templateSelector: '.alx-order-list',
+          events: {
+            "click .gotoOrderDetails": "gotoOrderDetails",
+          },
+          init: function () {
+            this.listenTo(this.model, "reset", this.ready);
+            this.dataLoadStarted = false;
+            this.dataReady = false;
+            this.dataModel = this.model;
+            this.render();
+          },
+          ready: function (orderList, args) {
+            this.orderList = orderList;
+            this.dataReady = true;
+            this.render();
+          },
+          renderDesktop: function () {
+            if (this.dataReady) {
+              var v = this;
+              v.data = {};
+              var formData = v.orderList.searchFormData || {};
+              //populate search order form data
+              v.data.searchOrder = formData.searchOrderInput;
+              v.data.searchOrderStatus = formData.searchOrderStatus;
+              v.data.fromDateStr = formData.fromDateStr;
+              v.data.toDateStr = formData.toDateStr;
+
+              v.data.orderList = v.orderList.toJSON();
+              v.data.orderStatusOpts = CCRZ.searchForm.jsonOrderStatusOptions;
+              v.setElement(this.templateSelector)
+              v.$el.html(v.templateDesktop(v.data));
+            }
+          },
+          preRender: function () {
+            if (!this.dataLoadStarted) {
+              this.dataModel.fetch();
+              this.dataLoadStarted = true;
+            }
+          },
+          postRender: function () {
+            if (this.dataReady) {
+              // this.updateDatePicker();
+              this.trigger('pagination:host:rendered', this, {
+                hostView: this.viewName
+              });
+            }
+          },
+          gotoOrderDetails: function (event) {
+            var objLink = $(event.currentTarget);
+            var id = objLink.data("id");
+            orderDetails(id);
+          }
+        });
+        var orderList = new CCRZ.collections.AB2COrderList();
+        CCRZ.MyAccountOrderListView = new CCRZ.views.MyAccountOrderListView({
+          model: orderList
+        });
+        return true;
+      }
+      return false;
+    });
+  </script>
+</apex:component>

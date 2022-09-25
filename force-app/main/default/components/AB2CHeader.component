@@ -1,0 +1,166 @@
+<apex:component >
+  <c:AB2CHeaderCart ></c:AB2CHeaderCart>
+
+  <script id="HeaderDesktop" type="text/template">
+    <a href="#mainContent" class="alx-main-content-link sr-only sr-only-focusable" tabindex="3">Skip to main content</a>
+    <nav class="navbar navbar-expand">
+      <div class="container-xl">
+
+        <div class="d-lg-none alx-ic ic-menu" tabindex="0" data-toggle="collapse" data-target="#navigationMenu" aria-controls="navigationMenu" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="sr-only">Toggle navigation</span>
+        </div>
+
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" id="alx-menu-link-StoreLocator" href="#">
+                <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-store-locator.svg')}" class="alx-nav-icon" alt=""/>
+                <span class="alx-menu-text">{{pageLabelMap 'Store_Locator'}}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="alx-menu-link-ContactUs" href="#">
+                <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-contact-us.svg')}" class="alx-nav-icon" alt=""/>
+                <span class="alx-menu-text">{{pageLabelMap 'Contact_Us'}}</span>
+              </a>
+            </li>
+            <li id="alx-menu-account" class="nav-item dropdown">
+              <a class="nav-link d-flex align-items-center" id="goToAccount" href="{{#if (pagevars 'isGuest')}}/signin{{else}}/my-account{{/if}}">
+                <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-my-account.svg')}" class="alx-nav-icon" alt=""/>
+                <span class="alx-menu-text text-left">{{pageLabelMap 'My_Account'}}</span>
+              </a>
+              <div class="dropdown-menu text-left">
+                <a id="goToEdit" class="dropdown-item" href="/my-account?viewState=editAccount">Edit My Profile</a>
+                <a id="goToOrders" class="dropdown-item" href="/my-account?viewState=myOrders">View My Orders</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#" onclick="logOutUser()">Sign Out</a>
+              </div>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="gotoWishlists" href="{{#if (pagevars 'isGuest')}}/signin?startUrl={{/if}}/my-account?viewState=myWishlists">
+                <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-heart.svg')}" class="alx-nav-icon" alt=""/>
+                <span class="alx-menu-text">Lists</span>
+              </a>
+            </li>
+            <li class="cc_my_chead nav-item">
+                <a href="#" id="cartHeader" class="chead cartHeaderLink" href="/cart"></a>
+                <!-- In this place will render the CartHeaderBrowser template-->
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </script>
+
+  <script>
+    CCRZ.remoteAction.forgotPassword = CCRZ.pagevars.namespace + 'cc_ctrl_Header.forgotPassword';
+
+    jQuery(function ($) {
+      Handlebars.registerPartial("CartHeaderPartialTemplate", document.getElementById("CartHeaderPartialTemplate").innerHTML);
+
+      Handlebars.registerHelper('hasCartCount', function () {
+        if (this.header && this.header.attributes) {
+          const count = this.header.attributes.cartCount;
+          if (count && count > 0) {
+            return 'alx-cart-count ';
+          }
+        }
+        return '';
+      });
+
+      CCRZ.headerModel = new CCRZ.models.headerModel({
+        cartId: CCRZ.pagevars.currentCartID,
+        viewState: "",
+        ipAddressLocKey: "g",
+        ipAddressLoc: "",
+        storefront: "",
+      });
+
+      CCRZ.headerNavModel = CCRZ.CloudCrazeModel.extend({});
+      CCRZ.views.headerView = CCRZ.CloudCrazeView.extend({
+        templateDesktop: CCRZ.util.template(CCRZ.uiProperties.headerView.desktop.tmpl),
+        templatePhone: CCRZ.util.template(CCRZ.uiProperties.headerView.phone.tmpl),
+        className: "cc_ctrl_Header",
+        viewName: "headerView",
+        maViewLinks: [],
+        init: function () {
+          const thisView = this;
+          thisView.headerMenu = new CCRZ.headerNavModel();
+          thisView.model = CCRZ.headerModel;
+          thisView.render();
+        },
+        registerNewView: function (viewName, title) {
+          this.maViewLinks.push({ viewState: viewName, linkLabel: title });
+        },
+        events: {
+          "click .chead": "goToCart",
+          "click #logoUrl": "goHome",
+          "click #goToEdit": "goToEdit",
+          "click #goToOrders": "goToOrders",
+          "click #gotoWishlists": "gotoWishlists",
+          "click #goToAccount": "goToAccount",
+        },
+
+        renderDesktop: function () {
+          $(this.el).html('');
+          this.setElement($(CCRZ.uiProperties.headerView.desktop.selector));
+          $(this.el).html(this.templateDesktop(this.model.toJSON()));
+        },
+        goToCart: function () {
+          window.location.href = "/cart" + CCRZ.buildQueryString('');
+        },
+        goHome: function (event) {
+          window.location.href = "/" + CCRZ.buildQueryString('');
+        },
+        goToEdit: function (event) {
+          this.goToMAS('editAccount');
+        },
+        goToOrders: function (event) {
+          this.goToMAS('myOrders');
+        },
+        goToAccount: function () {
+          this.goToMAS('viewAccount');
+        },
+        gotoWishlists: function () {
+          this.goToMAS('myWishlists');
+        },
+        goToMAS: function (vs) {
+          window.location.href = "/my-account" + CCRZ.buildQueryString('?viewState=' + vs);
+        },
+        showError: function (errorMsg) {
+          $(".error-msg").html(errorMsg);
+          $(".message_container").show();
+        },
+      });
+      CCRZ.headerView = new CCRZ.views.headerView({});
+
+      CCRZ.pubSub.on('view:Menu:refresh', function (theView) {
+        const menu = getMenuById('HeaderNav');
+        if (menu && menu.children) {
+          for (let menuItem of menu.children) {
+            $('#alx-menu-link-' + menuItem.menuId).attr('href', menuItem.linkURL);
+          }
+        }
+      });
+
+      CCRZ.pubSub.on('view:myAccountHeaderView:refresh', function (theView) {
+        // If user is logged in, show first name in header, and add dropdown menu of account links
+        if (!CCRZ.pagevars.isGuest && CCRZ.currentUser && CCRZ.currentUser.FirstName) {
+          const accountNavItem = $('#goToAccount .alx-menu-text');
+          accountNavItem.html(accountNavItem.text() + '<br><span class="text-muted">' + CCRZ.currentUser.FirstName + '</span>');
+
+          const dropdownMenu = $("#alx-menu-account .dropdown-menu");
+          $(document).on({
+            mouseenter: function () {
+              if (screenSize === "desktop")
+                dropdownMenu.addClass("show");
+            },
+            mouseleave: function () {
+              dropdownMenu.removeClass("show");
+            }
+          }, "#alx-menu-account");
+        }
+      });
+    });
+  </script>
+</apex:component>

@@ -1,0 +1,59 @@
+<apex:component controller="AB2CRecommendedProductsService">
+  <c:AB2CFeaturedProduct ></c:AB2CFeaturedProduct>
+
+  <script id="RecommendedProductsPartialTemplate" type="text/template">
+    {{#if .}}
+      <div class="alx-recommended-products">
+        <div class="alx-loading-circle"></div>   
+      </div>
+      {{initializeRecommendedProducts}}
+    {{/if}}
+  </script>
+
+  <script id="RecommendedProductsTemplate" type="text/template">
+    <h2 class="text-center mt-3 mb-4">Products You May Need</h2>
+    {{> FeaturedProductsPartialTemplate productList=this selectable='Y'}}
+  </script>
+
+  <script>
+    Handlebars.registerHelper('initializeRecommendedProducts', function () {
+      const cartId = CCRZ.pagevars.currentCartID;
+      CCRZ.models.RecommendedProductsModel = CCRZ.CloudCrazeModel.extend({
+        className: 'AB2CRecommendedProductsService',
+        fetch: function (callback) {
+          this.invokeCtx('getRecommendedProductsForCart', cartId, function (response, event) {
+            if (!response.success) {
+              console.error(response.data);
+            }
+            callback(response.data);
+          }, { nmsp: false, buffer: false });
+        }
+      });
+
+      CCRZ.views.RecommendedProductsView = CCRZ.CloudCrazeView.extend({
+        viewName: "RecommendedProductsView",
+        templateDesktop: CCRZ.util.template('RecommendedProductsTemplate'),
+        templateSelector: '.alx-recommended-products',
+        init: function (options) {
+          const thisView = this;
+          thisView.recommendedProducts = new CCRZ.models.RecommendedProductsModel();
+          thisView.recommendedProducts.fetch(function (response) {
+            if (response) {
+              thisView.model = response;
+              thisView.render();
+            } else {
+              console.warn('No recommended products found.');
+              $(thisView.templateSelector).html('');
+            }
+          });
+        },
+        renderDesktop: function () {
+          this.setElement(this.templateSelector);
+          this.$el.html(this.templateDesktop(this.model));
+        },
+      });
+
+      CCRZ.RecommendedProductsView = new CCRZ.views.RecommendedProductsView({});
+    });
+  </script>
+</apex:component>

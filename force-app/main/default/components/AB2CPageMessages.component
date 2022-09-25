@@ -1,0 +1,26 @@
+<apex:component >
+    <script>
+        CCRZ.pubSub.on("ccrz.views:PageMessagesView:defined", function () {
+            CCRZ.views.PageMessagesView = CCRZ.views.PageMessagesView.extend({
+                renderDesktop: function (messages) {
+                    for (let i in messages) {
+                        const msg = messages[i];
+                        if (msg.labelId && CCRZ.pagevars.pageLabels[msg.labelId]) {
+                            msg.message = CCRZ.pagevars.pageLabels[msg.labelId];
+                        }
+                        if (msg.message) {
+                            if (msg.type == 'CUSTOM') {
+                                $('.' + msg.classToAppend).append('<div class=\'' + this.getMessageClassName() + ' ' + this.getMessageSeverityStyle(msg) + '\'>' + msg.message + '</div>');
+                                $('.' + msg.classToAppend).show();
+                            } else if (msg.type == 'ALERT') {
+                                alert(msg.message);
+                            } else { // all other message types will appear in pre-configured HTML tag for page messages
+                                $('.default_page_message:first').append('<div ' + this.getMessageSeverityStyle(msg) + '\'>' + msg.message + '</div>');
+                            }
+                        }
+                    }
+                },
+            });
+        });
+    </script>
+</apex:component>

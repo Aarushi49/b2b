@@ -1,0 +1,200 @@
+<apex:component controller="AB2CAutocompleteService">
+
+  <script id="productSearchInput" type="text/template">
+    <div class="searchTopBarErrorMessage searchBoxWidgetError" ></div>
+    <div class="input-group">
+      <input type="text" class="form-control alx-product-search-text search_input" placeholder="Search Products" aria-label="Search" aria-describedby="search-button" 
+        data-trigger="manual" data-placement="bottom" data-content="{{pageLabelMap 'ProductSearch_Tooltip'}}">
+      <div class="input-group-append">
+        <button class="alx-append-btn alx-product-search-btn" type="Submit">
+          <div class="alx-ic ic-search" tabindex="0"><span class="sr-only">Search</span></div>
+        </button>
+      </div>
+    </div>
+  </script>
+
+  <script>
+    jQuery(function ($) {
+      CCRZ.algoliaIndexLabels = {};
+      CCRZ.algoliaIndexLabels[CCRZ.getPageConfig('sb.algolia.product.index')] = "Products";
+      CCRZ.algoliaIndexLabels[CCRZ.getPageConfig('sb.algolia.content.index')] = "Resources";
+      CCRZ.algoliaIndexLabels[CCRZ.getPageConfig('sb.algolia.category.index')] = "Categories";
+
+      CCRZ.pubSub.on('view:productSearchView:refresh', function () {
+        setTimeout(function () {
+          // Customize jQuery UI autocomplete category 
+          $.widget("custom.catcomplete", $.ui.autocomplete, {
+            _create: function () {
+              this._super();
+              this.widget().menu("option", "items", "> :not(.ui-autocomplete-category)");
+            },
+            _renderMenu: function (ul, items) {
+              const self = this;
+              let currentCategory = "";
+              $.each(items, function (index, item) {
+                if (item.type !== currentCategory) {
+                  ul.append("<li class='ui-autocomplete-category'>" + CCRZ.algoliaIndexLabels[item.type] + "</li>");
+                  currentCategory = item.type;
+                }
+                self.__renderItem(ul, item, item.type);
+              });
+            },
+            __renderItem: function (ul, item) {
+              if (item.type === CCRZ.getPageConfig('sb.algolia.product.index')) { // Render Product listitems in autocomplete menu
+                const category = item.category ? ` — ${item.category}` : '';
+                return $("<li>")
+                  .data("ui-autocomplete-item", item)
+                  .append($(`<a href="${item.link}">`).html(`${item.name}<br><span class="text-muted">${item.sku}${category}</span>`))
+                  .appendTo(ul);
+              } else if (item.type === CCRZ.getPageConfig('sb.algolia.content.index')) { // Render Resources listitems in autocomplete menu
+                return $("<li>")
+                  .data("ui-autocomplete-item", item)
+                  .append($(`<a href="${item.link}">`).html(`${item.name}`))
+                  .appendTo(ul);
+              } else if (item.type === CCRZ.getPageConfig('sb.algolia.category.index')) { // Render Category listitems in autocomplete menu
+                return $("<li>")
+                  .data("ui-autocomplete-item", item)
+                  .append($(`<a href="${item.link}">`).html(`${item.path}`))
+                  .appendTo(ul);
+              }
+            },
+          });
+
+          $('.search_input').autocomplete({
+            disabled: true
+          });
+
+          // Send request to Algolia for products and contents
+          $('.search_input').catcomplete({
+            delay: 0,
+            minLength: 1,
+            resultLimit: 15,
+            position: { my: "right top", at: "right+38 bottom+3" },
+            select: function (event, ui) {
+              const selectedAutocompleteLink = $('a.ui-menu-item-wrapper.ui-state-active').attr('href');
+              if (selectedAutocompleteLink) {
+                window.location.href = selectedAutocompleteLink;
+              }
+            },
+            source: function (request, response) {
+              $.ajax({
+                url: `https://${CCRZ.getPageConfig('sb.algolia.app.id')}-dsn.algolia.net/1/indexes/*/queries`,
+                type: 'POST',
+                data: JSON.stringify({
+                  requests: [
+                    {
+                      indexName: CCRZ.getPageConfig('sb.algolia.product.index'),
+                      params: `query=${request.term}`,
+                      attributesToRetrieve: "name,sku,category,imageLink,link",
+                      attributesToHighlight: null,
+                      hitsPerPage: 6
+                    },
+                    {
+                      indexName: CCRZ.getPageConfig('sb.algolia.content.index'),
+                      params: `query=${request.term}`,
+                      attributesToRetrieve: "name,imageLink,link",
+                      attributesToHighlight: null,
+                      hitsPerPage: 5
+                    },
+                    {
+                      indexName: CCRZ.getPageConfig('sb.algolia.category.index'),
+                      params: `query=${request.term}`,
+                      attributesToRetrieve: "name,path,link",
+                      attributesToHighlight: null,
+                      hitsPerPage: 5
+                    }
+                  ]
+                }),
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Algolia-API-Key': CCRZ.getPageConfig('sb.algolia.api.key'),
+                  'X-Algolia-Application-Id': CCRZ.getPageConfig('sb.algolia.app.id')
+                },
+                dataType: 'json',
+                success: function (data) {
+                  // Map response to send to jQuery UI autocomplete widget
+                  const items = [];
+                  data.results.map(function (result) {
+                    result.hits.map(function (hit) {
+                      hit['type'] = result.index;
+                      items.push(hit);
+                    });
+                  });
+                  response(items);
+                }
+              });
+            }
+          });
+        }, 1000);
+      });
+    });
+
+    CCRZ.pubSub.on('view:HeaderMenuView:refresh', function () {
+      if (CCRZ.productSearchView) {
+        CCRZ.productSearchView.render();
+      }
+    });
+
+    CCRZ.pubSub.on("ccrz.views:productSearchView:defined", function () {
+      CCRZ.views.productSearchView = CCRZ.views.productSearchView.extend({
+        templateDesktop: CCRZ.util.template('productSearchInput'),
+        events: {
+          "click .alx-product-search-btn": "doSearch",
+          "keyup .alx-product-search-text": "enterPress",
+          "focus .alx-product-search-text": "focusSearch",
+        },
+        init: function () {
+          this.render();
+        },
+        renderDesktop: function () {
+          this.$el.html('');
+          this.setElement($('.product-search-input'));
+          const modeljson = this.model.toJSON();
+          const searchhtml = this.templateDesktop(modeljson);
+          this.$el.html(searchhtml);
+          if (CCRZ.disableAdaptive) {
+            // initialize popover/tooltip
+            $('#doSearch').popover();
+          }
+        },
+        enterPress: function (e) {
+          const code = e.which; // recommended to use e.which, it's normalized across browsers
+          if (code == 13) e.preventDefault();
+          if (CCRZ.disableAdaptive) {
+            $(e.target).popover('hide');
+          }
+          if (code == 13) {
+            this.doSearch(e);
+          }
+          $(".alx-product-search-text").val($(e.target).val()); // make all search inputs have the same text
+        },
+        doSearch: function (event) {
+          const searchInput = (event.type === 'keyup' || event.type === 'autocompleteselect') ?
+            $(event.target) : $(event.target).parent().parent().prev();
+          const searchText = $.trim(searchInput.val());
+          if (this.validateSearchInput(searchInput)) {
+            let URL = this.model.get("defaults").page + '?cartID=' + CCRZ.pagevars.currentCartID + '&operation=quickSearch&searchText=' + encodeURIComponent(searchText);
+            URL += getCSRQueryString();
+            window.location.href = URL;
+          }
+        },
+        focusSearch: function (event) {
+          $(".ui-autocomplete").insertAfter($(event.target));
+        },
+        validateSearchInput: function (searchInput) {
+          const v = this;
+          const srchVal = false || (searchInput.val() ? searchInput.val().trim() : false);
+          if (srchVal && srchVal.length > 1) {
+            return true;
+          } else {
+            if (srchVal && srchVal.length > 0 && srchVal.length < 2) {
+              searchInput.popover('show');
+            }
+            return false;
+          }
+        }
+      });
+    });
+  </script>
+
+</apex:component>

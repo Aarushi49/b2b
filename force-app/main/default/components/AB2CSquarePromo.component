@@ -1,0 +1,43 @@
+<apex:component >
+    <!-- 
+        Square promo partial template. Expects model of this structure:
+        {
+            breakAt: 'large',
+            items: [
+                {
+                    Id: "a1k54000000ra5UAAQ"
+                    Name: "Category Landing - Area Rug - Buying Guide - 1"
+                    ccrz__Category__c: "a0N54000003thXDEAY"
+                    ccrz__Graphic_Type__c: "image"
+                    ccrz__ImageSource__c: "Static Resource"
+                    ccrz__ImageURI__c: "flexiti.jpg"
+                    ccrz__LocationType__c: "featureBanner"
+                    ccrz__LongDesc__c: "long desc test"
+                    ccrz__NewWindow__c: false
+                    ccrz__PageLocation__c: "category"
+                    ccrz__ProductRelated__c: "false"
+                    ccrz__Sequence__c: 1
+                    ccrz__ShortDesc__c: "short desc test"
+                    ccrz__SplashRotate__c: false
+                    ccrz__StaticResource__c: "B2C_AlexanianBanner"
+                    Timing__c: 1
+                    Promotion_Group_ID__c: "CategoryLandingAreaRugBuyingGuide"
+                }
+            ]
+        }
+    -->
+    <script id="SquarePromoPartialTemplate" type="text/template">
+        <div class="alx-square-promo">
+            {{#each items}}
+            <a href="{{decodeHTML ccrz__ExternalLink__c}}" class="{{../breakAt}}">
+                {{{promoSquareImage Promotion_Group_ID__c ccrz__Sequence__c}}}
+            </a>
+            {{/each}}
+            {{sendPromotionImpression items}}
+        </div>
+    </script>
+
+    <script>
+      Handlebars.registerPartial("SquarePromoPartialTemplate", document.getElementById("SquarePromoPartialTemplate").innerHTML);
+    </script>
+</apex:component>

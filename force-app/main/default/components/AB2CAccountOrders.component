@@ -1,0 +1,80 @@
+<apex:component >
+  <c:AB2CAccountOrdersList ></c:AB2CAccountOrdersList>
+
+  <script id="MyAccount-MyOrders-Desktop" type="text/template">
+
+    <div class="d-flex justify-content-between align-items-center text-center my-3">
+      <span></span>
+      <h1 class="mb-0">{{pageLabelMap 'MyAccount_MyOrders'}}</h1>
+      <a href="#" onclick="logOutUser()">Sign Out</a>
+    </div>
+    <div class="alx-act-card">
+      <div class="d-flex alc-act-card-header">
+        <h2>{{pageLabelMap 'MyAccount_MyOrders_Orders'}}</h2>
+      </div>
+      {{> MyAccountOrderListPartialTemplate .}}
+    </div>
+
+  </script>
+
+
+  <script>
+    Handlebars.registerPartial("MyAccountOrderListPartialTemplate", document.getElementById("MyAccountOrderListPartialTemplate").innerHTML);
+
+    CCRZ.MyAccount = _.extend(CCRZ.MyAccount||{},{
+      AB2CmyOrders:{
+        register : function(registrar){
+          //My Orders stuff
+          // var orderList = new CCRZ.collections.OrderList();
+          var theView = new CCRZ.views.myOrdersView();        
+          registrar.registerNewView('myOrders', CCRZ.pagevars.pageLabels['MyAccount_MyOrders'], theView );
+        }
+      }
+    });
+  </script>
+
+  <script>
+    jQuery(function ($) {
+
+      CCRZ.views.myOrdersView = CCRZ.CloudCrazeView.extend({
+        templateDesktop: CCRZ.util.template('MyAccount-MyOrders-Desktop'),
+        viewName: "myOrdersView",
+        managedSubView: true,
+        initialize: function () {
+          this.render();
+        },
+        events: {
+          "click .gotoOrderDetails": "gotoOrderDetails",
+        },
+        initSetup: function (callback) {
+          //CCRZ-2335 : Different Tabs under MyAccount do not pull data real-time
+          //reset the dataLoadStarted and dataReady flags and refresh the view
+          this.dataLoadStarted = false;
+          this.dataReady = false;
+          callback();
+        },
+        ready: function (orderList, args) {
+          this.orderList = orderList;
+          this.dataReady = true;
+          this.render();
+        },
+        renderDesktop: function () {
+          var v = this;
+          v.$el.html(v.templateDesktop({}));
+        },
+        preRender: function () {},
+        postRender: function () {
+          if (this.dataReady) {
+            // this.updateDatePicker();
+            this.trigger('pagination:host:rendered', this, {
+              hostView: this.viewName
+            });
+          }
+        }
+
+      });
+    });
+
+  </script>
+
+</apex:component>

@@ -1,0 +1,106 @@
+<apex:component >
+  <script id="Product-List-Header" type="text/template">
+      {{#if this.noResults}}
+        {{>noResultsDisplay}}
+      {{else}}
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
+          {{#if prodCount}}
+          <small class="text-muted">{{prodCount}} results found.</small>
+          {{/if}}
+          <a href="#" id="alx-clear-all-filters" class="cc_remove_filters"></a>
+        </div>       
+        <div class="form-inline">          
+          <div class="form-group pr-1">
+            <select class="form-control custom-select alx-select cc_page_size_control">
+              {{#each itemsPerOptions}}
+              <option value="{{safeQuote this}}" {{#ifEquals ../pageSize this}} selected {{/ifEquals}}>{{this}} Items </option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="form-group">
+            <select id="alx-plp-sort" class="form-control custom-select alx-select">
+              <option value="#alx-sort-categorySequence" {{#ifEquals sortBy 'categorySequence'}} selected{{/ifEquals}}>{{pageLabelMap 'ProductList_SortSequence'}}</option>
+              {{#if isSearch}}
+              <option value="#alx-sort-searchRank" {{#ifEquals sortBy 'searchRank'}} selected{{/ifEquals}}>{{pageLabelMap 'ProductList_SortRelevance'}}</option>
+              {{/if}}
+              <option value="#alx-sort-startDate" {{#ifEquals sortBy 'startDate'}} selected{{/ifEquals}}>{{pageLabelMap 'ProductList_SortNewest'}}</option>
+              <option value="#alx-sort-priceDesc" {{#ifEquals sortBy 'price'}} {{#ifEquals sortOrder 'desc'}} selected{{/ifEquals}}{{/ifEquals}}>{{pageLabelMap 'ProductList_SortPriceDesc'}}</option>
+              <option value="#alx-sort-priceAsc" {{#ifEquals sortBy 'price'}} {{#ifEquals sortOrder 'asc'}} selected{{/ifEquals}}{{/ifEquals}}>{{pageLabelMap 'ProductList_SortPriceAsc'}}</option>
+            </select>           
+          </div>
+          <div class="d-none">
+            <a id="alx-sort-categorySequence" class="cc_sort_option cc_sort_sequence" data-id="categorySequence" data-order="desc" href="#!"></a>
+            <a id="alx-sort-searchRank" class="cc_sort_option cc_sort_relevance" data-id="searchRank" data-order="desc" href="#!"></a>
+            <a id="alx-sort-startDate" class="cc_sort_option cc_sort_newest" data-id="startDate" data-order="desc" href="#!"></a>
+            <a id="alx-sort-priceDesc" class="cc_sort_option cc_sort_price_desc" data-id="price" data-order="desc" href="#!"></a>
+            <a id="alx-sort-priceAsc" class="cc_sort_option cc_sort_price_asc" data-id="price" data-order="asc" href="#!"></a>
+          </div>
+        </div>
+        <div class="messagingSection-Error" style="display: none"></div>
+        <div class="messagingSection-Warning" style="display: none"></div>
+        <div class="messagingSection-Info" style="display: none"></div>     
+      </div>
+      {{/if}}     
+    </script>
+
+  <script>
+    // List loading started
+    CCRZ.pubSub.on('view:productListHeader:refresh', function (theView) {
+      $('#alx-products-loading').show();
+      $('.alx-products-list').hide();
+      $('#alx-plp-sort').on('change', function () {
+        $(this.value).click();
+      });
+
+      CCRZ.collections.ProductList = CCRZ.collections.ProductList.extend({
+        comparator: function (a, b) {
+          let sortBy = CCRZ.productListPageModel.get('sortBy');
+          let sortOrder = CCRZ.productListPageModel.get('sortOrder');
+          let aAttr = a.get(sortBy);
+          let bAttr = b.get(sortBy);
+          if (typeof aAttr === 'string') {
+            aAttr = aAttr.toLowerCase();
+          }
+          if (typeof bAttr === 'string') {
+            bAttr = bAttr.toLowerCase();
+          }
+          if (aAttr === bAttr && sortBy === "price") {
+            aAttr = a.get(sortOrder === "asc" ? "minPrice" : "maxPrice");
+            bAttr = b.get(sortOrder === "asc" ? "minPrice" : "maxPrice");
+          }
+
+          // Set defaults
+          if (!aAttr && (sortBy === 'price' || sortBy === 'categorySequence')) aAttr = 0;
+          if (!bAttr && (sortBy === 'price' || sortBy === 'categorySequence')) bAttr = 0;
+
+          if (aAttr === bAttr) {
+            let aName = a.get('sfdcName');
+            let bName = b.get('sfdcName');
+            if (aName != null && typeof aName === 'string') {
+              aName = aName.toLowerCase();
+            }
+            if (bName != null && typeof bName === 'string') {
+              bName = bName.toLowerCase();
+            }
+            if (aName === bName) {
+              return 0;
+            }
+            return aName > bName ? 1 : -1;
+          }
+          if (sortOrder === "asc") {
+            return aAttr > bAttr ? 1 : -1;
+          } else {
+            return aAttr < bAttr ? 1 : -1;
+          }
+        }
+      });
+    });
+
+    // List loading ended
+    CCRZ.pubSub.on('view:productItemsView:refresh', function (theView) {
+      $('#alx-products-loading').hide();
+      $('.alx-products-list').show();
+    });
+  </script>
+</apex:component>

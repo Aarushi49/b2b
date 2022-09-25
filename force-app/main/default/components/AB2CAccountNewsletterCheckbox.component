@@ -1,0 +1,96 @@
+<apex:component controller="AB2CAccountController">
+
+  <script id="AccountNewsletterCheckboxPartialTemplate" type="text/template">
+    {{#if (initializeNewsletterCheckbox .)}}
+      <div class="alx-newsletter-checkbox"></div>
+    {{/if}}
+  </script>
+
+  <script id="AccountNewsletterCheckboxTemplate" type="text/template">
+    {{#ifEquals state 'edit' }}
+      <div class="form-group col-sm-12">
+        <label class="mb-0">Email Preferences</label>
+        <div class="form-check">
+          <input type="checkbox" {{#ifEquals status 'subscribed'}}checked{{/ifEquals}} class="form-check-input" id="alxEmailSub" value="" />
+          <label class="form-check-label" for="alxEmailSub">Subscribe to Alexanian email newsletter and save with exclusive offers</label>
+        </div>
+        <small class="form-text">* Preference changes may take up to 48 hours.</small>
+      </div>
+      <button class="alx-hidden-btn" id="alxEmailNewsletterBtn">Update MailChimp Test</button>
+    {{else}}
+      <div class="col-12 alx-act-field myAccPhone">
+        <label class="alx-pd-label">Subscribed to email newsletter?</label>
+        <p>{{#ifEquals status 'subscribed'}}Yes{{else}}No{{/ifEquals}}</p>
+      </div>
+    {{/ifEquals}}
+  </script>
+
+  <script>
+    Handlebars.registerHelper('initializeNewsletterCheckbox', function (context) {
+      if (context) {
+
+        CCRZ.models.AccountNewsletterCheckboxModel = CCRZ.CloudCrazeModel.extend({
+          className: 'AB2CAccountController',
+          fetch: function (callback) {
+            this.invokeCtx('getMailchimpSubscriptionStatus', context.email, function (response) {
+              if (!response.success) {
+                response.data.email = context.email;
+                console.error(response.data);
+              }
+              callback(response.data)
+            }, { nmsp: false, buffer: false });
+          },
+          updateMailChimpSubscription: function (email, newStatus, callback) {
+            this.invokeCtx('setMailchimpSubscriptionStatus', email, newStatus, function (response) {
+              callback(response);
+            }, { nmsp: false, buffer: false });
+          }
+        });
+
+        CCRZ.views.AccountNewsletterCheckboxView = CCRZ.CloudCrazeView.extend({
+          viewName: 'AccountNewsletterCheckbox',
+          templateDesktop: CCRZ.util.template('AccountNewsletterCheckboxTemplate'),
+          templateSelector: '.alx-newsletter-checkbox',
+          events: {
+            "click #alxEmailNewsletterBtn": "updateSubscription",
+          },
+          init: function (options) {
+            const thisView = this;
+            thisView.AccountNewsletterCheckbox = new CCRZ.models.AccountNewsletterCheckboxModel();
+            thisView.AccountNewsletterCheckbox.fetch(function (response) {
+              if (response) {
+                thisView.model = context;
+                thisView.model.status = response.status;
+                thisView.render();
+              } else {
+                console.warn('An issue occurred checking your email subscription status');
+                $(thisView.templateSelector).html('');
+              }
+            });
+          },
+          renderDesktop: function () {
+            this.setElement(this.templateSelector);
+            this.$el.html(this.templateDesktop(this.model));
+          },
+          updateSubscription: function (event) {
+            // Hides error message if visible
+            $('.error_update_mailchimp').addClass('d-none');
+            const thisView = this;
+            const newStatus = $('#alxEmailSub').is(':checked');
+            thisView.AccountNewsletterCheckbox.updateMailChimpSubscription(thisView.model.email, newStatus, function (response) {
+              if (!response.success) {
+                $('.error_update_mailchimp').removeClass('d-none');
+                window.scrollTo(0, 0);
+              }
+            });
+          }
+        });
+
+        CCRZ.AccountNewsletterCheckboxView = new CCRZ.views.AccountNewsletterCheckboxView({});
+
+        return true;
+      }
+      return false;
+    });
+  </script>
+</apex:component>

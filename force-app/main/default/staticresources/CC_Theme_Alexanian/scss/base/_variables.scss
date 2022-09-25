@@ -1,0 +1,58 @@
+// Colours
+$rouge: #c11633;
+$cranberry: #a70532;
+$white: #ffffff;
+$white-two: #e6e6e6;
+$snow: #f0f0f0;
+$grey: #9e9e9e;
+$outline-grey: #cccccc;
+$warm-grey: #757575;
+$warm-grey-2: #6b6b6b;
+$charcoal: #303030;
+$rich-black: #303030;
+$soft-black: #373737;
+$black: #1d1d1d;
+$black-60: rgba(0, 0, 0, 0.6);
+$black-80: rgba(0, 0, 0, 0.8);
+$cerulean: #0374bb;
+$ocean-blue: #016bad;
+$brownish-grey: #5c5c5c;
+$french-blue: #4267b2;
+$strong-pink: #f00075;
+$cherry-red: #e60023;
+$red: #ff0000;
+$frog-green: #4dbc15;
+$dark-sky-blue: #27a9e1;
+$kelly-green: #169750;
+$brownish-grey-two: #666666;
+$neon-pink: #f6059c;
+$violet-blue: #6e0ca3;
+$ultramarine: #1900b0;
+$tomato: #f04516;
+$ice:  #f2faff;
+$pale-sky-blue: #cfe4f1;
+$soft-pink: #fdf1f1;
+
+//Swatch colour family fallbacks
+$swatch-red: #ad1731;
+$swatch-orange: #e95f3a;
+$swatch-yellow: #f2ca59;
+$swatch-green: #68a731;
+$swatch-grey: #838383;
+$swatch-purple: #7c339d;
+$swatch-black: #000000;
+$swatch-beige: #d5c6af;
+$swatch-brown: #704a37;
+$swatch-blue: $cerulean;
+$swatch-white: $white;
+$swatch-multi-colour: conic-gradient(from 0.25turn, $neon-pink, $violet-blue 0.13turn, $ultramarine 0.27turn, $cerulean 0.42turn, $swatch-green 0.57turn, $swatch-yellow 0.72turn, $tomato 0.86turn, $swatch-red);
+
+// Sizing - Corresponds to breakpoints in Bootstrap 4
+$breakpoint-xs-max: 575px;
+$breakpoint-sm-min: 576px;
+$breakpoint-sm-max: 767px;
+$breakpoint-md-min: 768px;
+$breakpoint-md-max: 991px;
+$breakpoint-lg-min: 992px;
+$breakpoint-lg-max: 1199px;
+$breakpoint-xl-min: 1200px;

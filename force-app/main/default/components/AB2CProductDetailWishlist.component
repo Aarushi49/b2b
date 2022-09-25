@@ -1,0 +1,146 @@
+<apex:component controller="AB2CAccountController">
+
+    <script id="AddToWishlistPartialTemplate" type="text/template">
+        {{#if (pagevars 'isGuest')}}
+        <a class="ml-3" href="/signin?startUrl={{getCurrentLocation}}">
+            <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-heart.svg')}" class="alx-nav-icon" alt=""/>
+        </a>
+        {{else}}
+        <div class="wishFinder" data-sku="">
+            <div class="wishButtons"></div>
+        </div>
+        <div class="alert alert-info success-alert mt-3" style="display: none"></div>
+        {{/if}}
+    </script>
+
+    <!-- Wishlist modal for PDP -->
+    <script id="AddtoWishlist-Desktop" type="text/template">
+        <a data-toggle="modal" data-target="#alx-add-to-wishlist-modal" href="#">
+            <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-heart.svg')}" class="alx-nav-icon" alt=""/>
+        </a>
+
+        <div class="modal fade alx-modal" id="alx-add-to-wishlist-modal" tabindex="-1" role="dialog" aria-labelledby="Wishlist" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title alx-modal-title" id="modalTitle">Add to Wishlist</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body alx-modal-body">
+                            <p>Select a wishlist to add this item to:</p>
+                            <ul>
+                                {{#each this}}
+                                <li><a href="javascript:void(0);" class="pickWish" data-id="{{sfid}}">{{{name}}}</a></li>
+                                {{/each}}
+                            </ul>
+                            <div class="form-group">
+                                <label for="name">Or, create a new wishlist</label>
+                                <div class="d-flex">
+                                    <input name="name" placeholder="Wishlist Name" class="form-control newListName mr-3"/>
+                                    <a href="javascript:void(0);" class="btn btn-default pickWish w-50" data-id="-1">Create Wishlist</a>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/javascript">
+        CCRZ.pubSub.on("ccrz.views:wishlistPickerModal:defined", function () {
+            CCRZ.models.CreateWishlistModel = CCRZ.CloudCrazeModel.extend({
+                className: "AB2CAccountController",
+                create: function (callback) {
+                    this.invokeCtx('createDefaultWishlist', function (response) {
+                        if (callback) callback(response);
+                    }, { nmsp: false, buffer: false });
+                }
+            });
+
+            CCRZ.views.wishlistPickerModal = CCRZ.CloudCrazeView.extend({
+                templateDesktop: CCRZ.util.template(CCRZ.uiProperties.wishlistPickerModal.desktop.tmpl),
+                templatePhone: CCRZ.util.template(CCRZ.uiProperties.wishlistPickerModal.phone.tmpl),
+                className: 'cc_ctrl_WishlistPicker',
+                viewName: "wishlistPickerModal",
+                events: {
+                    "click .pickWish": "addItem",
+                    "click .newListName": "focusInput"
+                },
+                init: function () {
+                    this.setElement($('.wishButtons'));
+                    this.coll = new CCRZ.collections.WishlistLightList();
+                    const v = this;
+                    v.coll.fetch(function () {
+                        if (v.coll.length == 0) {
+                            // Create a default wishlist if one doesn't exist
+                            v.createWishlistModel = new CCRZ.models.CreateWishlistModel();
+                            v.createWishlistModel.create(function (response) {
+                                v.render();
+                            });
+                        } else {
+                            v.render();
+                        }
+                    });
+                },
+                refresh: function () {
+                    const v = this;
+                    v.coll.fetch(function () {
+                        v.render();
+                    });
+                },
+                render: function () {
+                    this.setElement($(CCRZ.uiProperties.wishlistPickerModal.selector));
+                    const v = this;
+                    if (CCRZ.display.isPhone()) {
+                        v.$el.html(v.templatePhone(this.coll.toJSON()));
+                    } else {
+                        v.$el.html(v.templateDesktop(this.coll.toJSON()));
+                    }
+                    CCRZ.pubSub.trigger("view:" + this.viewName + ":refresh", this);
+                },
+                focusInput: function (event) {
+                    event.stopPropagation();
+                },
+                addItem: function (event) {
+                    const objLink = $(event.target);
+                    const id = objLink.data("id");
+                    this.processAddItem(objLink, id);
+                },
+                processAddItem: function (obj, val) {
+                    const parentObj = obj.closest('.wishFinder');
+                    const sku = parentObj.data("sku");
+                    const createName = $('#alx-add-to-wishlist-modal .newListName').val();
+                    const v = this;
+                    $('.success-alert').text('').hide();
+                    this.invokeContainerLoadingCtx($('.deskLayout'), 'handleAddtoWishlist', sku, val, createName, function (response) {
+                        $('#alx-add-to-wishlist-modal').modal("hide");
+
+                        let listName = obj.text();
+                        if (val == '-1') { // New list created
+                            listName = createName;
+                            v.refresh();
+                        }
+                        $('.success-alert').text('Item added to ' + listName).show();
+                    });
+                }
+            });
+        });
+
+        Handlebars.registerHelper('getCurrentLocation', function () {
+            return window.location.pathname + window.location.search;
+        });
+
+        function renderWishlist(product) {
+            $('.wishFinder').attr('data-sku', product.SKU);
+            const pickerView = new CCRZ.views.wishlistPickerModal();
+            if (pickerView.coll.length !== 0) {
+                pickerView.render();
+            }
+        }
+    </script>
+</apex:component>

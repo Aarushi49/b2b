@@ -1,0 +1,30 @@
+@import "../base/variables";
+
+.alx-feature-banner {
+  padding-bottom: 1rem;
+  position: relative;
+
+  img {
+    width: 100%;
+    height: fit-content;
+    object-fit: cover;
+  }
+
+  .alx-banner-text-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1rem;
+    pointer-events: none;
+  }
+
+  .alx-banner-text-only {
+    position: relative;
+    pointer-events: unset;
+  }
+}

@@ -1,0 +1,78 @@
+<apex:component >
+    <script id="noResultsDisplay" type="text/template">
+    {{#if this.prodFilters}}
+        <!-- No filtered results -->
+        <div class="text-center">
+            <h2>No Matches Found</h2>
+            <p class="text-muted">We're sorry, no results were found for your filter: <b>"{{concatFilters this.prodFilters}}"</b></p>
+            <button type="button" class="btn btn-default cc_remove_filters mt-4">
+                {{pageLabelMap 'ProductCompare_ClearAllFilters'}}
+            </button>
+        </div>
+    {{else}}
+        <div class="text-center">
+            {{#if this.isSearch}}
+            <!-- No search results -->
+                <h2>No Search Results Found</h2>
+                <p class="text-muted">We're sorry, no results were found for your search: <b>"{{this.searchString}}".</b></p>
+            {{else}}
+                <h2>No Results Found</h2>
+                <p class="text-muted">We're sorry, no results were found based on the current criteria.</b></p>
+            {{/if}}
+            <h6 class="mt-4 mb-4">Try a new search.</h6>
+            <div class="product-search-input"></div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6 mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex align-items-center"><span class="alx-ic ic-info mr-2" aria-hidden="true"></span>Search Tips</h5>
+                        <ul class="text-muted">
+                            <li><p>Double check the spelling. Try varying the spelling.</p></li>
+                            <li><p>Limit the search to one or two words.</p></li>
+                            <li><p>Be less specific in your wording. Sometimes more general term will lead you to the similar products.</p></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex align-items-center"><span class="alx-ic ic-help mr-2" aria-hidden="true"></span>Still can't find what you are looking for?</h5>
+                        <p class="text-muted">Contact our client services team at 1-866-878-2525 or fill out our contact form for assistance with your inquiry.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {{/if}}
+    {{initializeNoResultsView this}}
+    <div class="d-none">
+        {{>RelatedResourcesPartialTemplate .}}
+    </div>
+    </script>
+
+    <script>
+        Handlebars.registerHelper('initializeNoResultsView', function (context) {
+            $('.alx-category-products').hide();
+            //// one-column layout if no search results
+            //if (!context.prodFilters && context.isSearch) {
+            //    $('.alx-plp-column-aside').removeClass('col-lg-2 col-md-3');
+            //    $('.alx-plp-column-main').removeClass('col-lg-10 col-md-9');
+            //}
+        });
+
+        jQuery(function ($) {
+            CCRZ.pubSub.on('view:productListHeader:refresh', function (theView) {
+                // No results view contains a search widget, need to call header refresh to initialize search widget in no results view
+                CCRZ.pubSub.trigger('view:HeaderMenuView:refresh');
+            });
+
+            CCRZ.pubSub.on('view:productListRelatedResources:refresh', function (data) {
+                // Move Related resources section to left panel, if it's not there already
+                if ($('.alx-plp-column-aside .alx-related-resources').length === 0) {
+                    $('.alx-plp-column-aside').append($('.alx-related-resources').detach());
+                }
+            });
+        });
+    </script>
+</apex:component>

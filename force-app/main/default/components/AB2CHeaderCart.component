@@ -1,0 +1,68 @@
+<apex:component controller="AB2CCartHeaderService">
+  <script id="CartHeaderBrowser" type="text/template">
+        {{> CartHeaderPartialTemplate}}  
+      </script>
+
+  <script id="CartHeaderPartialTemplate" type="text/template">
+        {{#if .}}
+          <div class="alx-cart-header"></div>
+          {{initializeCartHeader}}
+        {{/if}}
+      </script>
+
+  <script id="CartHeaderTemplate" type="text/template">
+        <a id="cartHeader" class="{{#ifGreater this.cartSize 0}}alx-cart-count{{/ifGreater}} nav-link chead cartHeaderLink" href="{{cartUrl}}" data-cart-count="{{this.cartSize}}">
+            <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-cart-empty.svg')}" class="alx-nav-icon" alt="{{pageLabelMap 'Component_SiteHeader_MyCart'}}"/>
+            <span class="alx-menu-text">{{pageLabelMap 'Component_SiteHeader_MyCart'}}</span>
+        </a>
+      </script>
+
+  <script>
+    Handlebars.registerHelper('cartUrl', function () {
+      return "/cart" + CCRZ.buildQueryString('');
+    });
+
+    Handlebars.registerHelper('initializeCartHeader', function () {
+      const cartId = CCRZ.pagevars.currentCartID;
+      CCRZ.models.CartHeaderModel = CCRZ.CloudCrazeModel.extend({
+        className: 'AB2CCartHeaderService',
+        fetch: function (callback) {
+          this.invokeCtx('getCartNum', cartId, function (response, event) {
+            callback(response.data);
+          }, { nmsp: false, buffer: false });
+        }
+      });
+
+      CCRZ.views.CartHeaderView = CCRZ.CloudCrazeView.extend({
+        viewName: "CartHeaderView",
+        templateDesktop: CCRZ.util.template('CartHeaderTemplate'),
+        templateSelector: '.alx-cart-header',
+        init: function (options) {
+          const thisView = this;
+          thisView.cartHeader = new CCRZ.models.CartHeaderModel();
+          thisView.cartHeader.fetch(function (response) {
+            thisView.model = response;
+            thisView.render();
+          });
+        },
+        renderDesktop: function () {
+          this.setElement(this.templateSelector);
+          this.$el.html(this.templateDesktop(this.model));
+        },
+        isAddedToCart: function (sku) {
+          let isSkuInCart = false;
+          if (this.model.cartItems && this.model.cartItems.length > 0) {
+            this.model.cartItems.map(function (cartItem) {
+              if (cartItem.ccrz__Product__r.ccrz__SKU__c === sku) {
+                isSkuInCart = true;
+              }
+            });
+          }
+          return isSkuInCart;
+        }
+      });
+
+      CCRZ.CartHeaderView = new CCRZ.views.CartHeaderView({});
+    });
+  </script>
+</apex:component>

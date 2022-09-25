@@ -1,0 +1,48 @@
+<apex:component >
+    <!-- 
+        Category Landing Services Menu partial template. Expects model of this structure:
+        {
+            displayName: "Area Rugs - More Services"
+            categoryName: "area-rugs",
+            menuId: "area-rugs-more-services",
+            children: [
+                {
+                    displayName: "Cleaning Services"
+                    linkURL: "/carpet-cleaning/area-rug-cleaning"
+                    menuId: "area-rug-area-rug-cleaning"
+                }
+            ]
+        }
+    -->
+    <script id="CategoryServicesPartialTemplate" type="text/template">
+        <div class="alx-left-nav-container">
+            <a data-toggle="collapse" href="#alx-left-nav-services" role="button" aria-expanded="false" aria-controls="alx-left-nav-services">More Services</a>
+            <!-- Mobile links -->
+            <div class="collapse alx-left-nav-items" id="alx-left-nav-services">
+                {{#each children}}
+                    <div class="alx-left-nav-top-level">
+                        <a class="nav-link" href="{{linkURL}}">{{decodeHTML displayName}}</a>
+                    </div>
+                {{/each}}
+            </div>
+
+            <!-- Desktop links -->
+            <div class="alx-left-nav-desktop-links">
+                {{#each children}}
+                    <a href="{{linkURL}}">
+                        <img src="https://res.cloudinary.com/alexanian/image/upload/v1591998391/prod/static/shared/services/{{getServiceAssetName menuId ../categoryName}}.svg"/>
+                        <p>{{decodeHTML displayName}}</p>
+                    </a>
+                {{/each}}
+            </div>
+        </div>
+    </script>
+
+    <script>
+        Handlebars.registerPartial("CategoryServicesPartialTemplate", document.getElementById("CategoryServicesPartialTemplate").innerHTML);
+
+        Handlebars.registerHelper("getServiceAssetName", function (menuId, categoryName) {
+            return menuId.replace(categoryName + "-", "");
+        });
+    </script>
+</apex:component>

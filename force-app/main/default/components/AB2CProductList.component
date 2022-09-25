@@ -1,0 +1,82 @@
+<apex:component controller="AB2CProductController" rendered="{!IF(contains($CurrentPage.Name,'ccrz__ProductList'), true, false)}">
+  <c:AB2CFeatureBanner ></c:AB2CFeatureBanner>
+  <c:AB2CProductFilter ></c:AB2CProductFilter>
+  <c:AB2CProductTile ></c:AB2CProductTile>
+  <c:AB2CProductListHeader ></c:AB2CProductListHeader>
+  <c:AB2CProductListFooter ></c:AB2CProductListFooter>
+  <c:AB2CProductCompareTray ></c:AB2CProductCompareTray>
+  <c:AB2CProductListNoResults ></c:AB2CProductListNoResults>
+  <c:AB2CProductListRelatedResources ></c:AB2CProductListRelatedResources>
+  <c:AB2CCategoryProductCarousel ></c:AB2CCategoryProductCarousel>
+
+  <script id="Product-List-Page-Feature-Top" type="text/template">
+    {{> FeatureBannerPartialTemplate .}}
+  </script>
+
+  <script id="Product-List-Page-View" type="text/template">
+    <div class="alx-plp-feature-top"></div>
+    <div class="productListHeader cc_page_header"></div>
+    <div id="alx-products-loading" class="alx-loading-circle"></div>
+    <div class="productListContent cc_results_list row alx-products-list"></div>
+    <div class="productListFooter cc_results_footer"></div>
+    <div class="alx-plp-feature-bottom"></div>
+    {{> CategoryProductCarouselPartialTemplate (getQueryParam 'categoryId')}}
+		<div class="compareTray"></div>
+  </script>
+
+  <script id="Product-List-Page-Feature-Bottom" type="text/template">
+    {{> FeatureBannerPartialTemplate .}}
+  </script>
+
+  <script type="text/javascript">
+    Handlebars.registerPartial("CategoryProductCarouselPartialTemplate", document.getElementById("CategoryProductCarouselPartialTemplate").innerHTML);
+
+    jQuery(function ($) {
+      // Restructure PLP, remove old BS classes and add BS4 classes
+      $('.container-fluid.contentBody').removeClass('container-fluid').addClass('container-xl');
+      $('.container-xl.contentBody > .row-fluid').removeClass('row-fluid').addClass('row');
+      $('.container-xl.contentBody > .row > .span3').removeClass('span3').addClass('col-lg-2 col-md-3 col-sm-12 alx-plp-column-aside');
+      $('.container-xl.contentBody > .row > .span9').removeClass('span9').addClass('col-lg-10 col-md-9 col-sm-12 alx-plp-column-main');
+
+      const categoryId = Handlebars.helpers.getQueryParam('categoryId');
+      if (categoryId) {
+        CCRZ.models.PlpPromoModel = CCRZ.CloudCrazeModel.extend({
+          className: 'AB2CProductController',
+          fetch: function (callback) {
+            this.invokeCtx('getProductPromosByCategory', categoryId, function (response, event) {
+              if (!response.success) {
+                console.error(response.data);
+              }
+              callback(response.data);
+            }, { nmsp: false, buffer: false });
+          }
+        });
+
+        CCRZ.models.PlpPromoModel = new CCRZ.models.PlpPromoModel();
+        CCRZ.models.PlpPromoModel.fetch(function (response) {
+          if (response.promos) {
+            renderBanner('featureBannerTop', '#Product-List-Page-Feature-Top', '.alx-plp-feature-top');
+            renderBanner('featureBannerBottom', '#Product-List-Page-Feature-Bottom', '.alx-plp-feature-bottom');
+            function renderBanner(bannerType, templateId, target) {
+              const bannerModel = {
+                items: response.promos.filter(function (p) {
+                  return p.ccrz__LocationType__c === bannerType;
+                })
+              };
+              if (bannerModel.items) {
+                const bannerTemplate = Handlebars.compile($(templateId).html());
+                $(target).html(bannerTemplate(bannerModel));
+              }
+            }
+          }
+          if (response.seoTitle) {
+            document.title = "Alexanian | " + _.unescape(response.seoTitle);
+          }
+          if (response.seoDescription) {
+            $("head").append('<meta name="description" content="' + _.unescape(response.seoDescription) + '">');
+          }
+        });
+      }
+    });
+  </script>
+</apex:component>

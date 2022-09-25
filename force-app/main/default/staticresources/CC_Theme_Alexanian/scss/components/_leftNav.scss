@@ -1,0 +1,114 @@
+@import "../base/variables";
+
+.alx-left-nav-container {
+  a {
+    text-decoration: none;
+  }
+
+  > a {
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  // Top level menu items
+  .alx-left-nav-top-level {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    & .active {
+      font-weight: bold;
+    }
+    a {
+      padding-left: 0;
+      width: 100%;
+
+      &[data-toggle="collapse"] {
+        width: 100%;
+        text-align: right;
+        background-repeat: no-repeat;
+        background-position: right;
+
+        &[aria-expanded="true"] {
+          background-image: url(../images/icons/ic-arrow-up.svg);
+        }
+        &[aria-expanded="false"] {
+          background-image: url(../images/icons/ic-arrow-right.svg);
+        }
+      }
+    }
+  }
+
+  // Second level menu items
+  .alx-left-nav-second-level {
+    & .active {
+      font-weight: bold;
+    }
+  }
+
+  .nav-link.disabled {
+    color: unset;
+  }
+
+  @media (max-width: $breakpoint-md-min) {
+    border: 1px solid $outline-grey;
+    margin: 1rem 0;
+
+    .alx-left-nav-items {
+      padding-left: 1rem;
+    }
+
+    .alx-services-menu {
+      margin-top: -1rem;
+    }
+
+    > a {
+      background: $snow;
+      border-bottom: 1px solid $outline-grey;
+      display: block;
+      width: 100%;
+      padding: 0.5rem 1rem 0.5rem 1rem;
+      background-repeat: no-repeat;
+      background-position: right;
+
+      &[aria-expanded="true"] {
+        background-image: url(../images/icons/ic-arrow-up.svg);
+      }
+      &[aria-expanded="false"] {
+        background-image: url(../images/icons/ic-arrow-right.svg);
+      }
+    }
+  }
+}
+
+.alx-services-menu {
+  margin-top: 2rem;
+}
+
+.alx-left-nav-desktop-links {
+  display: block;
+  padding-top: 0.5rem;
+  img {
+    max-width: 100%;
+    border: 0.2rem solid $charcoal;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      background: $white;
+      filter: invert(100%);
+    }
+  }
+
+  p {
+    padding-top: 0.5rem;
+  }
+}
+
+@media (max-width: $breakpoint-md-min) {
+  .alx-services-menu {
+    margin-top: -1rem;
+  }
+
+  .alx-left-nav-desktop-links {
+    display: none;
+  }
+}

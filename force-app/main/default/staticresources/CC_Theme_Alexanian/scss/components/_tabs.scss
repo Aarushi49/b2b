@@ -1,0 +1,35 @@
+@import "../base/variables";
+
+.nav-tabs {
+  border-color: $outline-grey;
+  text-transform: uppercase;
+
+  .nav-item {
+    border-radius: 0 !important;
+    font-weight: bold;
+    background-color: $snow;
+    border-bottom: 0.0625rem solid $outline-grey;
+    text-decoration: none;
+
+    &.nav-link:not(.active) {
+      background: $snow;
+
+      &:hover {
+        border-color: $white-two;
+        background: $white-two;
+      }
+    }
+
+    &.nav-link.active {
+      border-color: $outline-grey;
+      border-bottom: none;
+    }
+
+  }
+}
+
+.tab-content {
+  border: 0.0625rem solid $outline-grey;
+  border-top: none;
+}
+

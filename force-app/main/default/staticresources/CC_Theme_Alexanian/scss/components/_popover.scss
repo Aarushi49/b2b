@@ -1,0 +1,10 @@
+@import '../base/variables';
+
+.popover {
+  border-color: $outline-grey;
+  font-family: Roboto, sans-serif;
+  border-radius: 0;
+  .popover-body {
+    padding: 0.9375rem;
+  }
+}

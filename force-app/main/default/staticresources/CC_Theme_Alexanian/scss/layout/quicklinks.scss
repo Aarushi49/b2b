@@ -1,0 +1,20 @@
+@import '../base/variables';
+
+.alx-quicklinks {
+    .alx-ql-box {
+        min-height: 5.75rem;
+    }
+    a {
+        color: $rich-black;
+        font-size: 0.8125rem;
+        font-weight: bold;
+        margin-left: 0.875rem;
+        text-decoration: none;
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+    .alx-ql-content {
+        margin: 0.75rem 2rem;
+    }
+}

@@ -1,0 +1,169 @@
+<apex:component >
+    <script id="TotalSection" type="text/template">
+        <div class="text-center">
+            <h2>Order Summary 11</h2>
+
+            <!-- Order date/status -->
+            {{#if this.orderDate}}
+            <p><span class="text-muted">Order Date:</span> {{date this.orderDate}}</p>
+            <p><span class="text-muted">Order Status:</span> <b>{{this.status}}</b></p>
+            <hr>
+            {{/if}}
+
+            <!-- Product list -->
+            {{#unless this.orderDate}}
+            <table class="alx-totals-products">
+            {{#each (getProducts)}}
+                <tr>
+                    <td>{{add @index 1}}.</td>
+                    <td>{{name}}</td>
+                    <td>(Qty: {{quantity}})</td>
+                    <td class="{{#if isSale}}sale{{/if}}">{{price price}}</td>
+                </tr>
+            {{/each}}
+            </table>
+            <hr>
+            {{/unless}}
+
+            <!-- Prices -->
+            <table class="alx-totals-prices">
+                <tr>
+                    <td>{{pageLabelMap 'CartInc_Subtotal'}}:</td>
+                    <td>{{sum (getPromoPrice) this.subTotal this.currencyCode}}</td>
+                </tr>
+                {{#ifGreater (getPromoPrice) 0}}
+                <tr>
+                    <td>Promo code:</td>
+                    <td>-{{price (getPromoPrice)}}</td>
+                </tr>
+                {{/ifGreater}}
+                <tr>
+                    <td>{{pageLabelMap 'CartInc_Shipping'}}:</td>
+                    {{#if this.shippingCharge}}
+                    <td class="shippingCost">{{price this.shippingCharge this.currencyCode}}</td>
+                    {{else}}
+                    <td class="shippingCost">FREE</td>
+                    {{/if}}
+                </tr>
+                <tr>
+                    <td>{{pageLabelMap 'CheckOut_EstimatedTax'}}:</td>
+                    <td>{{price this.tax this.currencyCode}}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">{{pageLabelMap 'CartInc_GrandTotal'}}:</td>
+                    <td class="font-weight-bold">{{sum this.subTotal this.tax this.shippingCharge this.adjustment this.surchargeAmount this.currencyCode}}</td>
+                </tr>
+            </table>
+            <hr>
+
+            <!-- Order details -->
+            {{#unless allowCheckout}}
+            <p class="text-muted">Shipping Address:</p>
+            <p class="pb-3">
+                {{#with this.shippingAddress}}
+                {{firstName}} {{lastName}}<br>
+                {{address1}}, {{address2}}<br>
+                {{city}}, {{stateCode}}, {{postalCode}}, {{getCountry}}
+                {{/with}}
+            </p>
+
+            <p class="text-muted">Payment Details:</p>
+            {{#with (getPaymentDetailsTotals)}}
+                <div class="d-flex justify-content-center pb-3">
+                    <img class="pr-2" src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-{{cardType}}" alt="{{cardType}}"/>
+                    <p class="d-flex flex-column align-items-start m-0 justify-content-center">
+                        <span>Ending: {{cardEnding}}</span>
+                        <!--span>Expiry: {{cardExpiry}}</span-->
+                    </p>
+                </div>
+            {{/with}}
+
+            <p class="text-muted">Billing Address:</p>
+            <p>
+                {{#with this.billingAddress}}
+                {{firstName}} {{lastName}}<br>
+                {{address1}}, {{address2}}<br>
+                {{city}}, {{stateCode}}, {{postalCode}}, {{getCountry}} 
+                {{/with}}
+            </p>
+            {{/unless}}
+
+            <!-- Back to cart -->
+            {{#if allowCheckout}}
+            <div class="d-flex align-items-center justify-content-center pb-2">
+                <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-cart-empty.svg')}" class="alx-nav-icon pr-2" alt="{{pageLabelMap 'Component_SiteHeader_MyCart'}}"/>
+                <a href="/cart">Back To Cart</a>
+            </div>
+            {{/if}}
+        </div>
+    </script>
+
+    <script>
+        jQuery(function ($) {
+            Handlebars.registerPartial("totalsSection", $(CCRZ.uiProperties.OrderReviewView.partial.totalsSection).html());
+            console.log('in checkout totals -- ', this.shippingcharge);
+            Handlebars.registerHelper('add', function (num1, num2) {
+                return num1 + num2;
+            });
+
+            Handlebars.registerHelper('getCountry', function () {
+                if (this.country) return this.country;
+                if (this.countryCode === "CA") return "Canada";
+                else if (this.countryCode === "US") return "United States";
+                return this.countryCode;
+            });
+
+            Handlebars.registerHelper('getPaymentDetailsTotals', function () {
+                if (this.transactionPayments && this.transactionPayments.length > 0) {
+                    let cardType = 'credit';
+                    switch (this.transactionPayments[0].paymentType) {
+                        case '001_sopcc': cardType = 'visa'; break;
+                        case '002_sopcc': cardType = 'mastercard'; break;
+                        case '003_sopcc': cardType = 'amex'; break;
+                    }
+                    return {
+                        cardType: cardType,
+                        cardEnding: this.transactionPayments[0].accountNumber.substr(8),
+                        cardExpiry: '--/----'
+                    };
+                }
+                return {
+                    cardType: 'credit',
+                    cardEnding: 'xxxxxxx',
+                    cardExpiry: '--/----'
+                };
+            });
+
+            Handlebars.registerHelper('getProducts', function () {
+                const products = [];
+                const items = this.cartItems ? this.cartItems : this.orderItems;
+                if (items) {
+                    items.forEach(function (item) {
+                        if (item.productType !== "Coupon" && item.mockProduct) {
+                            products.push({
+                                name: item.mockProduct.name,
+                                quantity: item.quantity,
+                                price: item.price,
+                                isSale: item.mockProduct.serviceFlag
+                            });
+                        }
+                    });
+                }
+                return products;
+            });
+
+            Handlebars.registerHelper('getPromoPrice', function () {
+                let promoAmount = 0;
+                const items = this.cartItems ? this.cartItems : this.orderItems;
+                if (items) {
+                    items.forEach(function (item) {
+                        if (item.productType === "Coupon") {
+                            promoAmount += item.itemTotal;
+                        }
+                    });
+                }
+                return Math.abs(promoAmount);
+            });
+        });
+    </script>
+</apex:component>

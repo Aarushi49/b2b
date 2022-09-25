@@ -1,0 +1,269 @@
+<apex:component >
+
+    <!-- My Account - Wishlist section -->
+    <script id="MyAccount-MyWishlist-Desktop" type="text/template">
+        <div class="d-flex justify-content-between align-items-center text-center my-3">
+            <span></span>
+            <h1 class="title mb-0">View My Lists</h1>
+            <a href="#" onclick="logOutUser()">Sign Out</a>
+        </div>
+      
+        <div class="alx-act-card">
+            <p class="mb-3">
+                <button type="button" class="btn btn-primary createTemplate" data-id="">Create Wishlist</button>
+            </p>
+            <p class="alx-pd-label">{{this.length}} result{{#ifGreater this.length 1}}s{{/ifGreater}} found.</p>
+            <table class="table table-responsive-sm">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Last Update</th>
+                        <th>Default</th>
+                        <th class="w-50">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {{#each this}}
+                <tr>
+                    <td>
+                        <a href="#" data-id="{{sfid}}" class="gotoDetails">{{name}}</a>
+                    </td>
+                    <td>
+                        {{lastModifiedDateStr}}
+                    </td>
+                    <td>
+                        <input type="radio" name="isActive" value="{{this.sfid}}" data-id="{{this.sfid}}" {{#if isActive}}checked{{/if}} disabled/>
+                    </td>
+                    <td>
+                        {{#if isRO}}
+                        &#160;
+                        {{else}}
+                        <input type="button" class="openModal btn btn-default btn-sm" data-id="{{sfid}}" value="{{pageLabelMap 'Action_Edit'}}" />
+                        {{/if}}
+                        <input type="button" class="clone btn btn-default btn-sm" data-id="{{sfid}}" value="{{pageLabelMap 'Action_Clone'}}"/>
+                        {{#if isRO}}
+                        &#160;
+                        {{else}}
+                        <input type="button" class="delete btn btn-default btn-sm" data-id="{{sfid}}" value="{{pageLabelMap 'Action_Delete'}}"/>
+                        {{/if}}
+                    </td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+            <div id="modalSec"></div>
+        </div>
+    </script>
+
+    <!-- Wishlist edit modal -->
+    <script id="MyAccount-MyWishlist-EditDialog" type="text/template">
+        <a class="modalLauncher" style="display:none" href="#renameMod_{{sfid}}" data-toggle="modal">&#160;</a>&#160;
+        <div id="renameMod_{{sfid}}" class="modal fade cc_modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content cc_modal_content">
+    
+                    <div class="modal-header justify-content-between">
+                        <span></span>
+                        {{#if name}}
+                        <h3 id="myModalLabel">{{name}}</h3>
+                        {{else}}
+                        <h3 id="myModalLabel">{{pageLabelMap 'Action_CreateWishlist'}}</h3>
+                        {{/if}}
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            <span class="alx-ic ic-close"></span>
+                            <span class="sr-only">Close</span>
+                        </button>
+                    </div>
+    
+                    <div class="modal-body cc_modal-body">     
+                        <form id="renameForm">
+                            <div class="row">
+                                <div class="form-group col-12">
+                                    <label>{{pageLabelMap 'MyAccount_Name'}}*</label>
+                                    <input class="form-control rename_{{sfid}}" type="text" value="{{name}}" name="name"/>
+                                </div>
+                                <div class="form-group col-12">
+                                    <label>{{pageLabelMap 'Field_Notes'}}</label>
+                                    <input class="form-control rename_{{sfid}}" type="text" value="{{note}}" name="note"/>
+                                </div>
+                                <div class="form-group col-12">
+                                    <div class="form-check">
+                                        <input type="checkbox" value="true" {{#if isActive }} checked {{/if}} name="isActive" class="form-check-input rename_{{sfid}}" />
+                                        <label class="form-check-label" for="isActive">Default Wishlist</label>
+                                    </div>
+                                </div>
+                            </div>     
+                        </form>
+                        <p class="alx-form-text alx-no-wrap  ml-auto">* = required</p>
+                    </div>
+                    <div class="modal-footer justify-content-start">
+                        {{#if isRO}}
+                        &#160;
+                        {{else}}
+                        <input type="button" class="btn btn-primary save" data-id="{{sfid}}" value="{{pageLabelMap 'Save'}}"/>
+                        {{/if}}
+                        <input type="button" class="btn btn-link" data-dismiss="modal" value="{{pageLabelMap 'Cancel'}}"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <!-- Wishlist item detail -->
+    <script id="MyAccount-WishlistDetail-Desktop" type="text/template">
+        <div class="d-flex justify-content-between align-items-center text-center my-3">
+            <a href="#" onclick="CCRZ.AB2CmyaccountView.gotoWishlist()">< Back</a>
+            <h1 class="title mb-0">View My Lists</h1>
+            <a href="#" onclick="logOutUser()">Sign Out</a>
+        </div>
+      
+        <div class="alx-act-card alx-cart-items">
+            <div class="d-flex alc-act-card-header">
+                <h2>{{this.name}}</h2>
+            </div>
+            <div class="row">
+                {{#if this.note}}
+                <div class="col-12 alx-act-field myAccName">
+                    <label class="alx-pd-label">Notes:</label>
+                    <p>{{this.note}}</p>
+                </div>
+                {{/if}}
+                <div class="col-12 alx-act-field myAccName">
+                    <label class="alx-pd-label">Default Wishlist:</label>
+                    <p>{{#if isActive}}Yes{{else}}No{{/if}}</p>
+                </div>
+            </div>
+
+            <div class="alx-cart-item-list">
+                <table class="alx-order-items alx-products-list">
+                    <tr>
+                        <th>Items</th>
+                        <th class="w-25">Actions</th>
+                    </tr>
+                    {{#each this.itemData}}
+                    {{#with this.prodBean}}
+                    <tr data-cart-item-id="{{this.sfid}}">
+                        <td>
+                            <div class="row py-3">
+                                <div class="col-sm-6">
+                                    <!-- Main image & Product Badge (cloudinary.js) -->
+                                    {{#with (getSKUComponents this '')}}
+                                    <div id=alx-feature-product-{{sku}} class="alx-feature-product">
+                                        <a href="{{getProductDetailUrl ../this}}" class="alx-product-image">
+                                            <div id="alx-detail-{{swatchSku}}">
+                                                {{{productListImage sku swatchSku}}}
+                                            </div>
+                                        </a>
+                                    </div>
+                                    {{/with}}
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="alx-order-item-details">
+                                        <a href="{{getProductDetailUrl this}}">{{this.name}}</a>
+                                        <span class="pb-3">{{this.sku}}</span>
+                                        {{#each (getSpecValues this)}}
+                                        <span>{{this}}</span>
+                                        {{/each}}
+
+                                        <!-- Price -->
+                                        <span class="pt-3">
+                                        {{#if this.AB2CInStoreOnly}}
+                                            In-Store Only
+                                        {{else}}
+                                            {{getPriceAndUnit this}}
+                                        {{/if}}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div><a class="btn btn-primary mb-2" href="{{getProductDetailUrl this}}">View Product Page</a></div>
+                            <div><button type="button" class="btn btn-primary slim addItem mb-2" data-id="{{../uid}}">{{pageLabelMap 'Component_MiniwishList_AddToCart'}}</button></div>
+                            {{#unless ../isRO}}
+                            <div><button type="button" class="btn btn-default slim deleteItem" data-id="{{../uid}}" data-pid="{{parentId}}">Remove from list</button></div>
+                            {{/unless}}
+                        </td>
+                    </tr>
+                    {{/with}}
+                    {{/each}}
+                </table>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        CCRZ.MyAccount = _.extend(CCRZ.MyAccount || {}, {
+            AB2Cwishlist: {
+                register: function (registrar) {
+                    CCRZ.pubSub.on("ccrz.views:myWishlistsView:defined", function (theView) {
+                        CCRZ.models.CreateWishlistModel = CCRZ.CloudCrazeModel.extend({
+                            className: "AB2CAccountController",
+                            create: function (callback) {
+                                this.invokeCtx('createDefaultWishlist', function (response) {
+                                    if (callback) callback(response);
+                                }, { nmsp: false, buffer: false });
+                            }
+                        });
+
+                        if (CCRZ.getPageConfig('nav.tmpl', true)) {
+                            var wishlistData = new CCRZ.collections.WishlistList();
+
+
+                            var useTemplatePaginator = CCRZ.getPageConfig('pgbl.tmpl', false);
+                            if (useTemplatePaginator) {
+                                CCRZ.templatePaginatorView = new CCRZ.views.navigatePaginationView({
+                                    model: wishlistData
+                                });
+                            }
+
+                            var theView = new CCRZ.views.myWishlistsView({
+                                model: wishlistData
+                            });
+
+                            theView.className = 'cc_ctrl_WishlistRD';
+                            theView.invokeContainerLoadingCtx($('.deskLayout'), 'fetchWishlists', function (response, event) {
+                                if (response.data && response.data.length > 0) {
+                                    registrar.registerNewView('myWishlists', 'View My Lists', theView);
+                                    if (useTemplatePaginator) {
+                                        CCRZ.templatePaginatorView.listenTo(theView, "pagination:host:rendered", CCRZ.templatePaginatorView.hostRendered);
+                                    }
+                                } else {
+                                    this.createWishlistModel = new CCRZ.models.CreateWishlistModel();
+                                    this.createWishlistModel.create(function (response) {
+                                        registrar.registerNewView('myWishlists', 'View My Lists', theView);
+                                        if (useTemplatePaginator) {
+                                            CCRZ.templatePaginatorView.listenTo(theView, "pagination:host:rendered", CCRZ.templatePaginatorView.hostRendered);
+                                        }
+                                    });
+                                }
+                            }, { escape: false });
+                        }
+                    });
+                }
+            }
+        });
+
+        Handlebars.registerHelper("getSpecValues", function (wishlistItem) {
+            const specValues = [];
+            if (wishlistItem.productSpecsS) {
+                for (let spec of wishlistItem.productSpecsS) {
+                    if (spec.AB2CIsSize || spec.AB2CPSIsSwatch) {
+                        specValues.push(spec.AB2CProductSpecSKU);
+                    }
+                }
+            }
+            return specValues;
+        });
+
+        Handlebars.registerHelper('getPriceAndUnit', function (product) {
+            let unitOfMeasure = product.UnitOfMeasure;
+            if (product.ProductType == 'Dynamic Kit' || product.AB2CShowSquareFootageCalculator) {
+                unitOfMeasure = 'per sq. ft.';
+            } else if (product.AB2CShowPerLinearFoot) {
+                unitOfMeasure = 'per linear ft.';
+            }
+            return Handlebars.helpers.price(product.price / product.qtyPerUnit) + ' ' + unitOfMeasure;
+        });
+    </script>
+</apex:component>

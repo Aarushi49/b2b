@@ -1,0 +1,27 @@
+<apex:component >
+  
+<!-- Expects an address object
+  { 
+    address1: "123 Main Street",
+    address2: "Suit 001",
+    addrReadOnly: false,
+    city: "Toronto",
+    country: "Canada",
+    countryCode: "CA",
+    firstName: "Howard",
+    lastName: "Hone",
+    postalCode: "a1b2c3",
+    sfdcName: "000056",
+    sfid: "a0s54000000Q4QaAAK",
+    stateCode: "ON" 
+  } -->
+
+  <script id="AddressPartialTemplate" type="text/template">
+    <p class="mb-0">{{firstName}} {{lastName}}</p>
+    <p class="mb-0">{{address1}}</p>
+    {{#if address2}}<p class="mb-0">{{address2}}</p>{{/if}}
+    <p class="mb-0">{{city}}, {{stateCode}}, {{postalCode}}</p>
+    <p class="mb-0">{{country}}</p>
+  </script>
+  
+</apex:component>

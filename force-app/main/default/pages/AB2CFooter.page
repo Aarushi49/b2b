@@ -1,0 +1,166 @@
+<apex:page id="AB2CFooter" controller="AB2CSellerController" docType="html-5.0" sidebar="false" showHeader="false" standardStylesheets="false"
+    applyHtmlTag="false">
+    <c:AB2CQuickLinks ></c:AB2CQuickLinks>
+
+    <script id="footer-desktop-template" type="text/template">
+        <div class="container-xl">
+            {{> QuickLinksPartialTemplate (getMenuById 'QuickLinksMenu')}}
+        </div>
+
+        {{#with (getMenuById 'FooterMenu')}}
+        <!-- Footer section -->
+        <div class="footer">
+            <div class="container-xl">
+                <div class="row">
+                    {{#each children}}
+                        {{#ifEquals displayName 'Column'}}
+                        <div class="col-lg-3 col-md-6">
+                            {{#each children}}
+                                <div class="ftr-section">
+                                    <p>
+                                        <a href="{{linkURL}}" class="alx-link-heading">{{decodeHTML displayName}}</a>
+                                    </p>
+                                    {{#if children}}
+                                        <ul>
+                                            {{#each children}}
+                                                
+                                                {{#ifEquals displayName 'Email'}}
+                                                <li class="ftr-text">{{displayName}}:
+                                                    <a href="mailto:{{linkURL}}">{{linkURL}}</a>
+                                                </li>
+                                                {{else}}
+                                                    {{#ifEquals displayName 'Phone Toll Free'}}
+                                                    <li class="ftr-text">{{displayName}}:
+                                                        <a href="tel:{{linkURL}}">{{linkURL}}</a>
+                                                    </li>
+                                                    {{else}}
+                                                    <li>
+                                                        <a href="{{linkURL}}">{{decodeHTML displayName}}</a>
+                                                    </li>
+                                                    {{/ifEquals}}
+                                                {{/ifEquals}}
+
+                                            {{/each}}
+                                        </ul>
+                                    {{/if}}
+                                </div>
+                            {{/each}}
+                        </div>
+                        {{/ifEquals}}
+                    
+
+                        {{#ifEquals menuId 'SocialLinks'}}
+                            <div class="col-lg-3 col-md-6">
+                                <div class="ftr-section ftr-interactive">
+                                    <div class="social-row d-flex flex-row flex-wrap justify-content-center justify-content-xl-start">
+                                        <div class="d-flex alx-social-icon-row">
+                                            <div class="social-icon ic-facebook d-flex align-items-center justify-content-center position-relative">
+                                                <a class="stretched-link" href="{{this.children.[0].linkURL}}">
+                                                    <img class="" src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/social/mdi-facebook-box.svg')}" />
+                                                </a>
+                                            </div>
+                                            <div class="social-icon ic-instagram d-flex align-items-center justify-content-center position-relative">
+                                                <a class="stretched-link" href="{{this.children.[1].linkURL}}">
+                                                    <img class="" src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/social/mdi-instagram.svg')}" />
+                                                </a>
+                                            </div>
+                                            <div class="social-icon ic-pinterest d-flex align-items-center justify-content-center position-relative">
+                                                <a class="stretched-link" href="{{this.children.[2].linkURL}}">
+                                                    <img class="" src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/social/mdi-pinterest-box.svg')}" />
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex alx-social-icon-row">
+                                            <div class="social-icon ic-youtube d-flex align-items-center justify-content-center position-relative">
+                                                <a class="stretched-link" href="{{this.children.[3].linkURL}}">
+                                                    <img class="" src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/social/mdi-youtube.svg')}" />
+                                                </a>
+                                            </div>
+                                            <div class="social-icon ic-houzz d-flex align-items-center justify-content-center position-relative">
+                                                <a class="stretched-link" href="{{this.children.[4].linkURL}}">
+                                                    <img class="" src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/social/ic-social-houzz.svg')}" />
+                                                </a>
+                                            </div>
+                                            <div class="social-icon ic-homestars d-flex align-items-center justify-content-center position-relative">
+                                                <a class="stretched-link" href="{{this.children.[5].linkURL}}">
+                                                    <img class="" src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/social/ic-social-housestars.svg')}" />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                        {{/ifEquals}}
+                    {{/each}}
+
+
+                        <div class="ftr-section ftr-interactive">
+                            <form action="https://alexanian.us4.list-manage.com/subscribe/post?u=5e856e72789e06b26bc2ce8c0&amp;id=94ca55cb24" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+                                <div class="input-group mb-3 form-group">
+                                    <input type="email" value="" name="EMAIL" class="form-control alx-newsletter-input" id="mce-EMAIL" placeholder="Newsletter Sign-up" required>
+                                    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+                                    <div style="position: absolute; left: -5000px;" aria-hidden="true">
+                                        <input type="text" name="b_5e856e72789e06b26bc2ce8c0_94ca55cb24" tabindex="-1" value="">
+                                    </div>
+                                    <div class="input-group-append">
+                                        <button class="btn-email d-flex align-items-center justify-content-center" type="submit" name="subscribe" id="mc-embedded-subscribe">
+                                            <div class="alx-ic ic-email ic-white"></div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="ftr-section ftr-interactive form-group">
+                            <select class="form-control" id="alx-seller-locator-footer">
+                                <option value="" selected>Store Locator</option>
+                            </select>
+                        </div>
+                        <div class="ftr-section ftr-interactive w-100 d-flex flex-row justify-content-center justify-content-sm-start">
+                            <a href="#CyberSourceLink">
+                            <img class="cybersource-payment-img" src="https://res.cloudinary.com/alexanian/image/upload/v1586206255/prod/static/shared/cyber-source-secure-acceptance.svg" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="alx-trademark">
+                <div class="container h-100 d-flex align-items-center">
+                    <p>
+                        Alexanian&#8482; and Alexanian Carpet and Flooring&#8482; {{year}}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {{/with}}
+    </script>
+
+    <div class="footer-content-section"></div>
+
+    <script>
+        Handlebars.registerHelper('year', function () {
+            return new Date().getFullYear();
+        });
+
+        CCRZ.pubSub.on('view:Menu:refresh', function (theView) {
+            CCRZ.util.createView({
+                desktop: {
+                    template: 'footer-desktop-template',
+                    target: '.footer-content-section'
+                }
+            });
+
+            // Populate store locations in footer dropdown
+            getSellerLocatorModel().fetch(function (response) {
+                if (response.sellerList) {
+                    for (let seller of response.sellerList) {
+                        $('#alx-seller-locator-footer').append('<option value="' + seller.sellerId + '">' + seller.sfdcName + '</option>');
+                    }
+                    $('#alx-seller-locator-footer').change(function () {
+                        if ($(this).val()) {
+                            window.location.href = "/stores/detail?selid=" + $(this).val();
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</apex:page>

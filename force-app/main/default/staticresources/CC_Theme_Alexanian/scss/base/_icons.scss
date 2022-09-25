@@ -1,0 +1,36 @@
+.alx-ic {
+  &.ic-white {
+    background-color: $white;
+  }
+
+  &.ic-cerulean {
+    background-color: $cerulean;
+  }
+
+  &.ic-rouge {
+    background-color: $rouge;
+  }
+
+  &.ic-snow {
+    background-color: $snow;
+  }
+
+  // List of icon SVGs in /images/icons/, without ic- prefix
+  $icons: arrow-down, arrow-up, arrow-right, close, email, email-outline,
+    keyboard-left, lock, keyboard-right, keyboard-up, menu, pause, search,
+    check-circle, info, help, error;
+
+  @each $icon in $icons {
+    &.ic-#{$icon} {
+      -webkit-mask: url(../images/icons/ic-#{$icon}.svg);
+      mask: url(../images/icons/ic-#{$icon}.svg);
+    }
+  }
+
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: $rich-black;
+  -webkit-mask-size: cover;
+  mask-size: cover;
+}

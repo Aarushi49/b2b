@@ -1,0 +1,140 @@
+<apex:component controller="AB2CSellerController" rendered="{!IF(contains($CurrentPage.Name,'ccrz__SellerListPage'), true, false)}">
+    <c:AB2CSellerLocatorMap ></c:AB2CSellerLocatorMap>
+
+    <script id="Store-Locator-Container" type="text/template">
+        <div class="container-xl">
+            <h1 class="text-center">Store locator</h1>
+
+            <nav>
+                <div class="nav nav-tabs" role="tablist">
+                    <a class="nav-item nav-link active" id="alx-seller-locator-nav" data-toggle="tab" href="#alx-seller-locator-tab" role="tab" aria-controls="alx-seller-locator-tab" aria-selected="true">
+                        <span class="d-block d-lg-inline">Locate a store</span>
+                    </a>
+                    <a class="nav-item nav-link" id="alx-all-sellers-nav" data-toggle="tab" href="#alx-all-sellers-tab" role="tab" aria-controls="alx-all-sellers-tab" aria-selected="false">
+                        <span class="d-block d-lg-inline">View stores list</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="tab-content p-3">
+                <div class="tab-pane fade show active" id="alx-seller-locator-tab" role="tabpanel" aria-labelledby="alx-seller-locator-nav">
+                    <div class="form-row mt-4 mb-4">
+                        <div class="form-group col-md-5">
+                            <label for="alx-seller-postal-code">Postal Code</label>
+                            <input type="text" id="alx-seller-postal-code" class="form-control">
+                            <button id="alx-seller-locate" class="btn btn-primary btn-input-right">Locate</button>
+                        </div>
+                        <div class="form-group col-md-5">
+                            <label for="alx-seller-city-locator">City</label>
+                            <select class="form-control" id="alx-seller-city-locator">
+                                <option value="" selected>Select</option>
+                                {{#each cities}}
+                                    <option value="{{.}}">{{.}}</option>
+                                {{/each}}
+                            </select>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="alx-seller-distance">Distance</label>
+                            <select class="form-control" id="alx-seller-distance">
+                                <option value="" selected>Select</option>
+                                <option value="5">5 km</option>
+                                <option value="10">10 km</option>
+                                <option value="15">15 km</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr>
+                    <div id="alx-store-locator-map"></div>
+                </div>
+
+                <div class="tab-pane fade" id="alx-all-sellers-tab" role="tabpanel" aria-labelledby="alx-all-sellers-nav">
+                    <div class="form-row mt-4 mb-4">
+                        <div class="form-group col-md-6">
+                            <label for="alx-seller-city-list">City</label>
+                            <select class="form-control" id="alx-seller-city-list">
+                                <option value="" selected>Select</option>
+                                {{#each cities}}
+                                    <option value="{{.}}">{{.}}</option>
+                                {{/each}}
+                            </select>
+                        </div>
+                    </div>
+                    <hr>
+                    <div id="alx-store-locator-locations" class="row"></div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        jQuery(function ($) {
+            CCRZ.views.SellerLocatorView = CCRZ.CloudCrazeView.extend({
+                viewName: "SellerLocatorView",
+                templateDesktop: CCRZ.util.template('Store-Locator-Container'),
+                templateSelector: '.contentBody',
+                init: function (options) {
+                    const thisView = this;
+                    thisView.render();
+                    thisView.SellerLocator = getSellerLocatorModel();
+                    thisView.SellerLocator.fetch(function (response) {
+                        if (response.sellerList && response.cities) {
+                            response.cities = response.cities.sort();
+                            thisView.model = response;
+                            thisView.render();
+                            thisView.locateSeller();
+                            thisView.populateSellers();
+                        } else {
+                            console.error('Error fetching sellers.');
+                        }
+                    });
+                },
+                events: {
+                    'click #alx-seller-locate': 'locateSeller',
+                    'change #alx-seller-distance': 'locateSeller',
+                    'change #alx-seller-city-locator': 'locateSeller',
+                    'change #alx-seller-city-list': 'populateSellers'
+                },
+                locateSeller: function (event) {
+                    // Kick of rendering "Locate a Store" tab
+                    const thisView = this;
+                    let sellerData = this.model.sellerList;
+                    const sellerCity = $('#alx-seller-city-locator').val();
+                    const sellerDistance = $('#alx-seller-distance').val() || "0";
+                    const sellersInCity = sellerData.filter(function (seller) {
+                        return seller.AB2CCity === sellerCity;
+                    });
+                    const sellerCountry = sellersInCity && sellersInCity.length > 0 ? sellersInCity[0].AB2CCountry : "Canada";
+
+                    const userInputAddress = $('#alx-seller-postal-code').val();
+                    getCoordinates(userInputAddress, sellerCity, sellerCountry)
+                        .then(function (location) {
+                            renderMap(sellerData, sellerCity, thisView.model.cities, location, false, +sellerDistance);
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                            renderMap(sellerData, sellerCity, thisView.model.cities, { lat: 43.7184038, lng: -79.5181407 }, true, +sellerDistance);
+                        });
+                },
+                populateSellers: function (event) {
+                    // Kick of rendering "View Stores List" tab
+                    let sellerData = this.model.sellerList;
+                    const sellerCity = $('#alx-seller-city-list').val();
+                    if (sellerCity) {
+                        sellerData = sellerData.filter(function (seller) {
+                            return seller.AB2CCity === sellerCity;
+                        });
+                    }
+                    renderSellers(sellerData);
+                },
+                renderDesktop: function () {
+                    this.setElement(this.templateSelector);
+                    this.$el.html(this.templateDesktop(this.model));
+                },
+                postRender: function () {
+                    renderCustomBreadcrumb([{ label: "Store Locator" }]);
+                }
+            });
+            CCRZ.SellerLocatorView = new CCRZ.views.SellerLocatorView({});
+        });
+    </script>
+</apex:component>

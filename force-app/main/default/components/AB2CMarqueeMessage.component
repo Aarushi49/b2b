@@ -1,0 +1,29 @@
+<apex:component >
+    <script id='marquee-message' type='text/template'>
+        {{#alertBannerEnabled}}
+        <div class="marquee-message">
+            <a class="url-marquee-message" href='{!HTMLENCODE($Setup.Storefront_Alert_Banner__c.Marquee_URL__c)}'>
+                {!HTMLENCODE($Setup.Storefront_Alert_Banner__c.Message__c)}
+            </a>
+        </div>
+        {{/alertBannerEnabled}}
+    </script>
+    <div class='render-message'></div>
+
+    <script>
+        jQuery(function ($) {
+            Handlebars.registerHelper('alertBannerEnabled', function (options) {
+                let enabledMessage = {!$Setup.Storefront_Alert_Banner__c.Enabled__c};
+                if (enabledMessage) {
+                    return options.fn(this);
+                }
+            });
+            CCRZ.util.createView({
+                desktop: {
+                    template: 'marquee-message',
+                    target: 'render-message'
+                }
+            });
+        });
+    </script>
+</apex:component>

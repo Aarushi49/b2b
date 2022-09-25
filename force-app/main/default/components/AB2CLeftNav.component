@@ -1,0 +1,79 @@
+<apex:component >
+    <!-- 
+        Left nav partial template. Expects model of this structure:
+        {
+            displayName: "Carpet Buying Guide",
+            menuId: "carpet-buying-guide",
+            displayMenuTitle: true,
+            children: [
+                {
+                    displayName: "Construction"
+                    linkURL: "carpet-buying-guide/carpet-buying-guide-construction"
+                }
+            ]
+        }
+    -->
+    <script id="LeftNavPartialTemplate" type="text/template">
+        <div class="alx-left-nav-container">
+            <a class="{{#unless displayMenuTitle}}d-md-none d-lg-none d-xl-none{{/unless}}" data-toggle="collapse" href="#alx-left-nav-main" role="button" aria-expanded="true" aria-controls="alx-left-nav-main">{{leftNavCurrentDisplayName .}}</a>
+            <div class="alx-left-nav-items" id="alx-left-nav-main">
+                {{#each children}}
+                    <div class="alx-left-nav-top-level">
+                        <a class="nav-link {{leftNavItemActive linkURL}} {{#unless linkURL}}disabled{{/unless}}" href="{{linkURL}}">{{decodeHTML displayName}}</a>
+                        {{#if children}}
+                        <a data-toggle="collapse" href="#alx-left-nav-{{menuId}}" role="button" aria-expanded="false" aria-controls="alx-left-nav-{{menuId}}">&nbsp;</a>
+                        {{/if}}
+                    </div>
+                    {{#if children}}
+                    <div class="collapse alx-left-nav-second-level" id="alx-left-nav-{{menuId}}">
+                        {{#each children}}
+                        <a class="nav-link {{leftNavItemActive linkURL}}" href="{{linkURL}}">{{decodeHTML displayName}}</a>
+                        {{/each}}
+                    </div>
+                    {{/if}}
+                {{/each}}
+            </div>
+        </div>
+    </script>
+
+    <script>
+        Handlebars.registerPartial("LeftNavPartialTemplate", document.getElementById("LeftNavPartialTemplate").innerHTML);
+
+        jQuery(function ($) {
+            Handlebars.registerHelper('leftNavItemActive', function (linkURL) {
+                const isActive = window.location.href.includes(linkURL);
+                return isActive ? 'active' : '';
+            });
+
+            Handlebars.registerHelper('leftNavCurrentDisplayName', function (model) {
+                if (model) {
+                    for (child of model.children) {
+                        if (window.location.href.includes(child.linkURL)) {
+                            return screenSize === "mobile" ? child.displayName : model.displayName;
+                        }
+                    }
+                    return model.displayName;
+                }
+                return ' ';
+            });
+
+            whenAvailable('#alx-left-nav-main', function () {
+                updateFilterCollapse(screenSize === "mobile");
+            });
+
+            CCRZ.pubSub.on('action:screen:resize', function (deviceType) {
+                updateFilterCollapse(screenSize === "mobile");
+            });
+
+            function updateFilterCollapse(isCollapsable) {
+                if (!isCollapsable) {
+                    $('a[aria-controls="alx-left-nav-main"]').attr('href', '');
+                    $('#alx-left-nav-main').removeClass('collapse show');
+                } else {
+                    $('a[aria-controls="alx-left-nav-main"]').attr('href', '#alx-left-nav-main').attr("aria-expanded", "false");
+                    $('#alx-left-nav-main').addClass('collapse');
+                }
+            }
+        });
+    </script>
+</apex:component>

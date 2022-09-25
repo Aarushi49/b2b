@@ -1,0 +1,203 @@
+<apex:component >
+  <script id="menu-desktop-template" type="text/template">
+    <nav class="navbar navbar-expand-lg alx-navbar-menu">
+      <div class="container-xl">
+        <a class="navbar-brand" href="/" id="logoUrl">
+          <img src="https://res.cloudinary.com/alexanian/image/upload/v1586206255/prod/static/shared/logo-alexanian.svg" alt="Alexanian Flooring | Carpets | Window Coverings. Trusted since 1925"/>
+        </a>
+
+        <div class="product-search-input alx-menu-search ml-auto d-sm-flex d-none d-lg-none" />
+
+        <div class="alx-ic ic-search ml-auto d-inline-block d-sm-none" tabindex="0" data-toggle="collapse" data-target="#mobileSearchMenu" aria-controls="mobileSearchMenu" aria-expanded="false" aria-label="Toggle search"><span class="sr-only">Toggle search</span></div>
+        <div class="collapse navbar-collapse" id="mobileSearchMenu">
+          <div class="alx-mobile-menu-close d-flex align-items-center d-lg-none">
+            <div class="ml-auto alx-ic ic-close" tabindex="0" data-toggle="collapse" data-target="#mobileSearchMenu" aria-controls="mobileSearchMenu" aria-expanded="false" aria-label="Toggle search">
+              <span class="sr-only">Toggle search</span>
+            </div>
+          </div>
+          <div class="product-search-input" />
+        </div>
+        <div class="collapse navbar-collapse" id="navigationMenu">
+          <div class="alx-mobile-menu-close d-flex align-items-center d-lg-none">
+            <div class="ml-auto alx-ic ic-close" tabindex="0" data-toggle="collapse" data-target="#navigationMenu" aria-controls="navigationMenu" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="sr-only">Toggle navigation</span>
+            </div>
+          </div>
+          <ul id="navigationMenuLinks" class="navbar-nav mr-auto">
+            {{#each .}}
+              {{#if children}}
+              {{setMenuLinks .}}
+              <li class="nav-item dropdown">
+
+                <!-- Top level menu links -->
+                <a id="{{menuId}}" href="{{linkURL}}" class="d-flex align-items-center justify-content-between d-lg-none dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                  <span>{{displayName}}</span>
+                  <span class="alx-ic ic-arrow-down"></span>
+                </a>
+                <a id="{{menuId}}" href="{{linkURL}}" onclick="event.preventDefault(); window.location.href='{{linkURL}}'" class="d-none d-lg-flex dropdown-toggle alx-toggle-lg" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{displayName}}</a>
+
+                <ul class="dropdown-menu" aria-labelledby="{{menuId}}">
+                  {{#each children}}
+                    {{#if children}}
+                      <li class="dropdown-submenu">
+
+                        <!-- Second level menu links -->
+                        <a href="{{linkURL}}" id="{{menuId}}" class="dropdown-item d-lg-none d-flex align-items-center justify-content-between">
+                          <span>{{displayName}}</span>  
+                          <span class="alx-ic ic-arrow-down"></span>
+                        </a>
+
+                        <a id="{{menuId}}" class="dropdown-item dropdown-toggle d-none d-lg-flex align-items-center justify-content-between" href="{{linkURL}}">
+                          <span>{{displayName}}</span>
+                          <span class="alx-ic ic-arrow-right"></span>
+                        </a>
+
+                        <ul class="dropdown-menu" aria-labelledby="{{menuId}}">
+                          {{#each children}}
+                            <!-- Third level menu links -->
+                            <li class="dropdown-item">
+                              <a class="{{isSale displayName}}dropdown-item d-flex align-items-center" href="{{linkURL}}">{{displayName}}</a>
+                            </li>
+                          {{/each}}
+                        </ul>
+                      </li>
+                    {{else}}
+                      <li>
+                        <a class="{{isSale displayName}}dropdown-item d-flex align-items-center" href="{{linkURL}}">{{displayName}}</a>
+                      </li>
+                    {{/if}}
+                {{/each}}
+                </ul>
+              </li>
+              {{else}}
+                {{#ifEquals mType 'Category'}}
+                  <li class="{{isSale displayName}}nav-item d-flex align-items-center">{{categoryLink this 'cc_category' text=displayName}}</li>
+                {{/ifEquals}}
+                {{#ifEquals mType 'URL'}}
+                  <li class="{{isSale displayName}}nav-item d-flex align-items-center"><a href="{{linkURL}}" data-href="{{linkURL}}" data-menuid="{{menuId}}">{{displayName}}</a></li>
+                {{/ifEquals}}
+              {{/if}}
+            {{/each}}
+          </ul>
+        </div>
+
+        <div class="product-search-input alx-menu-search ml-auto d-none d-lg-flex" />
+
+      </div>
+    </nav>
+  </script>
+  <c:AB2CMarqueeMessage ></c:AB2CMarqueeMessage>
+  <script>
+    jQuery(function ($) {
+
+      Handlebars.registerHelper('isSale', function (displayName) {
+        if (displayName.toLowerCase().includes('sale')) {
+          return 'alx-sale ';
+        } else {
+          return '';
+        };
+      });
+
+      Handlebars.registerHelper('setMenuLinks', function (parentCategory) {
+        if (parentCategory.openInNewWindow && parentCategory.children) {
+          function getFriendlyUrl(displayName) {
+            return displayName.toLowerCase().replace(/ /g, '-');
+          }
+          const parentFriendlyUrl = getFriendlyUrl(parentCategory.displayName);
+
+          // Set product list page links for second level menu items
+          for (let i = 0; i < parentCategory.children.length; i++) {
+            const child = parentCategory.children[i];
+            if (child.mType === "Category") {
+              child.linkURL = "/" + parentFriendlyUrl + "/" + getFriendlyUrl(child.displayName);
+            }
+
+            // Set product list page links for third level menu items
+            if (parentCategory.children[i].children) {
+              for (let j = 0; j < parentCategory.children[i].children.length; j++) {
+                const grandchild = parentCategory.children[i].children[j];
+                if (grandchild.mType === "Category") {
+                  grandchild.linkURL = child.linkURL + "/" + getFriendlyUrl(grandchild.displayName);
+                }
+              }
+            }
+          }
+
+          // Add "View All <category>" link at the top of second level menu items
+          const viewAllName = parentCategory.displayName === 'Area Rugs' ? 'Rugs' : parentCategory.displayName;
+
+
+          if (parentCategory.displayName !== 'Carpet'){
+            parentCategory.children.unshift({
+              displayName: "View All " + viewAllName,
+              menuId: parentCategory.menuId + "02",
+              mType: "Category",
+              openInNewWindow: false,
+              sequence: 101,
+              linkURL: "/" + parentFriendlyUrl
+            });
+          }
+
+          if (screenSize !== "desktop") {
+            parentCategory.children.unshift({ // In mobile, category landing pages need a separate link
+              displayName: parentCategory.displayName + " Overview",
+              menuId: parentCategory.menuId,
+              mType: "URL",
+              openInNewWindow: false,
+              sequence: 100,
+              linkURL: "/" + parentFriendlyUrl + "/overview"
+            });
+          }
+
+          // Set category landing page URL for first level menu items
+          parentCategory.linkURL = '/' + parentFriendlyUrl + '/overview';
+        }
+      });
+
+      CCRZ.pubSub.on('view:Menu:refresh', function (theView) {
+        if (!CCRZ.models.HeaderMenuModel) {
+          CCRZ.models.HeaderMenuModel = CCRZ.CloudCrazeModel.extend({});
+          CCRZ.views.HeaderMenuView = CCRZ.CloudCrazeView.extend({
+            viewName: "HeaderMenuView",
+            templateDesktop: CCRZ.util.template('menu-desktop-template'),
+            templateSelector: '.menu_container',
+            events: {
+              "hide.bs.dropdown .dropdown": "handleMenu"
+            },
+            init: function (options) {
+              const thisView = this;
+              thisView.HeaderMenuDetails = new CCRZ.models.HeaderMenuModel();
+              const menu = getMenuById('HeaderMenu');
+              if (menu && menu.children) {
+                thisView.model = menu.children.filter(function (child) {
+                  return child.menuId !== "HIDDEN"
+                });
+                thisView.render();
+              }
+            },
+            renderDesktop: function () {
+              this.setElement(this.templateSelector);
+              this.$el.html(this.templateDesktop(this.model));
+            },
+            postRender: function () {
+              // Checks for combined height of navbar and marquee and adds appropriate spacing to start of html body
+              $('.alx-header-spacer').css('height', $('header').height() + $('.marquee-message').outerHeight());
+              $(window).resize(function () {
+                $('.alx-header-spacer').css('height', $('header').height() + $('.marquee-message').outerHeight());
+              }).resize();
+            },
+            handleMenu: function (e) {
+              if (e.clickEvent) {
+                e.preventDefault(); // Prevents default Bootstrap behavior where clicking item inside dropdown closes dropdown
+                $(e.clickEvent.target).parent().toggleClass('open');
+                $(e.clickEvent.target).siblings('.dropdown-menu').toggleClass('show');
+              }
+            }
+          });
+          CCRZ.HeaderMenuView = new CCRZ.views.HeaderMenuView({});
+        }
+      });
+    });
+
+  </script>
+</apex:component>

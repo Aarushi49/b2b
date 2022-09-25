@@ -1,0 +1,126 @@
+<apex:component >
+  <c:AB2CSimpleProduct ></c:AB2CSimpleProduct>
+
+  <script id="FeaturedProductsCarouselPartialTemplate" type="text/template">
+    <!-- 
+        Featured product carousel partial template. Model is an array of arrays of products of this structure:
+          [
+            [
+              {
+                  "sfid": "a1i540000033XbdAAE",
+                  "sfdcName": "Barrister-Oyster-2'6\"x8'0\" Runner",
+                  "ownerId": "0054P00000AQOkZQAX",
+                  "SKU": "1085-675-Oyster-26x8Runner",
+                  "storefront": "DefaultStore;AlexanianStore",
+                  "productStatus": "Released",
+                  "productType": "Product",
+                  "startDate": 1579564800000,
+                  "unitOfMeasure": "Each",
+                  "endDate": 4072636800000,
+                  "averageRating": 0,
+                  "quantityperunit": 1,
+                  "SEODescription": "Shop the beautiful Barrister Hand-Knotted Area Rug at alexanian.com - free Shipping across Canada on all online rugs - and an amazing selection of rugs of all kinds at our stores in Ontario.",
+                  "SEOTitle": "Barrister | 1085-675-Oyster | Hand-Knotted Area Rug | Alexanian Carpet & Flooring | alexanian.com | Canada",
+                  "taxable": false,
+                  "inventoryType": "STANDARD",
+                  "EProductMediasS": [{
+                          "product": "a1i540000033XbdAAE",
+                          "sfid": "a1d54000000WyV2AAK",
+                          "sfdcName": "000139",
+                          "altMessage": "alt 2",
+                          "enabled": true,
+                          "endDate": 4102358400000,
+                          "locale": "en_US",
+                          "mediaType": "Product Image",
+                          "productMediaSource": "URI",
+                          "sequence": 2,
+                          "startDate": 1581292800000,
+                          "URI": "https://alexanian.azureedge.net/a205a86993b94801b5eca4eb6972231f/Images/Products483-832x832-879587864.jpg"
+                      }, {
+                          "product": "a1i540000033XbdAAE",
+                          "sfid": "a1d54000000WyUxAAK",
+                          "sfdcName": "000138",
+                          "altMessage": "test product image",
+                          "enabled": true,
+                          "endDate": 4102358400000,
+                          "locale": "en_US",
+                          "mediaType": "Product Image",
+                          "productMediaSource": "URI",
+                          "sequence": 500,
+                          "startDate": 1581292800000,
+                          "URI": "https://alexanian.azureedge.net/a205a86993b94801b5eca4eb6972231f/Images/Products483-832x832--1648288690.jpg"
+                      }
+                  ],
+                  "productSpecIndiciesS": [{
+                          "product": "a1i540000033XbdAAE",
+                          "sfid": "a1e54000000VKi0AAG",
+                          "sfdcName": "a1e54000000VKi0",
+                          "spec": "a2A54000000G13yEAC",
+                          "productSpecIndexId": "a1i540000033XbdAAEa2A54000000G13yEAC",
+                          "specValue": "Oyster",
+                          "specR": {
+                              "displayName": "Color",
+                              "sfid": "a2A54000000G13yEAC"
+                          }
+                      }, {
+                          "product": "a1i540000033XbdAAE",
+                          "sfid": "a1e54000000VKi1AAG",
+                          "sfdcName": "a1e54000000VKi1",
+                          "spec": "a2A54000000GPqnEAG",
+                          "productSpecIndexId": "a1i540000033XbdAAEa2A54000000GPqnEAG",
+                          "specValue": "26x8Runner",
+                          "specR": {
+                              "displayName": "Size",
+                              "sfid": "a2A54000000GPqnEAG"
+                          }
+                      }
+                  ],
+                  "productSpecsS": [{
+                          "product": "a1i540000033XbdAAE",
+                          "sfid": "a1f54000000GHP5AAO",
+                          "sfdcName": "PS-0000120",
+                          "spec": "a2A54000000G13yEAC",
+                          "productID": "a1i540000033Xbd-a2A54000000G13y",
+                          "specValue": "Oyster"
+                      }, {
+                          "product": "a1i540000033XbdAAE",
+                          "sfid": "a1f54000000GHPPAA4",
+                          "sfdcName": "PS-0000140",
+                          "spec": "a2A54000000GPqnEAG",
+                          "productID": "a1i540000033Xbd-a2A54000000GPqn",
+                          "specValue": "26x8Runner"
+                      }
+                  ],
+                  "shortDesc": "Classically, refined and handsomely hand knotted, the Barrister rug collection lends a nod to the fashion forward menswear look that&#39;s so popular today. Each area rug is hand-crafted by expert weavers who are experienced at hand knotting traditional, contemporary and transitional patterns. The tradition of hand knotting excellence has been passed down through many generations and is true art form."
+              }
+          ]
+        ]
+    -->
+    <div id="featureProductCarousel{{size}}" class="alx-featured-product-carousel carousel slide" data-ride="carousel">
+      <div class="carousel-inner">
+          {{#each products}}
+              <div class="{{returnClass @first 'active'}}carousel-item" data-interval="5000">
+                  <div class="alx-feature-product-container d-flex justify-content-center">
+                      {{#each .}}
+                        {{> SimpleProductPartialTemplate . selectable=(lookup ../../this 'selectable')}}
+                      {{/each}}
+                  </div>
+              </div>
+          {{/each}}
+      </div>
+      
+      <a class="carousel-control-prev" href="#featureProductCarousel{{size}}" role="button" data-slide="prev">
+        <span class="alx-ic ic-keyboard-left" aria-hidden="true"></span>
+        <span class="sr-only">Previous</span>
+      </a>
+      <a class="carousel-control-next" href="#featureProductCarousel{{size}}" role="button" data-slide="next">
+        <span class="alx-ic ic-keyboard-right" aria-hidden="true"></span>
+        <span class="sr-only">Next</span>
+      </a>
+    </div>
+  </script>
+
+  <script>
+    Handlebars.registerPartial("FeaturedProductsCarouselPartialTemplate", document.getElementById("FeaturedProductsCarouselPartialTemplate").innerHTML);
+  </script>
+</apex:component>

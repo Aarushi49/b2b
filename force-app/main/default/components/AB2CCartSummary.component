@@ -1,0 +1,138 @@
+<apex:component >
+    <script id="CartDetail-ActionTotals-View" type="text/template">
+        <div class="alx-order-summary p-3">
+            <h2 class="text-center">Order Summary</h2>
+            <div class="alx-discount-section">
+                {{#ifStoreSetting 'Display_Cart_Coupon__c'}}
+                <div class="panel panel-default cc_panel cc_shopping_cart_discount_panel">
+                    <div class="cc_myaccount_content panel-body cc_body">
+                        {{#if this.hasCoupon}}
+                        <form id="couponClearForm" class="cc_coupon_clear_form">
+                            <div class="discount_code cc_discount_code d-flex flex-column">
+                                <p class="cc_applied_coupon text-muted pt-2">Applied Promo Code:</p>
+                                <div class="d-flex">
+                                    <p class="alx-promo-code-applied flex-fill">{{this.couponName}}</p>
+                                    <p class="cc_clear_coupon_code"><a id="clearCouponBtn" href="javascript:void(0);" class="cc_clear_coupon">Remove</a></p>
+                                </div>
+                            </div>
+                        </form>
+                        {{else}}
+                        <form id="couponAddForm" class="cc_coupon_add_form">
+                            <div class="discount_code cc_discount_code form-row">
+                                <p id="couponAddError" class="cc_coupon_add_error"></p>
+                                <div class="form-group col-12">
+                                    <label for="addCouponId"><p class="mb-0">Promo Code:</p></label>
+                                    <input type="text" id="addCouponId" name="couponId" class="form-control cc_add_coupon_id" />
+                                    <button id="addCouponBtn" type="button" class="btn btn-default cc_add_coupon btn-input-right">Apply</button>
+                                </div>
+                                <div class="col-12">
+                                    <div class="couponMessagingSection-Error"></div>
+                                </div>
+                                
+                            </div>
+                        </form>
+                        {{/if}}
+                    </div>
+                </div>
+                <hr>
+                {{/ifStoreSetting}}
+            </div>
+            <div class="alx-totals-section">
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="alx-totals-prices mb-2">
+                            <tr>
+                                <td>{{pageLabelMap 'CartInc_Subtotal'}}:</td>
+                                <td>{{price this.subtotalAmount}}</td>
+                            </tr>
+                            {{#ifLessThan (getDiscountAmount this) 0}}
+                            <tr>
+                                <td>Promo code:</td>
+                                <td>{{price (getDiscountAmount this)}}</td>
+                            </tr>
+                            {{/ifLessThan}}
+                        </table>
+
+                        <div class="alx-help-text d-flex justify-content-center">
+                            <div>* Taxes and shipping costs will be calculated during checkout.</div>
+                        </div>
+
+                        <hr>
+
+                        <div class=" cc_action_totals pull-right d-none">
+                            <button class="btn btn-default btn-sm continueShoppingButton cc_continue_shopping_button" name="" type="button" >{{pageLabelMap 'CartInc_ContinueShopping'}}</button>
+                            {{#if false }}
+                            {{ else }}
+                                {{#ifStoreSetting 'AutoCalcPriceAdjust__c'}}
+                                {{else}}
+                                    <button class="btn btn-default btn-sm getExtPricingButton cc_get_ext_pricing_button" type="button" >{{pageLabelMap 'CartInc_ApplyDiscounts'}}</button>
+                                {{/ifStoreSetting}}
+                                {{#ifDisplay 'WL.PkrOn'}}
+                                    <button class="btn btn-default btn-sm cc_create_cart_wishlist" data-toggle="modal" data-target="#wishMod" name="" type="button" >{{pageLabelMap 'Create_Cart_Wishlist'}}</button>
+                                {{/ifDisplay}}
+                            {{/if}}
+                            <button class="btn btn-default btn-sm updateCartButton cc_update_cart_button" name="" type="button" >{{pageLabelMap 'CartInc_Update'}}</button>
+                            {{#if false }}
+                            {{#ifDisplay 'C.EmailAnon'}}
+                            <a href="#emailModal" id="emailCartLink" class="cc_email_cart_link" data-toggle="modal"><button class="btn btn-default btn-sm remove cc_email_cart_link_button" type="button" >{{pageLabelMap 'CartOrderEmailer_Header'}}</button></a>
+                            {{/ifDisplay}}
+                            {{else}}
+                            {{#ifDisplay 'C.EnableEmailCart'}}
+                            <a href="#emailModal" id="emailCartLink" class="cc_email_cart_link" data-toggle="modal"><button class="btn btn-default btn-sm remove cc_email_cart_link_button" type="button" >{{pageLabelMap 'CartOrderEmailer_Header'}}</button></a>
+                            {{/ifDisplay}}
+                            {{/if}}
+                            <!--************-->
+                            {{#if false }}
+                                {{#ifDisplay 'rfq.GuestUser'}}
+                                    <button class="btn btn-default btn-sm remove cc_rfq_link_button" data-toggle="modal" data-target="#rfqModal" type="button" >{{pageLabelMap 'CartRFQForm_Header'}}</button>
+                            {{/ifDisplay}}
+                            {{else}}
+                                {{#ifDisplay 'rfq.LoggedIn'}}
+                                    <button class="btn btn-default btn-sm remove cc_rfq_link_button" data-toggle="modal" data-target="#rfqModal" type="button" >{{pageLabelMap 'CartRFQForm_Header'}}</button>
+                                {{/ifDisplay}}
+                            {{/if}}
+                            <!--************-->
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="d-flex justify-content-center">
+                            {{#if this.ECartItemsS}}
+                                {{#ifNotEquals this.ECartItemsS.models.length 0}}
+                                    {{#if this.allowCheckout}}
+                                    {{#ifEquals this.preventCheckout false}}
+                                    <button type="button" class="btn btn-primary btn-sm checkOutBtn cc_checkout_btn pull-right">{{pageLabelMap 'CartInc_Checkout'}}</button>
+                                    {{/ifEquals}}
+                                    {{/if}}
+                                {{/ifNotEquals}}
+                            {{/if}}
+                        </div>
+                        <div class="d-flex justify-content-center pt-3">
+                            <a href="javascript:void(0);" class="continueShoppingButton cc_continue_shopping_button" >{{pageLabelMap 'CartInc_ContinueShopping'}}</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+     </script>
+
+    <script>
+        jQuery(function ($) {
+
+            Handlebars.registerHelper("getDiscountAmount", function (cart) {
+                let discountAmt = 0;
+                if (cart && cart.ECartItemsS && cart.ECartItemsS.models) {
+                    for (let item of cart.ECartItemsS.models) {
+                        if (item.attributes && item.attributes.coupon) {
+                            discountAmt += item.attributes.itemTotal;
+                        }
+                    }
+                }
+                return discountAmt;
+            });
+
+        });
+    </script>
+</apex:component>

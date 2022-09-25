@@ -1,0 +1,60 @@
+<apex:component >
+    <script id="OrderItems-Desktop" type="text/template">
+        <table class="alx-order-items alx-products-list">
+            <tr>
+                <th>Items</th>
+                <th>Quantity</th>
+                <th>Price</th>
+            </tr>
+            {{#each this.orderItems}}
+            {{#ifNotEquals this.itemType 'Coupon'}}
+            <tr>
+                <td>
+                    <div class="row py-3">
+                        <div class="col-sm-6">
+                            <!-- Main image & Product Badge (cloudinary.js) -->
+                            {{#with (getSKUComponents mockProduct '')}}
+                            <div id=alx-feature-product-{{sku}} class="alx-feature-product">
+                                <a href="{{getProductDetailUrl ../mockProduct}}" class="alx-product-image">
+                                    <div id="alx-detail-{{swatchSku}}">
+                                        {{{productListImage sku swatchSku}}}
+                                    </div>
+                                </a>
+                            </div>
+                            {{/with}}
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="alx-order-item-details">
+                                {{productLink this.mockProduct 'cc_prod_link' text=(displayProductName 'Aggregate_Display' this.translatedParentProductName '')}}
+                                <span class="pb-3">{{this.mockProduct.sku}}</span>
+                                {{#each (getSpecValues this)}}
+                                <span>{{this}}</span>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>{{this.quantity}}</td>
+                <td>
+                    <span class="{{#if this.mockProduct.serviceFlag}}sale{{/if}}">{{{price this.price ../currencyCode}}}</span>
+                </td>
+            </tr>
+            {{/ifNotEquals}}
+            {{/each}}
+        </table>
+    </script>
+
+    <script>
+        Handlebars.registerHelper("getSpecValues", function (orderItem) {
+            const specValues = [];
+            if (orderItem && orderItem.mockProduct && orderItem.mockProduct.productSpecsS) {
+                for (let spec of orderItem.mockProduct.productSpecsS) {
+                    if (spec.AB2CIsSize || spec.AB2CPSIsSwatch) {
+                        specValues.push(spec.AB2CProductSpecSKU);
+                    }
+                }
+            }
+            return specValues;
+        });
+    </script>
+</apex:component>

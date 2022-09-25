@@ -1,0 +1,67 @@
+<apex:component >
+  <script id="MyAccount-Nav-Desktop" type="text/template">
+    <div class="dropdown d-sm-block d-md-none">
+        <button class="btn btn-default btn-block dropdown-toggle mb-3" type="button" id="leftNavButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {{pageLabelMap 'Component_SiteHeader_MyAccount'}}
+        </button>
+        <div class="dropdown-menu w-100" aria-labelledby="leftNavButton">
+            {{#each this}}
+              <a class="dropdown-item acctStep{{this.index}} gotoSection" href="#" data-index={{this.index}}>{{{pageLabelMap this.title}}}</a>
+            {{/each}}
+        </div>
+    </div>
+    
+    <h2 class="d-none d-md-block">{{pageLabelMap 'Component_SiteHeader_MyAccount'}}</h2>
+    <ul class="side_navigation_dropdown d-none d-md-block" id="side_nav">
+      {{#each this}}
+        <li class="acctStep{{this.index}} acctStepNav"><a href="#" class="gotoSection" data-index="{{this.index}}">{{{pageLabelMap this.title}}}</a></li>
+      {{/each}}
+      </ul>
+   </script>
+
+   <script>
+
+    jQuery(function ($) {
+
+      CCRZ.views.myAccountNavView = Backbone.View.extend({
+        templateDesktop: CCRZ.util.template('MyAccount-Nav-Desktop'),
+        viewName: "myAccountNavView",
+        managedSubView: true,
+        events: {
+          "click .gotoSection": "gotoSection"
+        },
+        initialize: function () { },
+        render: function () {
+          var m = new Array();
+          $.each(this.model, function (index, obj) {
+            m.push({
+              index: index,
+              title: obj.title
+            });
+          });
+          this.setElement($('#AB2CMyAccount_navSection'));
+          this.$el.html(this.templateDesktop(m));
+          CCRZ.pubSub.trigger("view:" + this.viewName + ":refresh", this);
+        },
+        viewChanged: function () {
+          if (this.currentView !== CCRZ.display.currentView) {
+            this.currentView = CCRZ.display.currentView;
+            return true;
+          }
+          return false;
+        },
+        renderViewChanged: function () {
+          if (this.viewChanged()) {
+            this.render();
+          }
+        },
+        gotoSection: function (event) {
+          var objLink = $(event.currentTarget);
+          var index = objLink.data("index");
+          CCRZ.pubSub.trigger('action:gotoSection:before', this);
+          CCRZ.AB2CmyaccountView.gotoSection(index);
+        }
+      });
+    });
+   </script>
+</apex:component>

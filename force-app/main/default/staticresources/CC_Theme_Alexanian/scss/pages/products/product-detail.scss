@@ -1,0 +1,147 @@
+@import "../../base/variables";
+
+.alx-pd-sku {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.13;
+  color: $grey;
+  margin-bottom: 1.4375rem;
+}
+
+.alx-pd-label {
+  font-size: 0.8125rem;
+  color: $warm-grey;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  line-height: 1.38;
+}
+
+.alx-pd-avail {
+  font-weight: 500;
+  color: $cerulean;
+}
+
+.alx-pd-unit {
+  color: $warm-grey;
+  font-size: 0.8125rem;
+  text-transform: lowercase;
+}
+
+.alx-pd-price {
+  color: $charcoal;
+  font-size: 1.5rem;
+  line-height: normal;
+}
+
+.alx-pd-base-price {
+  color: $charcoal;
+  font-size: 1rem;
+  line-height: normal;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.alx-pd-sale-price {
+  color: $rouge;
+  font-size: 1.5rem;
+  line-height: normal;
+  font-weight: 500;
+}
+
+.alx-pd-swatch-container {
+  margin-bottom: 1rem;
+
+  .alx-pd-swatch {
+    height: 2.4375rem;
+    width: 2.4375rem;
+    padding: 0;
+    cursor: pointer;
+    margin: 0 0.625rem 0.625rem 0;
+    transition: 0.2s ease-in-out;
+
+    &:last-of-type {
+      margin-right: 0;
+    }
+
+    &:hover {
+      border: 1px solid $charcoal;
+    }
+
+    &.active {
+      border: 2px solid $charcoal;
+      -webkit-box-shadow: inset 0px 0px 0px 1px $white;
+      -moz-box-shadow: inset 0px 0px 0px 1px $white;
+      box-shadow: inset 0px 0px 0px 1px $white;
+      img {
+        border: 1px solid $white;
+      }
+    }
+
+    &:focus {
+      border-color: $ocean-blue;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+.alx-pd-size-container {
+  margin-bottom: 1rem;
+
+  .alx-pd-size {
+    margin: 0 0.625rem 0.625rem 0;
+    display: flex;
+    &:last-of-type {
+      margin-right: 0;
+    }
+
+    .alx-ic {
+      display: none;
+    }
+
+    &.active {
+      padding-left: 0.6875rem;
+
+      .alx-ic {
+        display: inline-block;
+        margin-top: -0.3125rem;
+        margin-right: 0.25rem;
+      }
+    }
+  }
+}
+
+.alx-features-attributes {
+  .alx-pd-label {
+    margin-bottom: 0.125rem;
+  }
+  ul {
+    padding-left: 1.25rem;
+    margin-bottom: 1.25rem;
+    li {
+      font-size: 0.8125rem;
+      color: $charcoal;
+    }
+  }
+  p {
+    color: $charcoal;
+    font-size: 0.8125rem;
+    margin-bottom: 0;
+    line-height: 1.5;
+    &:last-child {
+      margin-bottom: 1.125rem;
+    }
+  }
+}
+
+.roomvo-stimr {
+  border-left: 1px solid $warm-grey;
+}
+
+.wishFinder {
+  margin-left: 1rem;
+  display: inline-block;
+}

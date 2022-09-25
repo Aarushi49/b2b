@@ -1,0 +1,65 @@
+// Store locator
+.alx-store-locator-stores div[id^="alx-seller"] {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  .alx-seller-info {
+    width: calc(100% - 6rem);
+  }
+
+  span {
+    font-size: 0.8rem;
+  }
+}
+
+.alx-seller-info table td {
+  font-size: 0.8rem;
+  padding-right: 1rem;
+}
+
+#alx-store-locator-map {
+  .alx-store-locator-stores {
+    max-height: 35rem;
+    overflow-y: scroll;
+  }
+}
+
+// Google Maps
+#map {
+  height: 100%;
+  min-height: 30rem;
+  max-height: 35rem;
+
+  .alx-map-info-window {
+    min-width: 14rem;
+  }
+
+  .gm-style .gm-style-iw-c {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .gm-ui-hover-effect {
+    display: none !important;
+  }
+}
+
+// Seller detail
+.alx-seller-detail {
+  #map {
+    height: unset;
+    margin-top: 2rem;
+  }
+
+  h3 {
+    margin: 2rem 0;
+  }
+
+  .alx-store-hours {
+    table {
+      font-size: 0.8rem;
+      margin: 0 auto;
+    }
+  }
+}

@@ -1,0 +1,61 @@
+<apex:component controller="AB2CFeaturedProductService">
+    <c:AB2CFeaturedProduct ></c:AB2CFeaturedProduct>
+
+    <script id="CategoryProductCarouselPartialTemplate" type="text/template">
+        {{#if (initializeCategoryProducts .)}}
+        <div class="alx-category-products">
+            <div class="alx-loading-circle"></div>   
+        </div>
+        {{/if}}
+    </script>
+
+    <script id="CategoryProductCarouselTemplate" type="text/template">
+        <h2 class="text-center mt-3 mb-4">Our Selections Of The Month</h2>
+        {{> FeaturedProductsPartialTemplate .}}
+    </script>
+
+    <script>
+        Handlebars.registerHelper('initializeCategoryProducts', function (categoryId) {
+            if (categoryId) {
+                CCRZ.models.CategoryProductsModel = CCRZ.CloudCrazeModel.extend({
+                    className: 'AB2CFeaturedProductService',
+                    fetch: function (callback) {
+                        this.invokeCtx('getFeaturedProductsForCategory', categoryId, function (response, event) {
+                            if (!response.success) {
+                                console.error(response.data);
+                            }
+                            callback(response.data);
+                        }, { nmsp: false, buffer: false });
+                    }
+                });
+
+                CCRZ.views.CategoryProductCarouselView = CCRZ.CloudCrazeView.extend({
+                    viewName: "CategoryProductCarouselView",
+                    templateDesktop: CCRZ.util.template('CategoryProductCarouselTemplate'),
+                    templateSelector: '.alx-category-products',
+                    init: function (options) {
+                        const thisView = this;
+                        thisView.CategoryProducts = new CCRZ.models.CategoryProductsModel();
+                        thisView.CategoryProducts.fetch(function (response) {
+                            if (response) {
+                                thisView.model = response;
+                                thisView.render();
+                            } else {
+                                console.warn('No featured products found for this category.');
+                                $(thisView.templateSelector).html('');
+                            }
+                        });
+                    },
+                    renderDesktop: function () {
+                        this.setElement(this.templateSelector);
+                        this.$el.html(this.templateDesktop(this.model));
+                    },
+                });
+
+                CCRZ.CategoryProductCarouselView = new CCRZ.views.CategoryProductCarouselView({});
+                return true;
+            }
+            return false;
+        });
+    </script>
+</apex:component>

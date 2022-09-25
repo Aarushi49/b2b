@@ -1,0 +1,77 @@
+<apex:page id="AB2CHtmlBodyIncludesBegin" docType="html-5.0" sidebar="false" showHeader="false" standardStylesheets="false"
+  applyHtmlTag="false">
+  <!-- Google Tag Manager (noscript) -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W5W99KL" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+
+  <script>
+    // CCRZ Overrides
+    CCRZ.userIsoCode = "CAD";
+    CCRZ.pagevars.remoteContext.userIsoCode = "CAD";
+    CCRZ.pageUrls.homePage = "/";
+    CCRZ.pageUrls.cart = "/cart";
+    if (!CCRZ.pagevars.currentCartID) {
+      CCRZ.pagevars.currentCartID = CCRZ.getQueryParam('cartId');
+    }
+
+    jQuery(function ($) {
+      cartDetails = function (cartId) {
+        document.location = "/cart?cartID=" + cartId + getCSRQueryString();
+      }
+      orderDetails = function (orderId) {
+        document.location = "/cart/checkout/order-detail?o=" + orderId + getCSRQueryString();
+      }
+      newPayment = function (paymentType) {
+        document.location = "/my-account/cards?pt=" + paymentType + "&mode=new&cartID=" + CCRZ.pagevars.currentCartID + getCSRQueryString();
+      }
+      updatePayment = function (paymentType, paymentId) {
+        document.location = "/my-account/cards?pt=" + paymentType + "&pid=" + paymentId + "&mode=edit&cartID=" + CCRZ.pagevars.currentCartID + getCSRQueryString();
+      }
+      homePage = function () {
+        document.location = "/?cartID=" + CCRZ.pagevars.currentCartID + getCSRQueryString();
+      }
+      checkout = function () {
+        document.location = "/cart/checkout?cartID=" + CCRZ.pagevars.currentCartID + getCSRQueryString();
+      }
+      forgotPassword = function () {
+        document.location = "my-account/forgot?cartID=" + CCRZ.pagevars.currentCartID + getCSRQueryString();
+      };
+
+      setDefaultTags();
+
+      loading = function (objEle) {
+        objEle.after('<div class="alx-loading-circle ccrz_loading_gif"></div>');
+        objEle.hide();
+      }
+    });
+  </script>
+
+  <div class="alx-header-spacer"></div>
+
+  <!-- Register page components -->
+  <c:AB2CHeaderCart ></c:AB2CHeaderCart>
+  <c:AB2CHeader ></c:AB2CHeader>
+  <c:AB2CMenu ></c:AB2CMenu>
+  <c:AB2CException ></c:AB2CException>
+  <c:AB2CProductSearch ></c:AB2CProductSearch>
+  <c:AB2CBreadcrumb ></c:AB2CBreadcrumb>
+  <c:AB2CPageMessages ></c:AB2CPageMessages>
+
+  <!-- Register pages -->
+  <c:AB2CHome ></c:AB2CHome>
+  <c:AB2CSellerDetail ></c:AB2CSellerDetail>
+  <c:AB2CSellerLocator ></c:AB2CSellerLocator>
+  <c:AB2CProductDetail ></c:AB2CProductDetail>
+  <c:AB2CProductList ></c:AB2CProductList>
+  <c:AB2CProductComparison ></c:AB2CProductComparison>
+  <c:AB2CAccountMain ></c:AB2CAccountMain>
+  <c:AB2CAccountSavedPaymentsEdit ></c:AB2CAccountSavedPaymentsEdit>
+  <c:AB2CLogin ></c:AB2CLogin>
+  <c:AB2CChangePassword ></c:AB2CChangePassword>
+  <c:AB2CNewCustomer ></c:AB2CNewCustomer>
+  <c:AB2CForgotPassword ></c:AB2CForgotPassword>
+  <c:AB2CCart ></c:AB2CCart>
+  <c:AB2CCheckout ></c:AB2CCheckout>
+  <c:AB2COrder ></c:AB2COrder>
+</apex:page>

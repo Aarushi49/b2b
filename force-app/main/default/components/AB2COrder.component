@@ -1,0 +1,68 @@
+<apex:component rendered="{!contains(UPPER($CurrentPage.Name), UPPER('ccrz__Order'))}">
+    <c:AB2CCheckoutTotals ></c:AB2CCheckoutTotals>
+    <c:AB2COrderItem ></c:AB2COrderItem>
+
+    <script id="Cart-OrderAttributeItems" type="text/template">
+        <!-- Not being used -->
+    </script>
+
+    <script id="OrderHeader-Desktop" type="text/template">
+        <div id="breadcrumb_desktop_container"></div>
+    </script>
+
+    <script id="Order-Container" type="text/template">
+        <div class="container-xl">
+            <div class="orderContainer">
+                <div class="alx-loading-circle"></div>
+            </div>
+        </div>
+    </script>
+
+    <script id="OrderDetails-View-Desktop" type="text/template">
+        {{#if this.ownerR}}
+        <div class="text-center">
+            {{#if this.isConfirmation}}
+            <h1>Order Confirmation</h1>
+            <p>Thank you for your order, {{this.buyerFirstName}}. Your order number is <b>{{this.orderNumber}}</b>.</p>
+            <p>You will recieve an order confirmation email shortly at {{this.buyerEmail}}, containing all of your order details.</p>
+            {{else}}
+            <h1>Order #{{this.orderNumber}}</h1>
+            {{/if}}
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                {{> orderItemsDesktop}}
+            </div>
+            <div class="col-md-4">
+                <div class="alx-totals-section alx-light-bg-section"></div>
+            </div>
+        </div>
+        {{else}}
+        <div class="alert alert-danger">
+            Unable to retreive order information. Please log in to view your order.
+        </div>
+        {{/if}}
+    </script>
+
+    <script>
+        jQuery(function ($) {
+            $('.phoneLayout > .home_slider').remove();
+            const totalsTemplate = Handlebars.compile($("#TotalSection").html());
+
+            CCRZ.pubSub.on("view:OrderDetailView:refresh", function () {
+                $('.alx-totals-section').html(totalsTemplate(CCRZ.orderDetailModel.attributes));
+                if (CCRZ.orderDetailModel.attributes.isConfirmation) {
+                    renderCustomBreadcrumb([{ label: "Checkout" }, { label: "Order Confirmation" }]);
+                } else {
+                    renderCustomBreadcrumb([
+                        { label: "My Account", href: '/my-account' },
+                        { label: 'View My Orders', href: '/my-account?viewState=myOrders' },
+                        { label: 'Order #' + CCRZ.orderDetailModel.attributes.orderNumber }]);
+                }
+            });
+
+            const orderConfirmTemplate = Handlebars.compile($("#Order-Container").html());
+            $('.contentBody').html(orderConfirmTemplate());
+        });
+    </script>
+</apex:component>

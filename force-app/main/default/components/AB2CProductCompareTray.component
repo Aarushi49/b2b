@@ -1,0 +1,48 @@
+<apex:component >
+
+    <script id="Product-Compare-Tray-View" type="text/template">
+        {{#ifDisplay 'PCP.Enabled'}}
+            {{#if this.length}}
+                <div class="alx-compare-tray-container container d-none d-lg-block cc_container cc_navbar-fixed-bottom">
+                    <div class="row justify-content-end">
+                        <div class="alx-compare-tray-row col-lg-10 col-md-9 col-sm-12" id="compareCollapse">
+                            <div class="d-flex justify-content-between">
+                                <div class="alx-compare-tray-items row w-100 compare-tray-row">
+                                    {{#each this}}
+                                        <div class="alx-compare-product col-3 compareTrayProd d-flex flex-column align-items-center">
+                                            <div class="d-flex justify-content-center">
+                                                <div class="alx-compare-image">
+                                                    {{#if (swatchSpecs productSpecsS)}}
+                                                        {{#each (swatchSpecs productSpecsS)}}
+                                                            {{#if @first}}
+                                                                {{{productListImage ../this.SKU AB2CProductSpecSKU}}}
+                                                            {{/if}}
+                                                        {{/each}}
+                                                    {{else}}
+                                                        {{{productListImage this.SKU null}}}
+                                                    {{/if}}
+                                                </div>
+                                                <button type="button" class="alx-compare-delete compareTrayRemButton
+                                                    removeFromCompare cc_remove_from_compare" 
+                                                    aria-label="{{pageLabelMap 'Modal_Aria_Close'}}" data-id="{{this.sfid}}">
+                                                    <i class="alx-ic ic-close" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
+                                            <p class="text-center text-capitalize font-weight-bold">{{this.sfdcName}}</p>
+                                            <p class="text-center text-capitalize">{{this.SKU}}</p>    
+                                        </div>
+                                    {{/each}}
+                                </div>
+                                <div class="alx-compare-submit compareTrayControls cc_compare_tray_controls">
+                                    <a class="compareTrayClear clearCompare  cc_clear_compare" href="javascript:void(0);">{{pageLabelMap 'ProductCompare_ClearAll'}}</a>
+                                    <button type="button" class="btn btn-default mb-2 gotoProductCompare cc_goto_prod_compare {{#ifLessThan this.length 2}}disabled{{/ifLessThan}}" data-id="{{this.prodBean.id}}" {{#ifLessThan this.length 2}}disabled{{/ifLessThan}}>{{pageLabelMap 'ProductCompare_CompareProducts'}}</button>
+                                    <div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {{/if}}
+        {{/ifDisplay}} 
+    </script>
+</apex:component>

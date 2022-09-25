@@ -1,0 +1,12 @@
+<apex:component >
+    <script id="CCException-Desktop" type="text/template">
+        <div class="container-xl text-center pt-4">
+            <h1>Page Not Found</h1>
+            <br>
+            <p>We’re sorry, but it looks like we can’t find the page you’re looking for.</p>
+            <br>
+            <p>Please double check the URL has been entered in correctly.</p>
+            <p>This page may also have been moved or removed from our website.</p>
+        </div>
+    </script>
+</apex:component>

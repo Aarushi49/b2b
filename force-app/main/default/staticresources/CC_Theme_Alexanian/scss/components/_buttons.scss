@@ -1,0 +1,104 @@
+@import "../base/variables";
+
+.btn {
+  min-height: 2.375rem;
+  border-radius: 0;
+  padding: 0.5rem 0.8125rem 0.5rem 0.9375rem;
+  text-transform: uppercase;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: normal;
+  text-decoration: none;
+
+  &.disabled, &:disabled {
+    cursor: not-allowed;
+  }
+
+  &.btn-default {
+    border: 2px solid $soft-black;
+    background-color: $white;
+    color: $rich-black;
+    &:hover,
+    &:active {
+      background-color: $soft-black;
+      color: $white;
+      text-decoration: none;
+
+      .alx-ic {
+        background-color: $white;
+      }
+    }
+
+    &.disabled, &:disabled {
+      &:hover,
+      &:active {
+        background-color: $white;
+        color: $rich-black;
+        text-decoration: none;
+        .alx-ic {
+          background-color: $white;
+        }
+      }
+    }    
+  }
+
+  &.btn-primary {
+    border: 2px solid $rich-black;
+    background-color: $soft-black;
+    color: $white;
+    &:hover,
+    &:active {
+      background-color: $white;
+      color: $soft-black;
+      text-decoration: none;
+
+    }
+  }
+
+  &:focus {
+    border-color: $ocean-blue;
+  }
+
+  &.btn-outline-primary {
+    border: solid 2px $charcoal;
+    color: $charcoal;
+
+    &:hover {
+      background: $white-two;
+      -webkit-box-shadow: inset 0px 0px 0px 1px $white;
+      -moz-box-shadow: inset 0px 0px 0px 1px $white;
+      box-shadow: inset 0px 0px 0px 1px $white;
+      text-decoration: none;
+
+    }
+    &:not(:disabled) {
+      &:active,
+      &.active {
+        background: $white-two;
+        border: solid 2px $charcoal;
+        color: $charcoal;
+        -webkit-box-shadow: inset 0px 0px 0px 1px $white;
+        -moz-box-shadow: inset 0px 0px 0px 1px $white;
+        box-shadow: inset 0px 0px 0px 1px $white;
+      }
+      &:focus {
+        border-color: $ocean-blue;
+      }
+    }
+  }
+
+  &.btn-input-right {
+    position: absolute;
+    right: 0.3rem;
+    bottom: 0;
+  }
+
+  &.btn-link {
+    text-decoration: underlin;
+    color: $charcoal;
+
+    &:hover {
+      color: $warm-grey-2;
+    }
+  }
+}

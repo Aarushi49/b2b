@@ -1,0 +1,274 @@
+@import "../base/variables";
+
+.alx-filters {
+  padding: 0rem;
+  margin-bottom: 1rem;
+
+  a {
+    color: $charcoal;
+    text-decoration: none;
+  }
+
+  .alx-filter {
+    padding-bottom: 0.5rem;
+
+    .alx-filter-heading {
+      background-color: $brownish-grey-two;
+      color: $white;
+      height: auto;
+      text-align: left;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 0.625rem 1rem;
+
+      a {
+        text-decoration: none;
+        font-weight: bold;
+        color: $white;
+      }
+
+      &[aria-expanded="false"] span:nth-child(2):after {
+        content: "+";
+      }
+      &[aria-expanded="true"] span:nth-child(2):after {
+        content: "-";
+      }
+    }
+
+    // Slider filter
+    .spec_slider_container {
+      .noUi-handle {
+        width: 0.6rem !important;
+        height: 0.6rem !important;
+        background-color: $cerulean !important;
+        border-color: $cerulean !important;
+        box-shadow: 0px 0px 0px 5px rgba(0, 194, 192, 0.2) !important;
+        border-radius: 50% !important;
+        right: -10px;
+        top: -4px;
+      }
+
+      .noUi-handle:before,
+      .noUi-handle:after {
+        content: unset !important;
+      }
+
+      .noUi-horizontal {
+        margin-top: 0.5rem;
+        height: 0.1rem !important;
+      }
+
+      .noUi-target {
+        border: unset !important;
+        box-shadow: unset !important;
+        width: calc(100% - 0.6rem) !important;
+        background: $outline-grey;
+      }
+
+      .upperDisp,
+      .lowerDisp {
+        font-size: 1rem !important;
+        font-family: unset !important;
+      }
+    }
+  }
+
+  @media (max-width: $breakpoint-md-min) {
+    border: 1px solid $outline-grey;
+
+    .alx-filter {
+      padding-bottom: 0 !important;
+      border-bottom: 1px solid $white;
+    }
+
+    a[href="#alx-plp-filter"] {
+      background: $snow;
+      padding: 1rem 1rem 0.5rem 1rem;
+
+      #alx-clear-all-filters-pseudo {
+        padding-right: 1.5rem;
+        background-repeat: no-repeat;
+        background-position: right;
+      }
+
+      &[aria-expanded="true"] #alx-clear-all-filters-pseudo {
+        background-image: url(../images/icons/ic-arrow-up.svg);
+      }
+      &[aria-expanded="false"] #alx-clear-all-filters-pseudo {
+        background-image: url(../images/icons/ic-arrow-down.svg);
+      }
+    }
+  }
+}
+
+.invalid-feedback {
+  font-style: unset;
+  font-size: 0.8125rem;
+  color: #dc3545 !important;
+  background-repeat: no-repeat !important;
+  padding-top: 0.25rem;
+  padding-left: 1.875rem;
+  background-image: url(../images/icons/ic-error.svg);
+}
+
+.form-control {
+  &.error {
+    background-color: $soft-pink !important;
+    border-color: $rouge;
+
+    ~ .input-group-append {
+      .alx-append-btn {
+        background-color: $soft-pink !important;
+        border-bottom: solid 1px $rouge;
+        border-top: solid 1px $rouge;
+        border-right: solid 1px $rouge;
+      }
+    }
+  }
+}
+
+.alx-products-list {
+  padding-top: 2rem;
+
+  .alx-product-badge {
+    position: absolute;
+    transform: translate(-3.1875rem, -1.25rem);
+  }
+
+  .alx-feature-product {
+    margin-bottom: 2.375rem;
+    text-align: center;
+
+    .alx-product-image {
+      display: flex;
+      overflow: hidden;
+      margin-bottom: 0.6875rem;
+      border: solid 2px transparent;
+      width: 11.875rem;
+      height: 14rem;
+      margin: 0 auto;
+      background: url(https://res.cloudinary.com/alexanian/image/upload/v1/dev/static/shared/placeholder);
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
+      border: 2px solid $white;
+      transition: 0.2s ease-in-out;
+
+      &:hover {
+        border: 2px solid $charcoal;
+      }
+
+      img {
+        cursor: pointer;
+        object-fit: cover;
+        max-width: 100%;
+
+        &:not(.alx-product-badge) {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+
+    .alx-selected-style {
+      font-size: 0.8125rem;
+      color: $warm-grey;
+      line-height: 1.38;
+      text-align: center;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .alx-swatch-container {
+      margin-bottom: 0.75rem;
+
+      .alx-swatch {
+        height: 2.4375rem;
+        width: 2.4375rem;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: border 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+        margin: 0 0.375rem;
+
+        &:hover {
+          border: 1px solid $white;
+          -webkit-box-shadow: 0px 0px 0px 2px $charcoal;
+          -moz-box-shadow: 0px 0px 0px 2px $charcoal;
+          box-shadow: 0px 0px 0px 2px $charcoal;
+        }
+
+        &.active {
+          border: 1px solid $white;
+          -webkit-box-shadow: 0px 0px 0px 2px $charcoal;
+          -moz-box-shadow: 0px 0px 0px 2px $charcoal;
+          box-shadow: 0px 0px 0px 2px $charcoal;
+        }
+
+        &:first-of-type {
+          margin-left: 0;
+        }
+
+        &:last-of-type {
+          margin-right: 0;
+        }
+
+        &.see-more {
+          text-decoration: none;
+
+          &:after {
+            content: "+";
+            color: $white;
+            font-size: 1.75rem;
+            font-size: 1.75rem;
+            position: relative;
+          }
+        }
+      }
+    }
+
+    a.alx-featured-product-name {
+      margin-bottom: 0.0625rem;
+      font-size: 0.875rem;
+      font-weight: bold;
+      color: $charcoal;
+      text-decoration: none;
+      cursor: pointer;
+      text-align: center;
+      display: inline-block;
+      line-height: 1.29;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+    .alx-featured-product-sku {
+      color: $charcoal;
+      font-size: 0.8125rem;
+      margin-bottom: 0.1875rem;
+    }
+
+    .alx-featured-price-range {
+      margin-bottom: 0.0625rem;
+      font-size: 0.875rem;
+      font-weight: bold;
+      line-height: 1.29;
+      color: $charcoal;
+
+      &.alx-sale-price {
+        color: $rouge;
+      }
+    }
+
+    .alx-featured-compare {
+      color: $charcoal;
+      font-size: 0.8125rem;
+      margin-bottom: 0;
+      text-decoration: underline;
+      cursor: pointer;
+
+      &:hover {
+        color: $warm-grey-2;
+      }
+    }
+  }
+}

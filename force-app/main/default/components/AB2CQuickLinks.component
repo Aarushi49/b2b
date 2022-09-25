@@ -1,0 +1,40 @@
+<apex:component >
+    <script id="QuickLinksPartialTemplate" type="text/template">
+        <!-- Quick Links section -->
+        <div class="alx-quicklinks">
+            <div class="alx-ql-box d-flex flex-column flex-lg-row justify-content-center align-items-center">
+
+                <div class="alx-ql-content-container d-flex flex-column flex-lg-row">
+                    <div class="alx-ql-content">
+                        <div class="d-flex align-items-center justify-content-center position-relative">
+                            <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/icons/ic-shipping.svg')}" />
+                            <a class="alx-ql-link stretched-link" href="{{children.[0].linkURL}}">{{children.[0].displayName}}</a>
+                        </div>
+                    </div>
+                    <div class="alx-ql-content">
+                        <div class="d-flex align-items-center justify-content-center position-relative">
+                            <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/icons/ic-in-store-pickup.svg')}" />
+                            <a class="alx-ql-link stretched-link" href="{{children.[1].linkURL}}">{{children.[1].displayName}}</a>
+                        </div>
+                    </div>
+                    <div class="alx-ql-content">
+                        <div class="d-flex align-items-center justify-content-center position-relative">
+                            <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/icons/ic-financing.svg')}" />
+                            <a class="alx-ql-link stretched-link" href="{{children.[2].linkURL}}">{{children.[2].displayName}}</a>
+                        </div>
+                    </div>
+               <!--     <div class="alx-ql-content">
+                        <div class="d-flex align-items-center justify-content-center position-relative">
+                            <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/icons/ic-price-match.svg')}" />
+                            <a class="alx-ql-link stretched-link" href="{{children.[3].linkURL}}">{{children.[3].displayName}}</a>
+                        </div>
+                    </div> -->
+                </div>
+
+            </div>
+        </div>
+    </script>
+    <script>
+        Handlebars.registerPartial("QuickLinksPartialTemplate", document.getElementById("QuickLinksPartialTemplate").innerHTML);
+    </script>
+</apex:component>

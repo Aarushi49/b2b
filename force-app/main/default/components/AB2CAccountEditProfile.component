@@ -1,0 +1,393 @@
+<apex:component >
+  <c:AB2CAccountNewsletterCheckbox ></c:AB2CAccountNewsletterCheckbox>
+  <c:AB2CAccountAddresses ></c:AB2CAccountAddresses>
+  <c:AB2CAccountSavedPayments ></c:AB2CAccountSavedPayments>
+
+  <!-- Main container and personal details template -->
+  <script id="MyAccount-ContactInformationEdit-Desktop" type="text/template">
+    <div class="d-flex justify-content-between align-items-center text-center my-3">
+      <span></span>
+      <h1 class="title mb-0">{{pageLabelMap 'MyAccount_EditProfile'}}</h1>
+      <a href="#" onclick="logOutUser()">Sign Out</a>
+    </div>
+
+    <div class="alx-act-card cc_myaccount_content">
+      <div class="alert alert-danger error_update_mailchimp d-none">
+        <p>An error occurred updating your newsletter subscription preference.</p>
+      </div>
+      <div class="error_update_contact cc_error_update_contact" style="display: none"></div>
+
+      <fieldset>
+        <div class="d-flex alc-act-card-header">
+          <legend>{{pageLabelMap 'MyAccount_EditProfile_Personal'}}</legend>
+          <p class="alx-form-text alx-no-wrap  ml-auto">* = required</p>
+        </div>
+
+        <form id="myAccountForm" class="cc_edit_account_form">
+          <input id="username" type="hidden" class="form-control contactInput cc_contact_input_username" name="username" maxlength=40 value="{{username}}" />
+          <input type="hidden" name="language" value="{{this.localeKey}}" class="form-control cc_user_language" />
+          <input type="hidden" name="currencyCode" value="CAD" class="form-control cc_currency_code" />
+
+          <div class="row cc_myaccount_edit_information">
+            <div class="form-group col-sm-6">
+              <label>{{pageLabelMap 'MyAccount_Profile_FirstName'}}</label>
+              <input class="form-control" name="userFirstName" value="{{userFirstName}}" />
+            </div>
+            <div class="form-group col-sm-6">
+              <label>{{pageLabelMap 'MyAccount_Profile_LastName'}}</label>
+              <input class="form-control" name="userLastName" value="{{userLastName}}" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="form-group col-sm-6">
+              <label>{{pageLabelMap 'MyAccount_Profile_Email_Edit'}}</label>
+              <div class="input-group">
+                <input class="form-control" name="emailAddress" value="{{emailAddress}}" />
+                <div class="input-group-append">
+                  <div class="alx-append-btn">
+                    <span class="alx-ic ic-email-outline"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group col-sm-6">
+              <label>{{pageLabelMap 'MyAccount_Profile_Phone_Edit'}}</label>
+              <input class="form-control" id="userPhone" name="userPhone" value="{{userPhone}}" placeholder="(555) 555-5555" maxlength=20/>
+            </div>
+          </div>
+        </form>
+        <div class="row">
+          {{> AccountNewsletterCheckboxPartialTemplate email=emailAddress state="edit"}}
+        </div>
+      </fieldset>
+      <input type="button" class="updateProfile btn btn-primary" value="{{pageLabelMap 'MyAccount_EditProfile_Save'}}" />
+    </div>
+
+    <!-- Change password inserted here-->
+    <div class="alx-act-card">
+      <div class="page_message error_change_password help-block has-error cc_has_error"></div>
+      <form class="cc_reset_password_form" id="resetForm">
+        <div class="d-flex alc-act-card-header">
+          <h2 class="alx-password-title">{{pageLabelMap 'MyAccount_ChangePassword_ChangePassword'}}</h2>
+          <p class="alx-form-text alx-no-wrap  ml-auto">* = required</p>
+        </div>
+
+        <div class="row">
+          <div class="form-group col-sm-6 cc_currentpassword">
+            <label class="cc_current_password_label" for="current_password">
+              <span class="required cc_required">{{pageLabelMap 'MyAccount_ChangePassword_Current_Password'}} *</span>
+            </label>
+            <div class="input-group cc_current_password_value">
+              <input type="password" class="form-control current_password cc_current_password" id="current_password" name="current_password" value="{{this.currentPassword}}" />
+              <div class="input-group-append">
+                <div class="alx-append-btn">
+                  <span class="alx-ic ic-lock"></span>
+                </div>
+              </div>
+            </div>
+            <span class="page_message error_current_password help-block has-error cc_has_error"/>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="form-group col-sm-6 cc_newpassword">
+            <label class="cc_new_password_label" for="new_password">
+              <span class="required cc_required">{{pageLabelMap 'MyAccount_ChangePassword_New_Password'}} *</span>
+            </label>
+            <div class="input-group cc_new_password_value">
+              <input type="password" class="form-control cc_new_password" id="new_password" name="new_password" value="{{this.newPassword}}" />
+              <div class="input-group-append">
+                <div class="alx-append-btn">
+                  <span class="alx-ic ic-lock"></span>
+                </div>
+              </div>
+            </div>
+            <span class="page_message error_new_password help-block has-error cc_has_error"/>
+            <small class="form-text cc_password_requirements">{{pageLabelMap 'MyAccount_ChangePassword_Instructions'}}</small>
+          </div>
+
+          <div class="form-group col-sm-6 cc_newpasswordconfirm">
+            <label class="cc_newpasswordconfirm_label" for="new_password_verify">
+              <span class="required cc_required">{{pageLabelMap 'MyAccount_ChangePassword_Confirm_New_Password'}} *</span>
+            </label>
+            <div class="input-group cc_newpasswordconfirm_value">
+              <input type="password" class="form-control cc_new_password_verify" id="new_password_verify" name="new_password_verify" value="{{this.newPasswordVerify}}" />
+              <div class="input-group-append">
+                <div class="alx-append-btn">
+                  <span class="alx-ic ic-lock"></span>
+                </div>
+              </div>
+            </div>
+            <span class="page_message error_verify_new_password help-block has-error cc_has_error"/>
+          </div>
+        </div>
+        <button class="alx-hidden-btn updatepassword cc_update_password" type="button" value="{{pageLabelMap 'Submit'}}" id="submit" alt="{{pageLabelMap 'Submit'}}"></button>
+      </form>
+      <input type="button" class="updatepassword btn btn-primary" value="{{pageLabelMap 'Submit'}}" />
+    </div>
+
+    {{> AccountsAddressesPartialTemplate .}}
+
+    {{> AccountsStoredPaymentsPartialTemplate .}}
+    
+  </script>
+
+  <script>
+
+    Handlebars.registerPartial("AccountNewsletterCheckboxPartialTemplate", document.getElementById("AccountNewsletterCheckboxPartialTemplate").innerHTML);
+    Handlebars.registerPartial("AccountsAddressesPartialTemplate", document.getElementById("AccountsAddressesPartialTemplate").innerHTML);
+    Handlebars.registerPartial("AccountsStoredPaymentsPartialTemplate", document.getElementById("AccountsStoredPaymentsPartialTemplate").innerHTML);
+
+    CCRZ.MyAccount = _.extend(CCRZ.MyAccount || {}, {
+      A2BCcontactInfoEdit: {
+        register: function (registrar) {
+          registrar.registerNewView('editAccount', CCRZ.pagevars.pageLabels['MyAccount_EditProfile'], new CCRZ.views.editAccountView());
+        }
+      }
+    });
+
+    CCRZ.remoteAction.MACPupdatePassword = 'ccrz.cc_ctrl_myaccountRD.updatePassword';
+
+    jQuery(function ($) {
+
+      // Page container and personal details
+      CCRZ.views.editAccountView = CCRZ.CloudCrazeView.extend({
+        templateDesktop: CCRZ.util.template(
+          CCRZ.uiProperties.contactInfoEditView.desktop.tmpl
+        ),
+        templateMobile: CCRZ.util.template(
+          CCRZ.uiProperties.contactInfoEditView.phone.tmpl
+        ),
+        className: "cc_ctrl_myaccountRD",
+        viewName: "editAccountView",
+        managedSubView: true,
+        navIndex: 3,
+        events: {
+          "change .countryListing": "changeStates",
+          "click .updateProfile": "updateContactInformation",
+          "click .updatepassword": "updatePassword",
+          "click .closeEditProfile": "closeEditProfile"
+        },
+        changeStates: function (event) {
+          var v = this;
+          var selectedCountry = $(event.target).val();
+          if ($(event.target).hasClass("mailing")) {
+            v.renderMailingStateList("", selectedCountry);
+          } else {
+            v.renderOtherStateList("", selectedCountry);
+          }
+        },
+        updateContactInformation: function (event) {
+
+          // Updates MailChimp subscription
+          $('#alxEmailNewsletterBtn').click();
+
+          var objLink = $(event.currentTarget);
+          var v = this;
+          var serializedMyAccountForm = $("#myAccountForm").serializeObject();
+          if ($("#myAccountForm").valid()) {
+            if (v.model.get("preventContactEdit")) {
+              v.updateUserInformation(objLink, serializedMyAccountForm);
+            } else {
+              v.model.updateContactInformation(
+                serializedMyAccountForm,
+                false,
+                function (response) {
+                  if (response && response.success) {
+                    v.updateUserInformation(objLink, serializedMyAccountForm);
+                  } else {
+                    if (response && response.messages) {
+                      CCRZ.pubSub.trigger("pageMessage", response);
+                      window.scrollTo(0, 0);
+                    }
+                  }
+                }
+              );
+            }          
+          }
+        },
+        updateUserInformation: function (objLink, serializedMyAccountForm) {
+          var v = this;
+          v.model.updateUserInformation(serializedMyAccountForm, false, function (
+            response
+          ) {
+            if (response && response.success) {
+              CCRZ.pubSub.trigger("myAccountUpdate", response);
+              location.reload();
+            } else {
+              if (response && response.messages) {
+                CCRZ.pubSub.trigger("pageMessage", response);
+                window.scrollTo(0, 0);
+              }
+            }
+          });
+        },
+        closeEditProfile: function () {
+          CCRZ.myaccountView.gotoSection(CCRZ.myaccountView.currIndex);
+        },
+        init: function () {
+          var v = this;
+          v.mailingStateView = new CCRZ.views.StateView();
+          v.otherStateView = new CCRZ.views.StateView();
+        },
+        renderDesktop: function () {
+          var v = this;
+          v.$el.html(v.templateDesktop(v.model.toJSON()));
+          v.renderStateLists();
+          v.initValidation();
+        },
+        initValidation: function () {
+          $('#userPhone').mask('(000) 000-0000');
+          $('#myAccountForm').validate({
+              invalidHandler: function (event1, validator1) {},
+              rules: {
+                "userFirstName": {
+                  required: true
+                },
+                "userLastName": {
+                  required: true
+                },
+                "emailAddress": {
+                  required: true
+                },
+                "userPhone": {
+                  required: true
+                }
+              },
+              messages: {
+                "userFirstName": {
+                  required: "First name is required"
+                },
+                "userLastName": {
+                  required: "Last name is required"
+                },
+                "emailAddress": {
+                  required: "Email address is required"
+                },
+                "userPhone": {
+                  required: "Phone number is required"
+                }
+              },
+              errorPlacement: function (error, element) {
+                error.addClass('invalid-feedback');
+                element.closest('.form-group').append(error);
+              }
+            });
+
+            $('#resetForm').validate({
+              invalidHandler: function (event1, validator1) {},
+              rules: {
+                "current_password": {
+                  required: true
+                },
+                "new_password": {
+                  required: true
+                },
+                "new_password_verify": {
+                  required: true,
+                  equalTo: "#new_password"
+                }
+              },
+              messages: {
+                "current_password": {
+                  required: "Current password is required"
+                },
+                "new_password": {
+                  required: "New password is required"
+                },
+                "new_password_verify": {
+                  required: "Password confirmation is required",
+                  equalTo: "Passwords must match"
+                }
+              },
+              errorPlacement: function (error, element) {
+                error.addClass('invalid-feedback');
+                if (element.attr("id") == 'new_password') {
+                  element.closest('.input-group').append(error);
+                } else {
+                  element.closest('.form-group').append(error);
+                }
+              }
+            });
+        },
+        renderStateLists: function () {
+          var v = this;
+          var mailingAddress =
+            CCRZ.myaccountModel.attributes.contactBean.mailingAddress;
+          v.renderMailingStateList(
+            mailingAddress.stateCode,
+            mailingAddress.country
+          );
+          var otherAddress =
+            CCRZ.myaccountModel.attributes.contactBean.otherAddress;
+          v.renderOtherStateList(otherAddress.stateCode, otherAddress.country);
+        },
+        renderMailingStateList: function (stateCode, countryCode) {
+          var v = this;
+          var stateList = CCRZ.geoCodes.filterStates(countryCode).toJSON();
+          v.mailingStateView.render(
+            "state",
+            stateCode,
+            "form-control",
+            stateList,
+            "mailing",
+            ".mailingStateSection"
+          );
+        },
+        renderOtherStateList: function (stateCode, countryCode) {
+          var v = this;
+          var stateList = CCRZ.geoCodes.filterStates(countryCode).toJSON();
+          v.otherStateView.render(
+            "state",
+            stateCode,
+            "form-control",
+            stateList,
+            "other",
+            ".otherStateSection"
+          );
+        },
+        updatePassword: function (event) {
+          if ($("#resetForm").valid()) {
+            var currentPassword = $('#current_password').val();
+            var newPassword = $('#new_password').val();
+            var newPasswordVerify = $('#new_password_verify').val();
+            if (!newPassword) {
+              return;
+            }
+            var myaccountjson = JSON.stringify(CCRZ.myaccountModel.toJSON());
+            this.invoke("updatePassword", currentPassword, newPassword, newPasswordVerify, function (response) {
+              if (response && response.messages) {
+                CCRZ.pubSub.trigger("pageMessage", response);
+              }
+            });
+          }
+        }
+      });
+
+      // Change password section
+      CCRZ.views.changePasswordView = CCRZ.CloudCrazeView.extend({
+        templateDesktop: CCRZ.util.template('MyAccount-ChangePassword-Desktop'),
+        className: "cc_ctrl_myaccountRD",
+        viewName: "changePasswordView",
+        templateSelector: '.myaccount_edit_password',
+        init: function () { },
+        preRender: function () {
+          if (CCRZ.pagevars.linkOverrideMap['MyAccountChangePassword']) {
+            window.location.href = CCRZ.pagevars.linkOverrideMap['MyAccountChangePassword'];
+          }
+        },
+        renderPhone: function () {
+          var v = this;
+          v.$el.html(v.templatePhone());
+        },
+        renderDesktop: function () {
+          var v = this;
+          v.$el.html(v.templateDesktop(v));
+        },
+      });
+    });
+
+  </script>
+
+
+</apex:component>

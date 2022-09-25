@@ -1,0 +1,78 @@
+<apex:component >
+    <!-- 
+        Hero banner partial template. Expects model of this structure:
+        {
+            items: [
+                {
+                    Id: "a1k54000000ra5UAAQ"
+                    Name: "Category Landing - Area Rug - Buying Guide - 1"
+                    ccrz__Category__c: "a0N54000003thXDEAY"
+                    ccrz__Graphic_Type__c: "image"
+                    ccrz__ImageSource__c: "Static Resource"
+                    ccrz__ImageURI__c: "flexiti.jpg"
+                    ccrz__LocationType__c: "featureBanner"
+                    ccrz__LongDesc__c: "long desc test"
+                    ccrz__NewWindow__c: false
+                    ccrz__PageLocation__c: "category"
+                    ccrz__ProductRelated__c: "false"
+                    ccrz__Sequence__c: 1
+                    ccrz__ShortDesc__c: "short desc test"
+                    ccrz__SplashRotate__c: false
+                    ccrz__StaticResource__c: "B2C_AlexanianBanner"
+                    Timing__c: 1
+                    Promotion_Group_ID__c: "CategoryLandingAreaRugBuyingGuide"
+                }
+            ]
+        }
+    -->
+    <script id="HeroBannerPartialTemplate" type="text/template">
+        <div id="heroCarousel" class="alx-hero-carousel carousel slide" data-ride="carousel">
+            <div class="alx-carousel-controls">
+                <div id="alxHeroPause" class="alx-carousel-pause" onclick="togglePause()">
+                    <img class="alx-pause" src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/icons/carousel-pause.svg')}" alt=""/>
+                    <img class="alx-play"src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/icons/carousel-play.svg')}" alt=""/>
+                    <span class="sr-only">Pause/Play carousel</span>
+                </div>
+                <ol class="carousel-indicators">
+                    {{#each items}}
+                        <li data-target="#heroCarousel" onclick="event.stopPropagation(); advanceToSlide({{@index}})" data-slide-to="{{@index}}"></li>
+                    {{/each}}
+                </ol>
+            </div>
+
+            <div class="carousel-inner">
+                {{#each items}}
+                    <a href="{{decodeHTML ccrz__ExternalLink__c}}" class="{{returnClass @first 'active'}}carousel-item" data-interval="5000">
+                        {{{promoBannerImage Promotion_Group_ID__c ccrz__Sequence__c}}}
+                    </a>
+                {{/each}}
+            </div>
+            <a class="carousel-control-prev" href="#heroCarousel" role="button" data-slide="prev">
+                <span class="alx-ic ic-keyboard-left" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#heroCarousel" role="button" data-slide="next">
+                <span class="alx-ic ic-keyboard-right" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
+            {{sendPromotionImpression items}}
+        </div>
+    </script>
+
+    <script>
+        Handlebars.registerPartial("HeroBannerPartialTemplate", document.getElementById("HeroBannerPartialTemplate").innerHTML);
+
+        function togglePause() {
+            if ($('#alxHeroPause').hasClass('paused')) {
+                $('#heroCarousel').carousel('cycle');
+            } else {
+                $('#heroCarousel').carousel('pause');
+            }
+            $('#alxHeroPause').toggleClass('paused');
+        }
+
+        function advanceToSlide(index) {
+            $('#heroCarousel').carousel(index);
+        }
+    </script>
+</apex:component>

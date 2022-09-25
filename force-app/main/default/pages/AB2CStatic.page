@@ -1,0 +1,206 @@
+<apex:page id="AB2CStatic" docType="html-5.0" sidebar="false" showHeader="false" standardStylesheets="false" applyHtmlTag="false"
+    controller="AB2CStaticContentController">
+    <c:AB2CLeftNav ></c:AB2CLeftNav>
+
+    <script id="StaticContentTemplate" type="text/template">
+        <div id="breadcrumb_desktop_container"></div>
+
+        {{#if menu}}
+        <div class="row">
+            <div class="col-lg-2 col-md-3 col-sm-12">
+                {{> LeftNavPartialTemplate menu}}
+            </div>
+            <div class="col-lg-10 col-md-9 col-sm-12">
+        {{/if}}
+
+        <h1 class="text-center">{{decodeHTML pageTitle}}</h1>
+        {{#each contentList}}
+        {{#ifEquals row 'row-start'}}
+            <div class="auto-grid">
+        {{/ifEquals}}
+            <div>
+                {{decodeHTML content}}
+            </div>
+        {{#ifEquals row 'row-end'}}
+            </div>
+        {{/ifEquals}}
+        {{/each}}
+        
+        {{#if menu}}
+            </div>
+        </div>
+        {{/if}}
+    </script>
+    <div class="container-xl static-content-section">
+        <div class="alx-loading-circle"></div>
+    </div>
+
+    <script>
+        jQuery(function ($) {
+            const contentId = Handlebars.helpers.getQueryParam('content');
+
+            CCRZ.pubSub.on('view:Menu:refresh', function (theView) {
+                if (!CCRZ.models.StaticContentModel) {
+                    CCRZ.models.StaticContentModel = CCRZ.CloudCrazeModel.extend({
+                        className: 'AB2CStaticContentController',
+                        fetch: function (callback) {
+                            this.invokeCtx('getStaticContent', contentId, function (response, event) {
+                                if (!response.success) {
+                                    console.error(response.data);
+                                }
+                                callback(response.data);
+                            }, { nmsp: false, buffer: false });
+                        }
+                    });
+
+                    CCRZ.views.StaticContentView = CCRZ.CloudCrazeView.extend({
+                        viewName: "StaticContentView",
+                        templateDesktop: CCRZ.util.template('StaticContentTemplate'),
+                        templateSelector: '.static-content-section',
+                        init: function (options) {
+                            const thisView = this;
+                            thisView.staticContentDetails = new CCRZ.models.StaticContentModel();
+                            thisView.staticContentDetails.fetch(function (response) {
+                                if (response) {
+                                    // Append canonical URL for better SEO
+                                    const canonical = document.createElement('link');
+                                    canonical.rel = 'canonical';
+                                    canonical.href = document.location.origin + "/" + response.contentId;
+                                    document.head.appendChild(canonical);
+
+                                    // Render left navigation menu if needed
+                                    let breadcrumbRendered = false;
+                                    if (response.menuId) {
+                                        const menu = getMenuById(response.menuId);
+                                        if (menu && menu.children) {
+                                            response.menu = menu;
+                                            response.menu.displayMenuTitle = true;
+                                            response.menu.children = response.menu.children.map(function (m) {
+                                                if (window.location.href.includes(m.linkURL)) {
+                                                    breadcrumbRendered = true;
+                                                    renderCustomBreadcrumb([{ label: menu.displayName, href: menu.linkURL }, { label: m.displayName }]);
+                                                }
+                                                return m;
+                                            });
+                                        }
+                                    }
+
+                                    if (response.contentList) {
+                                        let title = null;
+
+                                        // Sort content by sequence number
+                                        response.contentList.sort(function (a, b) {
+                                            return a.sequence - b.sequence;
+                                        });
+                                        response.contentList = response.contentList.map(function (a) {
+                                            a.sequence = Math.floor(a.sequence / 10);
+                                            if (a.pageTitle) {
+                                                title = _.unescape(a.pageTitle);
+                                            }
+                                            return a;
+                                        });
+
+                                        // Set document title
+                                        if (title) {
+                                            response.pageTitle = title;
+                                            if (!breadcrumbRendered) {
+                                                renderCustomBreadcrumb([{ label: title }]);
+                                            }
+                                        }
+
+                                        // Set meta fields
+                                        if (response.contentList.length > 0) {
+                                            const metaTitle = _.unescape(response.contentList[0].AB2CMetaTitle);
+                                            const metaDescription = _.unescape(response.contentList[0].AB2CMetaDescription);
+                                            if (metaTitle) {
+                                                document.title = "Alexanian | " + metaTitle;
+                                            }
+                                            if (metaDescription) {
+                                                $("head").append('<meta name="description" content="' + metaDescription + '">');
+                                            }
+                                        }
+
+                                        const listLength = response.contentList.length;
+                                        for (let i = 0; i < listLength; i++) {
+                                            // Transform HTML strings into DOM objects, if needed
+                                            const content = response.contentList[i].content;
+                                            const doc = new DOMParser().parseFromString(content, "text/html");
+                                            const parsedHtml = doc.documentElement.textContent;
+                                            if (parsedHtml.includes('&lt') && parsedHtml.includes('&gt')) {
+                                                // Raw html, take out starting and closing <p> tags put in by Salesforce RTE
+                                                response.contentList[i].content = parsedHtml.substring(3, parsedHtml.length - 4);
+                                            }
+
+                                            // Set auto-grid properties
+                                            const sequence = response.contentList[i].sequence;
+                                            const isGreaterThanLastSeq = i === 0 || (i - 1 >= 0 && sequence > response.contentList[i - 1].sequence);
+                                            const isNextSeqSame = i + 1 < listLength && response.contentList[i + 1].sequence === sequence;
+                                            const isSameAsLastSeq = i - 1 >= 0 && response.contentList[i - 1].sequence === sequence;
+                                            const isNextSeqGreater = i === listLength - 1 || (i + 1 < listLength && response.contentList[i + 1].sequence > sequence);
+                                            if (isGreaterThanLastSeq && isNextSeqSame) {
+                                                response.contentList[i].row = 'row-start';
+                                            } else if (isSameAsLastSeq && isNextSeqGreater) {
+                                                response.contentList[i].row = 'row-end';
+                                            }
+                                        }
+
+                                        thisView.model = response;
+                                        thisView.render();
+
+                                        if ($(".static-content-section").has("form").length) {
+                                            initializeForm($(".static-content-section form"));
+                                        }
+
+                                        CCRZ.pubSub.trigger("view:StaticContentView:loaded", thisView);
+                                    } else {
+                                        window.location.href = '/not-found';
+                                    }
+                                } else {
+                                    console.error('Error fetching static content for this page.');
+                                }
+                            });
+                        },
+                        renderDesktop: function () {
+                            this.setElement(this.templateSelector);
+                            this.$el.html(this.templateDesktop(this.model));
+                        },
+                    });
+
+                    CCRZ.StaticContentView = new CCRZ.views.StaticContentView({});
+                }
+            });
+
+            function initializeForm(form) {
+                form.submit(function (event) {
+                    event.preventDefault();
+                    submitForm(form.data("form-name"), form.serialize())
+                        .then(function (response) {
+                            const redirectUrl = form.data("form-redirect");
+                            if (redirectUrl) {
+                                window.location.href = redirectUrl;
+                            }
+                        }).catch(function (error) {
+                            console.error(error);
+                        });
+                });
+            }
+
+            function submitForm(formName, serializedData) {
+                return new Promise(function (resolve, reject) {
+                    CCRZ.models.FormModel = CCRZ.CloudCrazeModel.extend({
+                        className: 'AB2CStaticContentController',
+                        fetch: function () {
+                            this.invokeCtx('submitForm', formName, serializedData, function (response, event) {
+                                if (!response.success) {
+                                    reject(response.data);
+                                }
+                                resolve(response.data);
+                            }, { nmsp: false, buffer: false });
+                        }
+                    });
+                    new CCRZ.models.FormModel().fetch();
+                });
+            }
+        });
+    </script>
+</apex:page>

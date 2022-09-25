@@ -1,0 +1,185 @@
+@import "../base/variables";
+
+form {
+  &.alx-form {
+    background: #f0f0f0;
+    padding: 1rem;
+    font-size: 0.8125rem;
+  }
+}
+
+.alx-form-label {
+  color: $charcoal;
+  font-size: 0.8125rem;
+  font-weight: normal;
+  margin-bottom: 0.3125rem;
+  line-height: 1.5;
+}
+
+.alx-form-text {
+  color: $warm-grey-2;
+  font-size: 0.625rem;
+  font-weight: 500;
+}
+
+#alx-plp-sort {
+  min-width: 13rem;
+}
+
+.form-group,
+.form-inline,
+.input-group {
+  label {
+    color: $charcoal;
+    font-size: 0.8125rem;
+    font-weight: normal;
+    margin-bottom: 0.3125rem;
+  }
+
+  .form-text {
+    color: $warm-grey-2;
+    font-size: 0.625rem;
+    font-weight: 500;
+  }
+
+  .form-control {
+    -webkit-appearance: none;
+    border-radius: 0;
+    border: solid 1px $outline-grey;
+    color: $rich-black;
+    font-size: 0.8125rem;
+    padding: 0.5rem 0.9375rem;
+    height: 2.375rem;
+
+    &:focus {
+      box-shadow: none;
+      border-color: $rich-black;
+    }
+  }
+
+  select.form-control {
+    background: url(../images/icons/ic-arrow-down.svg) 98% / 1.5rem no-repeat
+      $white;
+    padding-right: 2rem;
+    min-width: 2rem;
+  }
+
+  textarea {
+    min-height: 5rem;
+  }
+
+  ::-webkit-input-placeholder,
+  :-ms-input-placeholder,
+  ::placeholder {
+    color: $warm-grey;
+  }
+}
+
+#alx-plp-sort {
+  min-width: 13rem;
+}
+
+.input-group {
+  .form-control {
+    &:not(:first-child) {
+      border-left: none;
+    }
+
+    &:not(:last-child) {
+      border-right: none;
+    }
+
+    &:focus {
+      ~ .input-group-append {
+        .alx-append-btn {
+          border-color: $rich-black;
+        }
+      }
+    }
+  }
+
+  .input-group-prepend,
+  .input-group-append {
+    height: 2.375rem;
+  }
+
+  .input-group-append {
+    .alx-append-btn {
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      background: $white;
+      border: 1px solid $outline-grey;
+      border-left: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.0625rem 0.4375rem 0.125rem;
+      .alx-ic {
+        background: $grey;
+      }
+
+      &.alx-product-search-btn {
+        .alx-ic {
+          background: $swatch-black;
+        }
+      }
+    }
+  }
+}
+
+.form-group {
+  margin-bottom: 0.375rem;
+}
+
+.form-check {
+  .form-check-label {
+    font-size: 0.9rem;
+    padding-left: 0.5rem;
+  }
+
+  input[type="checkbox"] {
+    appearance: none;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    border: solid 2px $warm-grey;
+    transition: border 0.15s ease-in-out;
+    border-radius: 3px;
+    width: 1.25rem;
+    top: -0.2rem;
+    height: 1.25rem;
+    outline: 0;
+    transition: all 0.5s;
+    font-size: 1rem;
+  }
+
+  input[type="checkbox"]:checked {
+    border-color: $charcoal;
+    background-color: $charcoal;
+    transition: all 0.5s;
+  }
+
+  input[type="checkbox"]:disabled {
+    border-color: $outline-grey;
+  }
+
+  input[type="checkbox"]:checked:disabled {
+    border-color: $outline-grey;
+    background-color: $outline-grey;
+  }
+
+  input[type="checkbox"]:checked:after {
+    position: absolute;
+    padding-left: 0.1rem;
+    top: -0.2rem;
+    content: "✓";
+    color: white;
+  }
+}
+
+// Change password form
+.changePasswordContainer {
+  #resetForm {
+    margin: 0 auto;
+    margin-top: 1rem;
+    max-width: 25rem;
+  }
+}

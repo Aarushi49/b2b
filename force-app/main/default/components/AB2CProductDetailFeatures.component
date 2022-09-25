@@ -1,0 +1,62 @@
+<apex:component >
+  <!-- 
+  "featureSpecs": [{
+      "product": "a1i540000033oo2AAA",
+      "sfid": "a1f54000000hf4cAAA",
+      "sfdcName": "PS-0001843",
+      "spec": "a2A54000000GUZwEAO",
+      "productID": "a1i540000033oo2-a2A54000000GUZw",
+      "specValue": "Cambrian",
+      "AB2CPSIsSwatch": false,
+      "AB2CIsSize": false,
+      "AB2CFeaturesAttributesSection": "Appearance",
+      "AB2CSpecName": "Collection"
+    }
+  ]
+  -->
+  <script id="ProductDetailFeaturesPartialTemplate" type="text/template">
+    {{#if featureSpecs}}
+    <div class="py-2">
+      <h6 class="text-uppercase font-weight-bold">Features &amp; Attributes</h6>
+      <div class="row alx-features-attributes">
+        {{#each (productFeatureTypes)}}
+          <div class="col-sm-6">
+            {{#if featureAttributeSection}}
+            <h4 class="alx-pd-label">{{featureAttributeSection}}:</h4>
+            {{/if}}
+            {{#each specs}}
+              {{#if AB2CSpecValueRT}}
+                {{decodeHTML AB2CSpecValueRT}}
+              {{else}}
+                <p>{{AB2CSpecName}}: {{specValue}}</p>
+              {{/if}}
+            {{/each}}
+          </div>
+        {{/each}}
+      </div>
+    </div>
+    {{/if}}
+  </script>
+
+  <script>
+    jQuery(function ($) {
+      Handlebars.registerHelper('productFeatureTypes', function () {
+        const types = [];
+        this.featureSpecs.forEach(function (spec) {
+          const typeIndex = types.indexOf(function (type) {
+            return spec.AB2CFeaturesAttributesSection === type.featureAttributeSection;
+          });
+          if (typeIndex < 0) {
+            types.push({
+              featureAttributeSection: spec.AB2CFeaturesAttributesSection,
+              specs: [spec]
+            });
+          } else {
+            types[typeIndex].specs.push(spec);
+          }
+        });
+        return types;
+      });
+    });
+  </script>
+</apex:component>

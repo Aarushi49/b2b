@@ -1,0 +1,160 @@
+@import '../../base/variables';
+
+.table {
+  &.alx-compare-table {
+    tbody {
+      border: none;
+
+      td {
+        vertical-align: top;
+        border-top: none;
+      }
+    }
+  
+    .form-group {
+      margin-bottom: 0.6875rem;
+    }
+    label {
+      color: $warm-grey;
+      font-weight: 500;
+      font-size: 0.8125rem;
+    }
+
+    p {
+      margin-bottom: 0;
+      a {
+        font-weight: bold;
+      }
+      
+      &.alx-featured-price-range  {
+        margin-bottom: 0.4375rem;
+        font-size: 0.875rem;
+        font-weight: bold;
+        line-height: 1.29;
+        color: $rich-black;
+      }
+
+      &.alx-featured-product-sku {
+        font-size: 0.8125rem;
+        margin-bottom: 0.4375rem;
+      }
+
+      &.alx-static-form {
+        height: 2.375rem;
+        padding: .5rem .9375rem;
+      }
+
+      &.alx-pd-label {
+        margin-bottom: 0.3125rem;
+      }
+
+      &.alx-pd-price {
+        color: $charcoal;
+        line-height: normal;
+      }
+      
+      &.alx-pd-base-price {
+        color: $charcoal;
+        line-height: normal;
+        text-decoration: line-through;
+      }
+      
+      &.alx-pd-sale-price {
+        color: $rouge;
+        line-height: normal;
+        font-weight: 500;
+      }
+
+      .alx-pd-unit {
+        color: $warm-grey;
+        font-size: 0.8125rem;
+        text-transform: lowercase;
+      }
+
+    }
+    .alx-compare-product-container {
+      margin: .875rem 0.875rem 0.625rem .875rem;
+
+      .alx-compare-delete {
+        height: 1.75rem;
+        min-height: 0;
+        padding: 0;
+        position: absolute;
+        transform: translate(-0.875rem, -0.875rem);
+      }
+
+      .alx-feature-product {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        max-width: 11.875rem;
+
+        .alx-product-image {
+          width: 11.875rem;
+          height: 14rem;
+          margin-bottom: 0.6875rem;
+          overflow: hidden;
+          
+          img {
+            object-fit: cover;
+            max-width: 100%;
+            width: 100%;
+            height: 100%;
+          }
+        }
+
+        .alx-featured-product-name {
+          font-size: 0.875;
+          font-weight: bold;
+          margin-bottom: 0.125rem;
+        }
+      }
+    }
+
+    ul {
+      padding-left: 1.25rem;
+      margin-bottom: 0;
+    }
+
+    .alx-clear {
+      padding-left: 0;
+    }
+    
+    .alx-compare-table-subheader {
+      border: none;
+      padding-left: 0;
+
+      p {
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+      }
+    }
+  
+    .alx-compare-features {
+
+      border: solid 1px $outline-grey;
+      border-bottom: none;
+
+      &:last-of-type {
+        border-bottom: solid 1px $outline-grey;
+      }
+
+      td {
+        border-right: 1px solid $outline-grey;
+        
+        &:last-of-type {
+          border-right: none;
+        }
+      }
+
+      .alx-compare-features-header {
+        p {
+          font-weight: bold;
+        }
+      }
+    }
+  }
+}

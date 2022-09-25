@@ -1,0 +1,49 @@
+@import "./variables";
+
+// Evenly space out all children. Used for columns in static pages.
+.auto-grid {
+  display: grid;
+  grid-gap: 1rem;
+  grid-auto-flow: row;
+  padding-bottom: 2rem;
+}
+
+@media (min-width: $breakpoint-sm-min) {
+  .auto-grid {
+    grid-auto-flow: column;
+  }
+}
+
+// Square Promo grid styles
+.alx-square-promo {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: -2%;
+
+  > a {
+    margin-top: 2%;
+    width: 100%;
+
+    img {
+      width: 100%;
+    }
+
+    &.large {
+      @media (min-width: $breakpoint-lg-min) {
+        width: 32%;
+        &:not(:nth-child(3n)) {
+          margin-right: 2%;
+        }
+      }
+    }
+
+    &.small {
+      @media (min-width: $breakpoint-sm-min) {
+        width: 32%;
+        &:not(:nth-child(3n)) {
+          margin-right: 2%;
+        }
+      }
+    }
+  }
+}

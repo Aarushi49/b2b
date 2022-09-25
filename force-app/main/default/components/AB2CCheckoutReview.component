@@ -1,0 +1,209 @@
+<apex:component >
+	<script id="Review-Desktop" type="text/template">
+		<form enctype="multipart/form-data" class="margin_form cc_OrderReview_new">
+			<div class="alx-light-bg-section">
+				<div class="d-flex justify-content-between">
+					<h2 class="m-0">
+						<span class="alx-badge">1</span>
+						Shipping Details
+					</h2>
+					<a id="edit_UserInfo" href="#edit_UserInfo" class="btn btn-link editAddressInfo">{{pageLabelMap 'CheckOut_edit'}}</a>
+				</div>
+				<p class="m-0 pt-3">
+					{{#with (getShippingAddress)}}
+					{{name}}<br>
+					{{address}}<br>
+					{{email}}
+					{{/with}}
+				</p>
+			</div>
+			
+			<div class="alx-light-bg-section my-3">
+				<div class="d-flex justify-content-between">
+					<h2 class="m-0">
+						<span class="alx-badge">2</span>
+						Payment Details
+					</h2>
+					<input class="btn btn-link processBack" type="button" value="{{pageLabelMap 'CheckOut_edit'}}" alt="{{pageLabelMap 'CheckOut_edit'}}" />
+				</div>
+				<div class="row pt-3">
+					<div class="col-md-6">
+						{{#with (getPaymentDetailsReview)}}
+						<div class="d-flex pb-3">
+							<img class="pr-2" src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-{{cardType}}" alt="{{cardType}}"/>
+							<p class="d-flex flex-column align-items-start m-0 justify-content-center">
+								<span>Ending: {{cardEnding}}</span>
+								<span>Expiry: {{cardExpiry}}</span>
+							</p>
+						</div>
+						{{/with}}
+					</div>
+
+					<div class="col-md-6">
+						<p><span class="text-muted">Billing Address:</span><br>
+						{{#with this.billingAddress}}
+						{{firstName}} {{lastName}}<br>
+						{{address1}}, {{address2}}<br>
+						{{city}}, {{stateCode}}, {{postalCode}}, {{country}}</p>
+						{{/with}}
+					</div>
+				</div>
+			</div>
+
+			<div class="border p-3 my-3">
+				<h2 class="pb-3">
+					<span class="alx-badge">3</span>
+					Review Order
+				</h2>
+				<div class="checkoutContainer checkoutPaymentContainer">
+					<div class="alert alert-error messagingSection-Error" style="display: none"></div>
+					<div class="alert alert-info messagingSection-Info" style="display: none"></div>
+					<div class="alert alert-warning messagingSection-Warning" style="display: none"></div>
+					<div class="reviewCartSection"></div>
+					
+					<div class="row text-center py-3">
+						<div class="col-lg-4">
+							<div class="alx-checkout-review-card border text-center p-3">
+								<p><span class="text-muted">Contact Information:</span><br>
+								{{this.buyerFirstName}} {{this.buyerLastName}}<br>
+								Phone Number: {{this.buyerPhone}}<br>
+								Email: {{this.buyerEmail}}</p>
+							</div>
+						</div>
+						<div class="col-lg-4">
+							<div class="alx-checkout-review-card border text-center p-3">
+								<p><span class="text-muted">Shipping Method:</span><br>{{getShippingMethod}}</p>
+
+								<p><span class="text-muted">Shipping Address:</span><br>
+								{{#with this.shippingAddress}}
+								{{firstName}} {{lastName}}<br>
+								{{address1}}, {{address2}}<br>
+								{{city}}, {{stateCode}}, {{postalCode}}, {{country}}</p>
+								{{/with}}
+							</div>
+						</div>
+						<div class="col-lg-4">
+							<div class="alx-checkout-review-card border text-center p-3">
+								<p class="text-muted">Payment Details:</p>
+								{{#with (getPaymentDetailsReview)}}
+								<div class="d-flex justify-content-center pb-3">
+									<img class="pr-2" src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-{{cardType}}" alt="{{cardType}}"/>
+									<p class="d-flex flex-column align-items-start m-0 justify-content-center">
+										<span>Ending: {{cardEnding}}</span>
+										<span>Expiry: {{cardExpiry}}</span>
+									</p>
+								</div>
+								{{/with}}
+
+								<p><span class="text-muted">Billing Address:</span><br>
+								{{#with this.billingAddress}}
+								{{firstName}} {{lastName}}<br>
+								{{address1}}, {{address2}}<br>
+								{{city}}, {{stateCode}}, {{postalCode}}, {{country}}</p>
+								{{/with}}
+							</div>
+						</div>
+					</div>
+
+					<div class="text-center">
+						<p class="text-muted">* You will not be charged until you have placed the order.</p>
+						<button type="button" class="btn btn-primary placeOrder">Place Order</button>
+					</div>
+				</div>
+			</div>
+		</form>
+	</script>
+
+	<script id="Review-Cart-DesktopV2" type="text/template">
+		<table class="alx-order-items alx-products-list">
+            <tr>
+                <th>Items</th>
+                <th>Quantity</th>
+                <th>Price</th>
+            </tr>
+            {{#each this.cartItems}}
+            {{#ifNotEquals this.cartItemType 'Coupon'}}
+            <tr>
+                <td>
+                    <div class="row py-3">
+                        <div class="col-sm-6">
+                            <!-- Main image & Product Badge (cloudinary.js) -->
+                            {{#with (getSKUComponents mockProduct '')}}
+                            <div id=alx-feature-product-{{sku}} class="alx-feature-product">
+                                <a href="{{getProductDetailUrl ../mockProduct}}" class="alx-product-image">
+                                    <div id="alx-detail-{{swatchSku}}">
+                                        {{{productListImage sku swatchSku}}}
+                                    </div>
+                                </a>
+                            </div>
+                            {{/with}}
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="alx-order-item-details">
+								<a href="{{getProductDetailUrl this.product}}">{{this.mockProduct.sfdcName}}</a>
+								<span class="pb-3">{{this.mockProduct.sku}}</span>
+                                {{#each (getSpecValues this)}}
+                                <span>{{this}}</span>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>{{this.quantity}}</td>
+                <td>
+                    <span class="{{#if this.mockProduct.serviceFlag}}sale{{/if}}">{{{price this.price ../currencyCode}}}</span>
+                </td>
+            </tr>
+            {{/ifNotEquals}}
+            {{/each}}
+		</table>
+	</script>
+
+	<script>
+		Handlebars.registerHelper("getSpecValues", function (cartItem) {
+			const specValues = [];
+			if (cartItem && cartItem.mockProduct && cartItem.mockProduct.productSpecsS) {
+				for (let spec of cartItem.mockProduct.productSpecsS) {
+					if (spec.AB2CIsSize || spec.AB2CPSIsSwatch) {
+						specValues.push(spec.specValue);
+					}
+				}
+			}
+			return specValues;
+		});
+
+		Handlebars.registerHelper('getPaymentDetailsReview', function () {
+			const paymentData = CCRZ.cartCheckoutModel.get('paymentData');
+			if (paymentData) {
+				let cardType = 'credit';
+				switch (paymentData.card_type) {
+					case '001': cardType = 'visa'; break;
+					case '002': cardType = 'mastercard'; break;
+					case '003': cardType = 'amex'; break;
+				}
+				return {
+					cardType: cardType,
+					cardEnding: 'xxxx' + paymentData.card_number.substr(12),
+					cardExpiry: paymentData.card_expirationMM + '/' + paymentData.card_expirationYYYY
+				};
+			}
+			return {
+				cardType: 'credit',
+				cardEnding: 'xxxxxxx',
+				cardExpiry: '--/----'
+			};
+		});
+
+		CCRZ.pubSub.on("ccrz.views:OrderReviewView:defined", function () {
+			CCRZ.views.OrderReviewView = CCRZ.views.OrderReviewView.extend({
+				placeOrder: function (event) {
+					if (event.preventDefault) event.preventDefault();
+					const orderId = CCRZ.cartCheckoutModel.get('orderId');
+					const location = "/cart/checkout/order-confirmation?o=" + orderId + getCSRQueryString();
+					window.location.href = window.location.origin + location;
+					return false;
+				}
+			});
+		});
+	</script>
+</apex:component>

@@ -1,0 +1,141 @@
+<apex:component rendered="{!IF(contains($CurrentPage.Name,'ccrz__ProductCompare'), true, false)}">
+  <c:AB2CSimpleProduct ></c:AB2CSimpleProduct>
+
+  <script id="CheckoutHeader-Desktop" type="text/template">
+    <div id="breadcrumb_desktop_container"></div>
+  </script>
+
+  <script id="ProductCompare-Container" type="text/template">
+    <div class="container-xl">
+        <div class="pcsec">
+          <h1 class="text-center">Product Comparison</h1>
+          <div class="alx-loading-circle"></div>
+        </div>
+    </div>
+  </script>
+
+  <script id="ProductCompare-Desktop" type="text/template">
+
+      <div class="container-xl">
+          <h1 class="text-center">Product Comparison</h1>
+
+          <div>
+            <div class="alert alert-error messagingSection-Error" style="display: none"></div>
+            <div class="alert alert-info messagingSection-Info" style="display: none"></div>
+            <div class="alert alert-warning messagingSection-Warning" style="display: none"></div>
+          </div>
+
+          <table class="alx-compare-table table">
+            <tbody>
+              <tr>
+                <td class="alx-clear">
+                  <a href="#" onclick="clearAll()">Clear All</a>
+                </td>
+                {{#each this.productList}}
+                  <td>
+                    <div class="alx-compare-product-container">
+                      <button type="button" class="btn btn-default alx-compare-delete comparePageRemButton removeFromCompare" 
+                        aria-label="{{pageLabelMap 'Modal_Aria_Close'}}" data-id="{{this.sfid}}">
+                        <i class="alx-ic ic-close" aria-hidden="true"></i>
+                      </button>
+                      {{> SimpleProductPartialTemplate . selectable=true }}
+                    </div>
+                  </td>
+                {{/each}}
+              </tr>
+              <tr>
+                <td class="alx-compare-table-subheader" colspan="{{compareColSpan this.productList}}">
+                  <p>Product Features & Attributes</p>
+                </td>
+              </tr>
+              {{#each (productFeatureTypes)}}
+                <tr class="alx-compare-features">
+                  <td class="alx-compare-features-header">
+                    <p>
+                      {{ this.featureAttributeSection }}
+                    </p>
+                  </td>
+                  {{#each specs}}
+                    <td>
+                      {{#ifGreater this.length 0}}
+                        {{#each .}}
+                          {{#if AB2CSpecValueRT}}
+                            {{decodeHTML AB2CSpecValueRT}}
+                          {{else}}
+                            <p>{{AB2CSpecName}}: {{specValue}}</p>
+                          {{/if}}
+                        {{/each}}
+                      {{/ifGreater}}
+                      {{#ifLessThan this.length 1}}
+                        --
+                      {{/ifLessThan}}
+                    </td>
+                  {{/each}}
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+      </div>
+  </script>
+
+
+  <script>
+    jQuery(function ($) {
+        $('.phoneLayout > .home_slider').remove();
+        renderCustomBreadcrumb([{ label: "Product Comparison" }]);
+        const productCompareTemplate = Handlebars.compile($("#ProductCompare-Container").html());
+        $('.pcsec').html(productCompareTemplate());
+
+
+        Handlebars.registerHelper('compareColSpan', function (productList) {
+          return productList.length + 1;
+        });
+
+        Handlebars.registerHelper('displaySpecs', function (product) {
+            if (!product.productSpecsS) {
+                return false;
+            }
+            const styleSpecs = returnSwatches(product.productSpecsS);
+            const sizeSpecs = returnSizes(product.compositeProductsS, null, product.productSpecsS);
+            return (styleSpecs && styleSpecs.length > 1) || (sizeSpecs && sizeSpecs.length > 1);
+        });
+
+        Handlebars.registerHelper('salePrice', function (product) {
+            return product['savings'] != undefined;
+        });
+
+        Handlebars.registerHelper('productFeatureTypes', function () {
+          const types = [];
+          this.productList.forEach(function (product) {
+            product.productSpecsS.forEach(function(spec) {
+              if (spec.AB2CFeaturesAttributesSection) {
+                const typeIndex = types.indexOf(function (type) {
+                  return spec.AB2CFeaturesAttributesSection === type
+                });
+                if (typeIndex < 0) {
+                  types.push({
+                    featureAttributeSection: spec.AB2CFeaturesAttributesSection,
+                    specs: []
+                  });
+                }
+              }
+            });
+          });
+          this.productList.forEach(function(product) {
+            types.forEach(function(type) {
+              const specsOfType = product.productSpecsS.filter(function(spec){
+                return spec.AB2CFeaturesAttributesSection === type.featureAttributeSection;
+              });
+              type.specs.push(specsOfType);
+            });
+          });
+          
+          return types;
+        });
+    });
+
+    function clearAll() {
+      window.history.back();
+    }
+  </script>
+</apex:component>

@@ -1,0 +1,52 @@
+<apex:component >
+    <!-- 
+        Feature banner partial template. Expects model of this structure:
+        {
+            items: [
+                {
+                    AB2C_Text_Overlay__c: "<h2>FIRST PROMO BANNER TITLE</h2>"
+                    Id: "a1k54000000gDp4AAE"
+                    Name: "Area Rugs - Feature - Header"
+                    Promotion_Group_ID__c: "CategoryLandingAreaRugHeroBanner"
+                    ccrz__Category__c: "a0N54000003thXDEAY"
+                    ccrz__ExternalLink__c: "ccrz__ProductList?categoryId=a0N54000003thXDEAY"
+                    ccrz__LinkType__c: "Category"
+                    ccrz__LocationType__c: "featureBannerTop"
+                    ccrz__PageLocation__c: "productList"
+                    ccrz__ProductRelated__c: "false"
+                    ccrz__Sequence__c: 1
+                    ccrz__SplashRotate__c: false
+                }
+            ]
+        }
+    -->
+    <script id="FeatureBannerPartialTemplate" type="text/template">
+        {{#if items.[0]}}
+        <div class="alx-feature-banner">
+            {{#with items.[0]}}
+            {{#ifNotEquals ccrz__LinkType__c 'None'}}
+            <a href="{{decodeHTML ccrz__ExternalLink__c}}">
+                {{{promoBannerImage Promotion_Group_ID__c ccrz__Sequence__c}}}
+            </a>
+            {{else}}
+            {{{promoBannerImage Promotion_Group_ID__c ccrz__Sequence__c}}}
+            {{/ifNotEquals}}
+            {{#if (hasBannerText AB2C_Text_Overlay__c)}}
+            <div class="alx-banner-text-overlay {{#ifEquals ccrz__LinkType__c 'None'}}alx-banner-text-only{{/ifEquals}}">
+                {{decodeHTML AB2C_Text_Overlay__c}}
+            </div>
+            {{/if}}
+            {{/with}}
+            {{sendPromotionImpression items}}
+        </div>
+        {{/if}}
+    </script>
+
+    <script>
+        Handlebars.registerPartial("FeatureBannerPartialTemplate", document.getElementById("FeatureBannerPartialTemplate").innerHTML);
+
+        Handlebars.registerHelper("hasBannerText", function(bannerText){
+            return bannerText && bannerText.length > 35;
+        });
+    </script>
+</apex:component>

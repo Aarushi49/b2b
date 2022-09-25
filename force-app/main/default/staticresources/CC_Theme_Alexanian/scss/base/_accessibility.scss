@@ -1,0 +1,24 @@
+// Hides element on page, but still readable for screen readers
+@mixin sr-only-helper {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.alx-main-content-link {
+  &:focus {
+    z-index: 2000;
+    position: absolute;
+    color: $rich-black;
+    background: $white;
+    padding: 0.5rem 0.875rem;
+    margin: 0.5rem;
+    border: 1px solid $rich-black;
+  }
+}

@@ -1,0 +1,274 @@
+<apex:component rendered="{!IF(contains($CurrentPage.Name,'ccrz__MyAccount'), true, false)}">
+  <c:AB2CAccountOverview ></c:AB2CAccountOverview>
+  <c:AB2CAccountEditProfile ></c:AB2CAccountEditProfile>
+  <c:AB2CAccountOrders ></c:AB2CAccountOrders>
+  <c:AB2CAccountWishlist ></c:AB2CAccountWishlist>
+  <c:AB2CAccountNav ></c:AB2CAccountNav>
+
+  <script>
+    jQuery(function ($) {
+      const accountContainer = $('.acctmainSection');
+      const parentContainer = accountContainer.closest('div[class^="container-fluid"]');
+      parentContainer.removeClass('container-fluid').addClass('container-xl');
+      accountContainer.wrap('<div class="row"></div>');
+      accountContainer.before('<div id="AB2CMyAccount_navSection" class="alx-act-nav col-sm-2"></div>');
+      accountContainer.addClass('col-sm-10');
+
+      CCRZ.models.AddressModel = Backbone.Model.extend({
+        idAttribute: "sfid"
+      });
+
+      CCRZ.models.MyAccount = CCRZ.CloudCrazeModel.extend({
+        className: "cc_ctrl_myaccountRD",
+        fetch: function (callback) {
+          var model = this;
+          model.invokeCtx("fetchAccountData",
+            function (response) {
+              if (response.success) {
+                CCRZ.geoCodes.fetch(function () {
+                  model.set(model.parse(response.data));
+                  model.set({
+                    countryList: CCRZ.geoCodes.countryList.toJSON(),
+                    myAccountEditProfileOverrideLink: CCRZ.pagevars.linkOverrideMap['MyAccountEditProfile']
+                  });
+                  callback();
+                });
+              } else {
+                console.error('Unable to fetch account data');
+              }
+            },
+            {
+              escape: false
+            }
+          );
+        },
+        updateContactInformation: function (data, refreshModel, callback) {
+          var model = this;
+          model.invokeCtx("updateContactInformation",
+            JSON.stringify(data),
+            function (response) {
+              if (response && response.success && response.data) {
+                if (refreshModel) {
+                  CCRZ.geoCodes.fetch(
+                    function () {
+                      model.set(model.parse(response.data));
+                      model.set({
+                        countryList: CCRZ.geoCodes.countryList.toJSON()
+                      });
+                    }
+                  );
+                }
+                callback(response);
+              } else {
+                if (response && response.messages && _.isArray(response.messages) && response.messages.length) {
+                  callback(response);
+                } else {
+                  callback(CCRZ.createPageMessage('ERROR', 'messagingSection-contactInfo-Error', 'ContactInfo_UpdateError'));
+                }
+              }
+            },
+            {
+              buffer: false
+            }
+          );
+        },
+        updateUserInformation: function (data, refreshModel, callback) {
+          var model = this;
+          model.invokeCtx("updateUserInformation",
+            JSON.stringify(data),
+            function (response) {
+              if (refreshModel) {
+                CCRZ.geoCodes.fetch(
+                  function () {
+                    model.set(model.parse(response.data));
+                    model.set({
+                      countryList: CCRZ.geoCodes.countryList.toJSON()
+                    });
+                  }
+                );
+              }
+              callback(response);
+            },
+            {
+              buffer: false
+            }
+          );
+        },
+        updateAddress: function (data, addressType, callback) {
+          var model = this;
+          if (addressType == 'Billing') {
+            model.invoke("updateMailingAddress", data, CCRZ.pagevars.storefrontName, CCRZ.pagevars.portalUserId, function (response) {
+              model.set(model.parse(response));
+              callback();
+            });
+          } else {
+            model.invoke("updateOtherAddress", data, CCRZ.pagevars.storefrontName, CCRZ.pagevars.portalUserId, function (response) {
+              model.set(model.parse(response));
+              callback();
+            });
+          }
+        }
+      });
+    });
+  </script>
+
+  <script>
+    jQuery(function ($) {
+      CCRZ.views.myaccountView = CCRZ.CloudCrazeView.extend({
+        viewName: "myaccountView",
+        init: function () {
+          this.currIndex = 0;
+          this.sectionMap = {};
+          this.subViewArray = {};
+          this.navView = new CCRZ.views.myAccountNavView({
+            model: this.subViewArray
+          });
+          if (CCRZ.pagevars.pageConfig.isTrue('MA.useDef')) {
+            this.loadDefaultViews();
+          }
+
+          var v = this;
+          this.model.fetch(function () {
+            if (CCRZ.pagevars.pageConfig.isTrue('MA.overrideFlow')) {
+              CCRZ.pubSub.on("view:myaccountView:subViewInit", function (data) {
+                v.currIndex = v.sectionMap['viewAccount'] || 0;
+                v.subView = v.subViewArray[v.currIndex].view;
+                v.render();
+              });
+              CCRZ.pubSub.trigger("view:myaccountView:awaitingSubViewInit", v);
+            }
+            else {
+              v.currIndex = v.sectionMap['viewAccount'] || 0;
+              v.subView = v.subViewArray[v.currIndex].view;
+              v.render();
+            }
+          });
+        },
+        loadDefaultViews: function () {
+          if (CCRZ.MyAccount.A2BCcontactInfo) {
+            CCRZ.MyAccount.A2BCcontactInfo.register(this);
+          }
+
+          if (CCRZ.MyAccount.A2BCcontactInfoEdit) {
+            CCRZ.MyAccount.A2BCcontactInfoEdit.register(this);
+          }
+
+          if (CCRZ.MyAccount.AB2CmyOrders) {
+            CCRZ.MyAccount.AB2CmyOrders.register(this);
+          }
+
+          if (CCRZ.MyAccount.AB2Cwishlist) {
+            CCRZ.MyAccount.AB2Cwishlist.register(this);
+          }
+        },
+        registerView: function (index, title, view) {
+          this.removeView(index);
+          this.subViewArray[index] = {
+            title: title,
+            view: view
+          };
+        },
+        registerNewView: function (viewName, title, view) {
+          var arrRef = this.subViewArray;
+          var sctMap = this.sectionMap;
+
+          if (_.isUndefined(this.lastIdx)) {
+            this.lastIdx = 0;
+          } else {
+            this.lastIdx++;
+          }
+          arrRef[this.lastIdx] = {
+            title: title,
+            view: view
+          };
+          sctMap[viewName] = this.lastIdx;
+        },
+        removeView: function (index) {
+          /*
+          if(this.subViewArray[index] != undefined && this.subViewArray[index].view != undefined)
+          this.subViewArray[index].view.remove();
+          */
+          if (this.subViewArray[index] != undefined)
+            delete this.subViewArray[index];
+
+          if (index == this.currIndex) {
+            index = 0;
+            this.subView = null;
+          }
+        },
+        render: function () {
+          var v = this;
+          v.$el.html('');
+          v.setElement($('.acctmainSection'));
+          if (!v.subView || v.subView == null) {
+            v.subView = v.subViewArray[v.currIndex].view;
+          }
+          if (v.subView.initSetup) {
+            v.subView.initSetup(function () {
+              v.renderSubView();
+            });
+          } else {
+            v.renderSubView();
+          }
+          CCRZ.pubSub.trigger("view:" + v.viewName + ":refresh", v);
+
+          const viewState = new URLSearchParams(window.location.search).get('viewState');
+          if (viewState) {
+            this.gotoSection(v.sectionMap[viewState] || 0);
+          }
+        },
+        renderSubView: function () {
+          var v = this;
+          v.subView.setElement(v.$el);
+          v.subView.model = v.model;
+          v.navView.render();
+          v.subView.render();
+          renderCustomBreadcrumb([{ label: "My Account", href: '/my-account' }, { label: v.navView.model[this.currIndex].title }]);
+        },
+        gotoSection: function (index) {
+          var v = this;
+          v.$el.fadeOut(function () {
+            v.$el.empty().show();
+            v.subView = v.subViewArray[index].view;
+            v.currIndex = index;
+            if (v.subView.initSetup) {
+              v.subView.initSetup(function () {
+                v.renderSubView();
+              });
+            } else {
+              v.renderSubView();
+            }
+          });
+        },
+        goToStep: function (stepName) {
+          for (var i = 0; i < this.subViewArray.length; i++) {
+            if (this.subViewArray[i].title == stepName) {
+              this.gotoSection(i);
+              break;
+            }
+          }
+        },
+        gotoEdit: function () {
+          this.gotoSection(1);
+        },
+        gotoOrders: function () {
+          this.gotoSection(2);
+        },
+        gotoWishlist: function () {
+          this.gotoSection(3);
+        }
+      });
+
+      CCRZ.geoCodes = new CCRZ.models.GeoModel();
+      CCRZ.myaccountModel = new CCRZ.models.MyAccount({
+        imageSource: ""
+      });
+      CCRZ.AB2CmyaccountView = new CCRZ.views.myaccountView({
+        model: CCRZ.myaccountModel
+      });
+      if (!CCRZ.disableAdaptive) {
+        CCRZ.dynamicViews.push(CCRZ.AB2CmyaccountView);
+      }
+    });
+  </script>
+</apex:component>

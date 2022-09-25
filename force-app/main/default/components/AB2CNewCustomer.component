@@ -1,0 +1,370 @@
+<apex:component controller="AB2CAccountCreateController" rendered="{!IF(contains($CurrentPage.Name,'ccrz__CCSiteRegister'), true, false)}">
+
+    <script id="SiteRegister-NewCustomer-Desktop" type="text/template">
+        <div class="container" id="contentNewCustomerForm">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <h1>Create Account</h1>
+                    <p class="text-muted">Please fill out the details below to create an account.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6 col-md-12">
+                    <form id="newCustomerForm" action="" forceSSL="true" class="alx-form">
+                        <p class="text-left h4 pt-1">Personal Details</p>
+                        <div id="alertMessage" class="d-none text-danger">
+                            Please review fields.
+                        </div>
+
+                        <div class="form-group pt-1">
+                            <label for="firstName" >{{pageLabelMap 'CheckOut_FirstName'}}</label>
+                            <input type="text" class="form-control"  name="firstName" id="firstName" placeholder="First Name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastName" >{{pageLabelMap 'CheckOut_LastName'}} </label>
+                            <input type="text" class="form-control" value="{{lastName}}" name="lastName" id="lastName" placeholder="Last Name">   
+                        </div>                        
+
+                        <div class="form-group">
+                            <label for="primaryPhone">{{pageLabelMap 'CheckOut_PrimaryPhone'}} </label>
+                            <input type="text" class="form-control" value="{{primaryPhone}}" name="primaryPhone" id="primaryPhone" placeholder="Primary Phone"
+                             maxlength=20>
+                        </div>
+
+                        <p class="text-left h4 pt-2">Account Setup</p>
+
+                        <div class="form-group pt-1">
+                            <label for="Email">Email &#42;</label>
+                            <input name="email" type="email" class="form-control" id="Email" name="email" placeholder="Email" value="{{email}}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="inputPassword">Password</label>
+                            <input name="password" type="password" class="form-control" id="password" placeholder="Password" value="{{password}}">
+                            <small id="passwordHelpBlock" class="form-text text-muted">
+                                &#42; Passwords must match and be at least 8 characters in length. Passwords must contain at least one alpha, one numeric, and one special character.
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputPasswordConfirmation">Confirm Password &#42;</label>
+                            <input name="confirmPassword" type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" value="{{confirmPassword}}" >
+                        </div>
+
+                        <p class="text-left h4 pt-2">Address Details</p>
+                        <div class="form-group">
+                            <label>Country  &#42;</label>
+                            {{{selectGeo 'country' this.countryList shippingAddress.countryCode 'countryListing form-control' 'shippingAddress.'}}}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="address">Address 1 &#42; </label>
+                            <input type="text" class="form-control" value="{{shippingAddress.address1}}" placeholder="Address 1" name="shippingAddress.address1" id="shippingAddress.address1">
+                        </div>
+                        <div class="form-group">
+                            <label for="aptSuite">Apt/Suite </label>
+                            <input type="text" class="form-control" value="{{shippingAddress.aptSuite}}" name="shippingAddress.aptSuite" placeholder="(Optional)" id="shippingAddress.aptSuite">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="city">City &#42; </label>
+                            <input type="text" class="form-control" value="{{shippingAddress.city}}" placeholder="City" name="shippingAddress.city" id="shippingAddress.city">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="provinceCode" id="addressProvince">Province &#42; </label>
+                            <div id="shippingStateSection" class="shippingStateSection"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="postalCode" id="addressPostal">Postal Code &#42; </label>
+                            <input type="text" class="form-control text-uppercase alx-postal" value="{{shippingAddress.postalCode}}" name="shippingAddress.postalCode" id="shippingAddress.postalCode" placeholder="A1B 2C3">
+                        </div>
+
+                        <div class="pt-4 pb-4">
+                            <div class="form-check">
+                                <input name="signUpforNewsLetter" type="checkbox" class="form-check-input" id="signUpforNewsLetter" {{#if this.signUpforNewsLetter}} checked {{/if}}>
+                                <label class="form-check-label" for="signUpforNewsLetter">Sign up for our newsletter and save with exclusive offers</label>
+                            </div>
+                        </div>
+                                                
+                        <p class="alx-form-text alx-no-wrap  ml-auto"> &#42; = required</p>
+
+                        <div class="d-flex align-items-center">
+                            <div class="pr-2"><button type="button" class="btn btn-dark submitNewCustomer">Submit</button></div>
+                            <div class="p-2"><a href="#" onclick="backToSignIn()" class="font-weight-bolder"><< Back To Sign In</a></div>
+                          </div>
+                    </form>
+                </div>
+                <div class="col-lg-6 d-none d-lg-block">
+                    <img class="img-fluid" src="https://res.cloudinary.com/alexanian/image/upload/v1585260539/prod/static/shared/register.jpg" alt="Alexanian Store"></img>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/javascript">
+        jQuery(function ($) {
+            CCRZ.pubSub.on("ccrz.views:newCustomerView:defined", function () {
+                CCRZ.views.newCustomerView = CCRZ.views.newCustomerView.extend({
+                    className: 'AB2CAccountCreateController',
+                    templateSelector: '.contentBody',
+                    templateDesktop: CCRZ.util.template(CCRZ.uiProperties.newCustomerView.desktop.tmpl),
+                    viewName: "newCustomerViewCustom",
+                    init: function (options) {
+                        renderCustomBreadcrumb([{ label: "Sign In", href: '/signin' }, { label: "Create Account" }]);
+                        const thisView = this;
+                        if (window.location.protocol != "https:") {
+                            thisView.gotoSecureRegistration();
+                        }
+                        this.stateView = new CCRZ.views.StateView();
+                        thisView.model.init(function () {
+                            CCRZ.geoCodes.fetch(function () {
+                                thisView.model.set({
+                                    countryList: getAvailableCountryList(),
+                                    shippingAddress: {
+                                        countryCode: 'CA',
+                                        state: 'ON'
+                                    }
+
+                                });
+                                thisView.render();
+                            });
+                        });
+                    },
+                    events: {
+                        "click  .submitNewCustomer": "submitNew",
+                        "change .countryListing": "changeStates",
+                    },
+                    submitNew: function (event) {
+                        let newCustomerJSON = form2js('newCustomerForm', '.', false, function (node) { }, false, true);
+
+                        newCustomerJSON.language = 'en_US';
+                        newCustomerJSON.currencyCode = 'CAD';
+
+                        newCustomerJSON.shippingAddress.address2 = newCustomerJSON.shippingAddress.aptSuite;
+                        newCustomerJSON.shippingAddress.state = $('.shippingStateSection option:selected').text()
+                        newCustomerJSON.shippingAddress.country = $('.countryListing option:selected').text();
+
+
+                        newCustomerJSON.billingAddress = newCustomerJSON.shippingAddress;
+                        newCustomerJSON.companyName = newCustomerJSON.firstName + newCustomerJSON.lastName;
+                        newCustomerJSON.signUpforNewsLetter = $('#signUpforNewsLetter:checked').val() ? true : false;
+                        if (jQuery('#newCustomerForm').valid()) {
+                            var thisView = this;
+                            this.invokeCtx('submitForm', JSON.stringify(newCustomerJSON), function (response, event) {
+                                if (!response.success) {
+                                    document.body.scrollTop = document.documentElement.scrollTop = 0;
+                                    let objResponse = response.data;
+                                    $('#alertMessage').removeClass('d-none')
+                                    if (objResponse.DuplicateEmail) {
+                                        let validator = $('#newCustomerForm').validate();
+                                        validator.showErrors({
+                                            "email": "The Email you are attempting to use is already taken. Please try to login. If you can’t remember your password, contact us or use the 'Forgot your password?'' link to reset it."
+                                        });
+                                    }
+                                    if (objResponse.checkValidateInput) {
+                                        $('#alertMessage').toggleClass('d-none');
+                                    }
+                                }
+                                if (newCustomerJSON.signUpforNewsLetter && response.success) {
+                                    thisView.setMailchimpShubscriptionStatus(newCustomerJSON, thisView.redirectPage);
+                                } else if (response.success) {
+                                    thisView.redirectPage();
+                                }
+                            }, { nmsp: false, buffer: false });
+                        } else {
+                            document.body.scrollTop = document.documentElement.scrollTop = 0;
+                        }
+                    },
+                    setMailchimpShubscriptionStatus: function (newCustomerJSON, callback) {
+                        var thisView = this;
+                        thisView.invokeCtx('setMailchimpShubscriptionStatus', newCustomerJSON.email, function (response, event) {
+                            if (!response.success) {
+                                response.data.email = newCustomerJSON.email;
+                                console.error(response.data);
+                            }
+                            callback();
+                        }, { nmsp: false, buffer: false });
+                    },
+                    redirectPage: function () {
+                        window.location.href = '/signin?registrationSuccess=true' + getCSRQueryString();
+                    },
+                    render: function () {
+                        const thisView = this;
+                        thisView.$el.html('');
+                        thisView.setElement($(CCRZ.uiProperties.newCustomerView.desktop.selector));
+                        thisView.$el.html(thisView.templateDesktop(thisView.model.toJSON()));
+                        thisView.renderStateLists();
+                        thisView.initValidation();
+                        this.handleCountryChange(CCRZ.newCustomerModel.attributes.shippingAddress.countryCode);
+                    },
+                    changeStates: function (event) {
+                        const v = this;
+                        const countryCode = $(event.target).val();
+                        this.handleCountryChange(countryCode);
+                        v.renderShippingStateList('', countryCode);
+
+                    },
+                    handleCountryChange: function (countryCode) {
+                        $('.alx-postal').val(null);
+                        if (!countryCode || countryCode === 'CA') {
+                            $('#addressProvince').text('Province *');
+                            $('#addressPostal').text('Postal Code *');
+                            $('.alx-postal').attr('placeholder', 'A1B 2C3');
+                            $('.alx-postal').mask('S0S 0S0');
+                        } else if (countryCode === 'US') {
+                            $('#addressProvince').text('State*');
+                            $('#addressPostal').text('Zip Code *');
+                            $('.alx-postal').attr('placeholder', '12345');
+                            $('.alx-postal').mask('00000');
+                        } else {
+                            $('#addressProvince').text('State/Province *');
+                            $('#addressPostal').text('Postal/Zip Code *');
+                            $('.alx-postal').attr('placeholder', '');
+                            $('.alx-postal').unmask();
+                        }
+
+                    },
+                    renderStateLists: function () {
+                        const v = this;
+                        const shippingAddress = CCRZ.newCustomerModel.attributes.shippingAddress;
+                        v.renderShippingStateList(shippingAddress.state, shippingAddress.countryCode);
+
+                    },
+                    renderShippingStateList: function (state, country) {
+                        const v = this;
+                        const stateList = CCRZ.geoCodes.filterStates(country).toJSON();
+                        this.stateView.render('state', state, 'form-control', stateList, 'shippingAddress.', '.shippingStateSection');
+                        if (stateList.length === 0) {
+                            $('#shippingStateSection input').attr('placeholder', '')
+
+                        }
+                    },
+                    initValidation: function () {
+                        $('#primaryPhone').mask('(000) 000-0000');
+                        $('#newCustomerForm').validate({
+                            invalidHandler: function (event, validator) { },
+                            rules: {
+                                "firstName": {
+                                    required: true,
+                                    maxlength: 50
+                                },
+                                "lastName": {
+                                    required: true,
+                                    maxlength: 80
+                                },
+                                "primaryPhone": {
+                                    required: true,
+                                    maxlength: 40
+                                },
+                                "email": {
+                                    required: true,
+                                    maxlength: 80,
+                                    email: true
+                                },
+                                "password": {
+                                    required: true,
+                                    minlength: 8,
+                                    maxlength: 20,
+                                    passwordcheck: true
+                                },
+                                "confirmPassword": {
+                                    required: true,
+                                    equalTo: "#password"
+                                },
+                                "shippingAddress.countryCode": {
+                                    required: true
+                                },
+                                "shippingAddress.address1": {
+                                    required: true,
+                                    maxlength: 255
+                                },
+                                "shippingAddress.city": {
+                                    required: true,
+                                    maxlength: 40
+                                },
+                                "shippingAddress.stateCode": {
+                                    required: true
+                                },
+                                // If there is no PickList to choose from, the shippingAddress uses state instead of stateCode
+                                "shippingAddress.state": {
+                                    required: true
+                                },
+                                "shippingAddress.postalCode": {
+                                    maxlength: 20,
+                                    required: true
+                                }
+                            },
+                            messages: {
+                                "firstName": {
+                                    maxlength: "First name exceeds the max length",
+                                    required: "Please enter first name"
+                                },
+                                "lastName": {
+                                    maxlength: "Last name exceeds the max length",
+                                    required: "Please enter last name"
+                                },
+                                "primaryPhone": {
+                                    maxlength: "Primary Phone exceeds the max length",
+                                    required: "Please enter Primary Phone"
+                                },
+                                "email": {
+                                    maxlength: "Email exceeds the max length",
+                                    required: "Please enter email",
+                                    email: "Your email address must be in the format of name@domain.com"
+                                },
+                                "password": {
+                                    maxlength: "Password exceeds the max length",
+                                    minlength: "Your password must be at least 8 characters long",
+                                    required: "Please enter password",
+                                    passwordcheck: "Passwords must contain at least one alpha, one numeric, and one special character"
+                                },
+                                "confirmPassword": {
+                                    required: "Password confirmation is required",
+                                    equalTo: "Passwords must match"
+                                },
+                                "shippingAddress.countryCode": {
+                                    required: "Please select a Mailing country"
+                                },
+                                "shippingAddress.address1": {
+                                    maxlength: "Address exceeds the max length",
+                                    required: "Please enter Address Information"
+                                },
+                                "shippingAddress.city": {
+                                    maxlength: "City exceeds the max length",
+                                    required: "Please enter city"
+                                },
+                                "shippingAddress.stateCode": {
+                                    required: "Please select State"
+                                },
+                                "shippingAddress.state": {
+                                    required: "Please selete State"
+                                },
+                                "shippingAddress.postalCode": {
+                                    maxlength: "Postal code exceeds the max length",
+                                    required: "Please enter a postal code"
+                                }
+                            },
+                            errorPlacement: function (error, element) {
+                                error.addClass('invalid-feedback');
+                                if (element.attr("id") == 'password') {
+                                    element.closest('.form-control').after(error);
+                                } else {
+                                    element.closest('.form-group').append(error);
+                                }
+                            }
+                        });
+                        $.validator.addMethod("passwordcheck",
+                            function (value, element) {
+                                const number = /([0-9])/;
+                                const alphabets = /([a-zA-Z])/;
+                                const special_characters = /([~,!,@,#,$,%,^,&,*,-,_,+,=,?,>,<])/;
+                                return value.match(number) && value.match(alphabets) && value.match(special_characters);
+                            });
+                    }
+                });
+            })
+        });
+    </script>
+</apex:component>

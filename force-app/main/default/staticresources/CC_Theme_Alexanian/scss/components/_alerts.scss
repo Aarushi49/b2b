@@ -1,0 +1,16 @@
+@import "../base/variables";
+
+.alert {
+  font-size: 0.8rem;
+  border-radius: 0 !important;
+
+  p {
+    margin: 0;
+  }
+}
+
+.alert-info{
+  color: $ocean-blue;
+  background-color: $ice;
+  border-color: $pale-sky-blue;
+}

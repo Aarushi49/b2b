@@ -1,0 +1,53 @@
+@import "../base/variables";
+
+.alx-dynamic-kit {
+  border: 1px solid $outline-grey;
+  font-size: 0.8125rem;
+  padding: 0 0.5rem 1rem 0.5rem;
+
+  .alx-dk-header {
+    font-weight: bold;
+    color: $charcoal;
+    text-align: center;
+    padding: 0.5rem 0 0.5rem 0;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+  }
+
+  .alx-option-name {
+    color: $charcoal;
+    font-weight: 500;
+  }
+
+  .alx-select {
+    border-radius: 0rem;
+    font-size: 0.8125rem;
+  }
+
+  .alx-dk-output {
+    font-size: 0.8125rem;
+
+    .alx-calc-sale-price-text {
+      font-size: 1.5rem;
+      color: $rouge;
+      font-weight: 500;
+    }
+    .alx-calc-price-text {
+      font-size: 1.5rem;
+      color: $charcoal;
+    }
+  }
+
+  .alx-head-text {
+    font-size: 0.6875rem;
+    &.alx-x {
+      margin-left: 0.7rem;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+  }
+
+  .alx-foot-text {
+    font-size: 0.625rem;
+  }
+}

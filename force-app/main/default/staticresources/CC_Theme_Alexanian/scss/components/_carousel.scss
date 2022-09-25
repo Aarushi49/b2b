@@ -1,0 +1,513 @@
+@import "../base/variables";
+
+// Hero carousel
+.alx-hero-carousel {
+  margin-top: 0.625rem;
+
+  .alx-carousel-controls {
+    background: $black-60;
+    height: 2.875rem;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .carousel-indicators {
+      align-items: center;
+      position: relative;
+      margin: 0;
+      width: 100%;
+      flex: 0;
+
+      li {
+        width: 0.625rem;
+        height: 0.625rem;
+        margin-right: 0.25rem;
+        margin-left: 0.25rem;
+        border-radius: 50%;
+        border: 1px solid $white;
+        background: none;
+        opacity: 1;
+        transition: background 0.2s ease-in-out;
+        &.active {
+          background: $white;
+        }
+      }
+    }
+
+    .alx-carousel-pause {
+      margin-right: 0.25rem;
+      width: 1.625rem;
+      height: 0.7rem;
+      border-radius: 0;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      background: none;
+      border: none;
+
+      img {
+        position: absolute;
+        transition: opacity 0.2s ease-in-out;
+      }
+
+      .alx-pause {
+        opacity: 1;
+      }
+      .alx-play {
+        opacity: 0;
+      }
+
+      &.paused {
+        .alx-pause {
+          opacity: 0;
+        }
+        .alx-play {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .carousel-control-prev,
+  .carousel-control-next {
+    width: auto;
+    align-items: flex-end;
+    z-index: 20;
+    padding-bottom: 0.3125rem;
+
+    .alx-ic {
+      background-color: $white;
+      height: 2.25rem;
+      width: 2.25rem;
+      -webkit-mask-size: 2.25rem 2.25rem;
+      mask-size: 2.25rem 2.25rem;
+    }
+  }
+
+  .carousel-control-prev {
+    padding-left: 1.25rem;
+  }
+
+  .carousel-control-next {
+    padding-right: 1.25rem;
+  }
+
+  .carousel-inner {
+    .carousel-item {
+      height: 20.8125rem;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+}
+
+// Featured product carousel
+.alx-featured-product-carousel {
+  width: 100%;
+  margin-bottom: 1.75rem;
+  padding: 0 1.1875rem;
+
+  .carousel-inner {
+    padding: 1.25rem 0.9375rem 0;
+
+    .alx-feature-product-container {
+      .alx-product-badge {
+        position: absolute;
+        transform: translate(-3.1875rem, -1.25rem);
+      }
+
+      .alx-feature-product {
+        padding: 0 0.9375rem;
+        text-align: center;
+        flex-grow: 1;
+        flex-basis: 0;
+
+        &:first-of-type {
+          padding-left: 0;
+        }
+
+        &:last-of-type {
+          padding-right: 0;
+        }
+
+        .alx-product-image {
+          display: flex;
+          overflow: hidden;
+          margin: 0 auto;
+          margin-bottom: 0.6875rem;
+          border: solid 2px transparent;
+          width: 11.875rem;
+          height: 14rem;
+          background: url(https://res.cloudinary.com/alexanian/image/upload/v1/dev/static/shared/placeholder);
+          background-repeat: no-repeat;
+          background-position: center center;
+          background-size: cover;
+          border: 2px solid $white;
+          transition: 0.2s ease-in-out;
+
+          &:hover {
+            border: 2px solid $charcoal;
+          }
+
+          img {
+            cursor: pointer;
+            object-fit: cover;
+            max-width: 100%;
+
+            &:not(.alx-product-badge) {
+              width: 100%;
+              height: 100%;
+            }
+          }
+        }
+
+        .alx-selected-style {
+          font-size: 0.8125rem;
+          color: $warm-grey;
+          line-height: 1.38;
+          text-align: center;
+          font-weight: 500;
+          margin-bottom: 0.5rem;
+        }
+
+        .alx-spec-selections-container {
+          margin: 0 auto;
+          width: 11.875rem;
+
+          label {
+            font-weight: 500;
+            font-size: 0.8125rem;
+            color: $warm-grey;
+
+            &.error-text {
+              color: $rouge;
+            }
+          }
+        }
+
+        .alx-swatch-container {
+          margin-bottom: 0.75rem;
+
+          .alx-swatch {
+            height: 2.4375rem;
+            width: 2.4375rem;
+            cursor: pointer;
+            border: 1px solid $grey;
+            transition: border 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+            margin: 0 0.375rem;
+
+            &:hover {
+              border: 1px solid $white;
+              -webkit-box-shadow: 0px 0px 0px 2px $charcoal;
+              -moz-box-shadow: 0px 0px 0px 2px $charcoal;
+              box-shadow: 0px 0px 0px 2px $charcoal;
+            }
+
+            &.active {
+              border: 1px solid $white;
+              -webkit-box-shadow: 0px 0px 0px 2px $charcoal;
+              -moz-box-shadow: 0px 0px 0px 2px $charcoal;
+              box-shadow: 0px 0px 0px 2px $charcoal;
+            }
+
+            &:first-of-type {
+              margin-left: 0;
+            }
+
+            &:last-of-type {
+              margin-right: 0;
+            }
+
+            &.see-more {
+              text-decoration: none;
+
+              &:after {
+                content: "+";
+                color: $white;
+                font-size: 1.75rem;
+                font-size: 1.75rem;
+                position: relative;
+              }
+            }
+          }
+        }
+
+        a.alx-featured-product-name {
+          margin-bottom: 0.0625rem;
+          font-size: 0.875rem;
+          font-weight: bold;
+          color: $charcoal;
+          text-decoration: none;
+          cursor: pointer;
+          text-align: center;
+          display: inline-block;
+          line-height: 1.29;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+        .alx-featured-product-sku {
+          color: $charcoal;
+          font-size: 0.8125rem;
+          margin-bottom: 0.1875rem;
+        }
+
+        .alx-featured-price-range {
+          margin-bottom: 0.0625rem;
+          font-size: 0.875rem;
+          font-weight: bold;
+          line-height: 1.29;
+          color: $charcoal;
+
+          &.alx-sale-price {
+            color: $rouge;
+          }
+        }
+
+        .alx-featured-compare {
+          color: $charcoal;
+          font-size: 0.8125rem;
+          margin-bottom: 0;
+          text-decoration: underline;
+          cursor: pointer;
+
+          &:hover {
+            color: $warm-grey-2;
+          }
+        }
+      }
+    }
+  }
+
+  .carousel-control-prev,
+  .carousel-control-next {
+    width: auto;
+    z-index: 20;
+    align-items: flex-start;
+    top: 7rem;
+    opacity: 1;
+
+    .alx-ic {
+      background-color: $charcoal;
+      height: 2.25rem;
+      width: 1.1875rem;
+      -webkit-mask-size: 3.875rem;
+      mask-size: 3.875rem;
+    }
+
+    &:hover {
+      opacity: 1;
+      .alx-ic {
+        background-color: $warm-grey-2;
+      }
+    }
+  }
+
+  .carousel-control-prev {
+    .alx-ic {
+      -webkit-mask-position: -1.25rem;
+      mask-position: -1.25rem;
+    }
+  }
+
+  .carousel-control-next {
+    .alx-ic {
+      -webkit-mask-position: -1.375rem;
+      mask-position: -1.375rem;
+    }
+  }
+}
+
+// Product detail carousel
+.alx-product-detail-carousel {
+  .carousel-zoom {
+    position: absolute;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0.5rem 0.5rem 0 0.5rem;
+
+    .ic-search {
+      background-color: $white;
+    }
+  }
+
+  .carousel-inner {
+    overflow: unset;
+  }
+
+  .alx-product-badge {
+    position: absolute;
+    right: -1rem;
+    top: -1rem;
+  }
+
+  .carousel-item {
+    text-align: center;
+    transition: none;
+
+    img,
+    video {
+      object-fit: cover;
+      max-width: 100%;
+    }
+  }
+
+  .thumbnail-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .alx-ic {
+      zoom: 2;
+      width: 1rem;
+    }
+
+    a {
+      display: none;
+    }
+
+    .carousel-indicators {
+      justify-content: space-between;
+      overflow-x: hidden;
+      position: relative;
+      margin: 0;
+      padding: 0.25rem 0;
+
+      li {
+        width: 8rem;
+        height: 8rem;
+        margin-right: 0.5rem;
+        border: 1px solid transparent;
+        background-color: transparent;
+        opacity: 1;
+
+        &.active {
+          border: 1px solid $white;
+          -webkit-box-shadow: 0px 0px 0px 2px $charcoal;
+          -moz-box-shadow: 0px 0px 0px 2px $charcoal;
+          box-shadow: 0px 0px 0px 2px $charcoal;
+        }
+
+        img {
+          display: block;
+          width: 8rem;
+          height: 8rem;
+          object-fit: cover;
+        }
+      }
+    }
+  }
+}
+
+#alx-product-detail-modal {
+  width: 100%;
+  text-align: center;
+
+  .modal-dialog {
+    max-width: unset;
+    pointer-events: unset;
+  }
+
+  .alx-product-detail-modal-image {
+    min-width: calc(100% - 5rem);
+  }
+
+  .modal-container {
+    display: flex;
+    min-height: 94vh;
+    justify-content: center;
+    flex-direction: column;
+    background: transparent;
+
+    .modal-image-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+
+      .carousel-control-next,
+      .carousel-control-prev {
+        width: 2.5rem;
+        margin: 0;
+        padding: 1rem 0;
+        position: relative;
+      }
+
+      img,
+      video {
+        max-width: calc(100% - 2rem);
+        border: 2px solid white;
+      }
+    }
+
+    // Icons
+    button,
+    .carousel-control-next,
+    .carousel-control-prev {
+      opacity: 0.8;
+      &:hover {
+        opacity: 1;
+      }
+    }
+    .ic-keyboard-left,
+    .ic-keyboard-right {
+      background-color: $white;
+      zoom: 2;
+      width: 1rem;
+    }
+    .ic-close {
+      background-color: $white;
+      zoom: 1.5;
+    }
+  }
+}
+
+.alx-swatch- {
+  background: $swatch-grey;
+}
+.alx-swatch-beige {
+  background: $swatch-beige;
+}
+.alx-swatch-black {
+  background: $swatch-black;
+}
+.alx-swatch-blue {
+  background: $swatch-blue;
+}
+.alx-swatch-brown {
+  background: $swatch-brown;
+}
+.alx-swatch-green {
+  background: swatch-green;
+}
+.alx-swatch-grey {
+  background: $swatch-grey;
+}
+.alx-swatch-multi-colour {
+  background: $swatch-multi-colour;
+}
+.alx-swatch-orange {
+  background: $swatch-orange;
+}
+.alx-swatch-purple {
+  background: $swatch-purple;
+}
+.alx-swatch-red {
+  background: $swatch-red;
+}
+.alx-swatch-white {
+  background: $swatch-white;
+  border: solid 1px $snow;
+}
+.alx-swatch-yellow {
+  background: $swatch-yellow;
+}

@@ -1,0 +1,168 @@
+<apex:component >
+  <c:AB2CAccountNewsletterCheckbox ></c:AB2CAccountNewsletterCheckbox>
+  <c:AB2CAccountOrdersList ></c:AB2CAccountOrdersList>
+  <script id="MyAccount-ContactInformation-Desktop" type="text/template">
+    <div class="d-flex justify-content-between align-items-center text-center my-3">
+      <span></span>
+      <h1 class="mb-0">Welcome, {{this.userFirstName}}</h1>
+      <a href="#" onclick="logOutUser()">Sign Out</a>
+    </div>
+    <div class="alx-act-card">
+      <fieldset>
+        <div class="d-flex alc-act-card-header">
+          <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-my-account.svg')}" class="mr-2" alt=""/>
+          <legend>{{pageLabelMap 'MyAccount_Profile_User_Information'}}</legend>
+          {{#if hideEditProfile}} {{else}}
+            <a href="#" class="gotoSectionContactInfoEdit ml-auto" value="{{pageLabelMap 'MyAccount_EditProfile'}}">{{pageLabelMap 'MyAccount_EditProfile'}} &#62;&#62;</a>
+          {{/if}}
+        </div>
+        <div class="row">
+          <div class="col-12 alx-act-field myAccName">
+            <label class="alx-pd-label">{{pageLabelMap 'MyAccount_Profile_Name'}}:</label>
+            <p>{{userFirstName}} {{userLastName}}</p>
+          </div>
+          <div class="col-12 alx-act-field myAccEmailAddr">
+            <label class="alx-pd-label">{{pageLabelMap 'MyAccount_Profile_Email'}}:</label>
+            <p>{{emailAddress}}</p>
+          </div>
+          <div class="col-12 alx-act-field myAccPhone">
+            <label class="alx-pd-label">{{pageLabelMap 'MyAccount_Profile_Phone'}}:</label>
+            <p>{{userPhone}}</p>
+          </div>
+          {{> AccountNewsletterCheckboxPartialTemplate email=emailAddress state="readOnly"}}
+        </div>
+      </fieldset>
+    </div>
+    <div class="alx-act-card">
+      <div class="d-flex alc-act-card-header">
+        <img src="{!URLFOR($Resource.CC_Theme_Alexanian, 'images/ic-orders.svg')}" class="mr-2" alt=""/>
+        <h2>{{pageLabelMap 'MyAccount_MyOrders_Orders'}}</h2>
+        <a href="#" class="gotoSectionOrderHistory ml-auto" value="{{pageLabelMap 'MyAccount_MyOrders'}}">{{pageLabelMap 'MyAccount_MyOrders'}} &#62;&#62;</a>
+
+      </div>
+      {{> MyAccountOrderListPartialTemplate .}}
+    </div>
+  </script>
+
+  <script>
+    Handlebars.registerPartial("AccountNewsletterCheckboxPartialTemplate", document.getElementById("AccountNewsletterCheckboxPartialTemplate").innerHTML);
+    Handlebars.registerPartial("MyAccountOrderListPartialTemplate", document.getElementById("MyAccountOrderListPartialTemplate").innerHTML);
+
+    CCRZ.MyAccount = _.extend(CCRZ.MyAccount||{},{
+      A2BCcontactInfo: {
+        register: function(registrar){
+          registrar.registerNewView('viewAccount', CCRZ.pagevars.pageLabels['MyAccount_ContactInformation'], new CCRZ.views.contactInfoView());
+        }
+      }
+    });
+
+    jQuery(function($) {
+      CCRZ.views.contactInfoView = CCRZ.CloudCrazeView.extend({
+        templateDesktop: CCRZ.util.template('MyAccount-ContactInformation-Desktop'),
+        viewName: "contactInfoView",
+        managedSubView: true,
+        navIndex: 3,
+        events: {
+          "click .editAddress": "editAddress",
+          "click #updateContactBtn": "updateContactInformation",
+          "click #updateUserInfoBtn": "updateUserInfo",
+          "click .gotoSectionContactInfoEdit": "gotoSectionContactInfoEdit",
+          "click .gotoSectionOrderHistory": "gotoSectionOrderHistory"
+        },
+        /**
+         *
+         * Edit the address
+         */
+        editAddress: function(event) {
+          var v = this;
+          var objLink = $(event.currentTarget);
+          var type = objLink.data("type");
+          var addModel =
+            type == "Billing"
+              ? v.model.get("contactBean").mailingAddress
+              : v.model.get("contactBean").otherAddress;
+          addModel.addressType = type;
+          var addressView = new CCRZ.views.editAddressView({
+            el: $("#edit_address"),
+            model: addModel,
+            parentView: v
+          });
+        },
+        /**
+         *
+         * Updates 1) First Name, 2) Last Name and 3) Phone
+         * in the Mobile view.
+         */
+        updateContactInformation: function(event) {
+          var v = this;
+          var objLink = $(event.currentTarget);
+          loading(objLink);
+          var data = $("#contactForm").serializeObject();
+          v.model.updateContactInformation(JSON.stringify(data), function() {
+            v.handleResponse(objLink, $("#edit_account"));
+          });
+        },
+        /**
+         *
+         * Update 1) Username, 2) Email, 3) Language
+         * and 4) Currency Code in the Mobile view.
+         */
+        updateUserInfo: function(event) {
+          var v = this;
+          var objLink = $(event.currentTarget);
+          loading(objLink);
+          var data = $("#userInformationForm").serializeObject();
+          v.model.updateUserInformation(data, true, function() {
+            v.handleResponse(objLink, $("#edit_user_information"));
+            window.location.reload();
+          });
+        },
+        /**
+         *
+         * Opens the Contact Info Edit Sub-View.
+         */
+        gotoSectionContactInfoEdit: function() {
+          CCRZ.AB2CmyaccountView.gotoEdit();
+        },
+        /**
+         *
+         * Opens the Order History Sub-View.
+         */
+         gotoSectionOrderHistory: function() {
+          CCRZ.AB2CmyaccountView.gotoOrders();
+        },
+        /**
+         *
+         * Updates the Addresses in the Mobile view.
+         */
+        updateAddress: function(event, addressType) {
+          var v = this;
+          var objLink = $(event.currentTarget);
+          loading(objLink);
+          var data = $("#addressForm").serializeObject();
+          v.model.updateAddress(JSON.stringify(data), addressType, function() {
+            v.handleResponse(objLink, $("#edit_address"));
+          });
+        },
+        init: function() {
+          var v = this;
+          v.listenTo(CCRZ.pubSub, "myAccountUpdate", function(response) {
+            CCRZ.console.log("myAccountUpdate trigger - response: " + response);
+            v.model.set(v.model.parse(response.data));
+          });
+        },
+        render: function() {
+          var v = this;
+          CCRZ.myaccountModel = v.model;
+          v.$el.html(v.templateDesktop(CCRZ.myaccountModel.toJSON()));
+
+        },
+        handleResponse: function(objLink, modalWindow) {
+          doneLoading(objLink);
+          CCRZ.AB2CmyaccountView.gotoSection("viewAccount");
+        }
+      });
+    });
+
+  </script>
+</apex:component>

@@ -1,0 +1,342 @@
+<apex:component >
+	<!-- Filter container -->
+	<script id="Product-List-Filter" type="text/template">
+		<div class="alx-filters">
+			<a href="#alx-plp-filter" class="d-flex justify-content-between" data-toggle="collapse" aria-expanded="false" aria-controls="alx-plp-filter">
+				<p class="text-uppercase"><b>Filters</b></p>
+				<p id="alx-clear-all-filters-pseudo">Clear All</p>
+			</a>
+			<div class="collapse accordion specGroupContent cc_filter_options" id="alx-plp-filter"></div>
+		</div>
+		{{>RelatedResourcesPartialTemplate}}
+    </script>
+
+	<!--
+		CCRZ Data Model for SPEC-GROUP
+		{
+		    name: "Size"
+		    sfid: "a2A54000000GPqnEAG"
+		    specValues: {
+		        length: 7
+		        models:[{
+		            cid: "c51"
+		            attributes: {
+		                enabled: true
+		                value: "2x3"
+		                count: 4
+		            }
+		            collection: {length: 7, models: Array(7), _byId: {…}}       << Ref to specValues
+		            _changing: false
+		            _previousAttributes: {}
+		            changed: {}
+		            id: "2x3"
+		            _pending: false
+		            _events: {all: Array(1)}
+		        }]
+		        _byId: {
+		            c48: {
+		                cid: "c48"
+		                attributes: {
+		                    enabled: true
+		                    value: "10x14"
+		                    count: 3
+		                }
+		                collection: r {length: 7, models: Array(7), _byId: {…}}     << Ref to specValues
+		                _changing: false
+		                _previousAttributes: {}
+		                changed: {}
+		                id: "10x14"
+		                _pending: false
+		                _events: {all: Array(1)}
+		            },
+		            10x14: {cid: "c48", attributes: {…}, collection: r, _changing: false, _previousAttributes: {…}, …}
+		        }
+		    }
+		    listSize: 10
+		    renderCount: 7
+		    viewMoreBtn: false
+		    collapsed: false
+		    sequence: 500
+		    filterType: "Slider"
+		    rangeMin: 0
+		    rangeMax: 99999
+		    filterMin: 0
+		    filterMax: 99999
+		}
+	-->
+	<script id="Spec-Group-View" type="text/template">
+		<div class="alx-filter">
+			<button type="button" class="btn btn-block alx-filter-heading d-flex justify-content-between" data-toggle="collapse" data-target="#collapse{{sfid}}" aria-controls="collapse{{sfid}}" aria-expanded="{{#ifEquals collapsed true}}true{{else}}false{{/ifEquals}}">
+				<span>{{name}}{{#ifGreater (enabledFilterCount this) 0}} ({{enabledFilterCount this}}){{/ifGreater}}</span>
+				<span></span>
+			</button>
+		    <div id="collapse{{sfid}}" class="p-2 collapse {{#ifEquals collapsed true}}show{{/ifEquals}}" aria-labelledby="collapse{{sfid}}">
+		        {{#ifEquals filterType 'Slider'}}
+                    <div class="spec spec_slider_container">
+						<p id="slider_{{this.sfid}}" class="slider_{{this.sfid}} cc_slider" data-spec="{{this.name}}"></p>
+						<div class="d-flex justify-content-between">
+							<div>
+								{{this.notationStart}}<span id="lower_{{this.sfid}}" class="lowerDisp lower_{{this.sfid}} cc_lower_disp"></span>{{this.notationEnd}}
+							</div>
+							<div>
+								{{this.notationStart}}<span id="higher_{{this.sfid}}" class="upperDisp higher_{{this.sfid}} cc_upper_disp"></span>{{this.notationEnd}}
+							</div>							
+						</div>
+                    </div>
+		        {{/ifEquals}}
+		        {{#ifEquals filterType 'Checkbox'}}
+					{{#each_upto specValues.models renderCount}}
+					{{#with this.attributes}}
+					<div class="form-check cc_spec_filter_option pb-2 {{#ifEquals enabled false}} disabled {{/ifEquals}}">
+						<input class="form-check-input cc_filter_checkbox cc_checkbox" type="checkbox" id="{{../../this.sfid}}-{{value}}" {{#ifEquals enabled false}} disabled {{/ifEquals}} data-specid="{{../../this.sfid}}" data-spec="{{../../this.name}}" data-value="{{value}}" {{#if selected}} checked {{/if}}>
+						<label class="form-check-label" for="{{../../this.sfid}}-{{value}}">
+							<span class="cc_filter_value" data-spec="{{../../this.name}}" data-id="{{../../this.sfid}}">{{value}}</span>
+						</label>
+					</div>
+					{{/with}}
+					{{/each_upto}}
+					{{#if viewMoreBtn}}
+						<div class="cc_filter_buttons">
+							<a href="#" class="cc_show_all">Show More</a>
+						</div>
+					{{/if}}
+		        {{/ifEquals}}
+		    </div>
+		</div>
+	</script>
+
+
+
+	<script>
+
+
+		jQuery(function ($) {
+			Handlebars.registerHelper('enabledFilterCount', function (specGroupModel) {
+				// Counts the number of selected items in this spec group
+				if (specGroupModel.filterType === 'Checkbox') {
+					return specGroupModel.specValues.models.reduce(function (a, m) {
+						return a + (m.attributes.selected ? 1 : 0);
+					}, 0);
+				} else if (specGroupModel.filterType === 'Slider') {
+					return (specGroupModel.rangeMin === specGroupModel.filterMin &&
+						specGroupModel.rangeMax === specGroupModel.filterMax) ? 0 : 1;
+				}
+			});
+
+			CCRZ.pubSub.on("ccrz.views:SpecGroupView:defined", function () {
+
+				CCRZ.models.SpecGroup = CCRZ.CloudCrazeModel.extend({
+					idAttribute: "sfid",
+					defaults: {
+						name: "",
+						sfid: "",
+						specValues: [],
+						listSize: 10,
+						renderCount: 0,
+						viewMoreBtn: false,
+						collapsed: false
+					},
+					initialize: function () {
+						this.set('renderCount', this.get('specValues').length > this.get('listSize') ? this.get('listSize') : this.get('specValues').length);
+						this.set('viewMoreBtn', this.get('specValues').length > this.get('renderCount'));
+					},
+					parse: function (data, options) {
+						var appliedValuesMap = options.appliedFilters[data.sfid] ? _.indexBy(options.appliedFilters[data.sfid].specValues, 'value') : null;
+						var previousSpecValues = options.previousItems[data.sfid] ? options.previousItems[data.sfid].specValues : null;
+						var newValueMap = _.indexBy(data.specValues, 'value');
+
+
+
+						//Filter to collapse
+						if (options.expandedFilter) {
+							let pathName = window.location.pathname.split('/')[1].replace('-', '_');
+							const isActive = 'AB2C_Active_' + pathName + '__c';
+							const collaped = 'AB2C_Collapsed_' + pathName + '_Filters__c';
+							if (options.expandedFilter[isActive]) {
+								let collapedFields = options.expandedFilter[collaped];
+								let filterName = data.name;
+								if (collapedFields)
+									if (collapedFields.includes(filterName.toUpperCase())) {
+										data.collapsed = true;
+									}
+							}
+
+							//Filter Notation
+							const notationStart = 'AB2C_' + data.name + '_Notation_Start__c';
+							if (options.expandedFilter[notationStart])
+								data.notationStart = options.expandedFilter[notationStart];
+
+							const notationEnd = 'AB2C_' + data.name + '_Notation_End__c';
+							if (options.expandedFilter[notationEnd])
+								data.notationEnd = options.expandedFilter[notationEnd];
+						}
+
+						if (data.filterType === 'Slider' && options.previousItems[data.sfid]) {
+							let dataPrevious = options.previousItems[data.sfid];
+							data.collapsed = dataPrevious.rangeMax === dataPrevious.filterMax && dataPrevious.rangeMin === dataPrevious.filterMin ? false : true;
+						}
+
+						// Don't modify slider values if it's currently filtered on
+						if (data.filterType === 'Slider' && !options.appliedFilters[data.sfid]) {
+							if (!previousSpecValues) {
+								// Initial Set
+								var minVal = Number(_.min(data.specValues, function (sv) { return Number(sv.value); }).value);
+								var maxVal = Number(_.max(data.specValues, function (sv) { return Number(sv.value); }).value);
+								data.rangeMin = !_.isNaN(minVal) ? minVal : 0;
+								data.rangeMax = !_.isNaN(maxVal) ? maxVal : 99999;
+								data.filterMin = data.rangeMin;
+								data.filterMax = data.rangeMax;
+								data.specValues = new CCRZ.collections.SpecValueList(data.specValues, { parse: true });
+							} else {
+								// If filters have been applied, but the slider is not used as a filter, leave it in it's initial state
+								data = options.previousItems[data.sfid];
+								data.filterMin = data.rangeMin;
+								data.filterMax = data.rangeMax;
+								data.collapsed = data.rangeMax === data.filterMax ? false : true;
+							}
+
+							return data;
+						}
+
+						// If there are previous spec values (filters were applied)
+						// We merge the previous spec values, with the new return data
+						if (previousSpecValues && data.filterType === 'Checkbox') {
+							previousSpecValues.each(function (specValue) {
+								if (newValueMap[specValue.get('value')]) {
+									// The new results contain a listing for this spec value
+									specValue.set(newValueMap[specValue.get('value')]);
+									specValue.set('enabled', true);
+								} else {
+									// The new results do not contain a listing for this spec value
+									if (options.appliedFilters[data.sfid]) {
+										// This group currently has a filter selected
+										if (appliedValuesMap && appliedValuesMap[specValue.get('value')]) {
+											// This option is currently being filtered on, but did not match any products
+											specValue.set('enabled', true);
+											specValue.set('count', 0);
+										} else {
+											// This is an additional option within the group that's not being filtered on
+											// (OR) scenario
+											specValue.set('enabled', true);
+											specValue.set('count', null);
+										}
+									} else {
+										specValue.set('enabled', false);
+										specValue.set('count', 0);
+									}
+								}
+								if (appliedValuesMap && appliedValuesMap[specValue.get('value')]) {
+									specValue.set('selected', true);
+									data.collapsed = true;
+								} else {
+									specValue.set('selected', false);
+								}
+
+							});
+							// Set the return data
+							data.specValues = previousSpecValues;
+						} else {
+							// Initial set scenario
+							data.specValues = new CCRZ.collections.SpecValueList(data.specValues, { parse: true });
+						}
+						data.specValues.sort();
+						return data;
+					}
+				});
+
+
+				CCRZ.collections.SpecGroupList = CCRZ.CloudCrazeCollection.extend({
+					model: CCRZ.models.SpecGroup,
+					className: "cc_ctrl_ProductListFilter",
+					comparator: function (item) {
+						var sortBy = item.get(CCRZ.filterPageModel.get("sortFiltersBy"));
+						if (typeof sortBy === "string") {
+							return sortBy.toLowerCase();
+						} else {
+							return sortBy;
+						}
+					},
+					fetch: function (callback) {
+						var coll = this;
+						var inputData = CCRZ.filterPageModel.formatInput();
+						var inputJSON = JSON.stringify(inputData);
+						coll.invokeContainerLoadingCtx($(".deskLayout"), "findFilters", inputJSON, function (response) {
+							if (response && response.success && response.data && response.data.prodFilters) {
+								var newFiltersMap = _.indexBy(response.data.prodFilters, 'sfid');
+								// Iterate the collection of specs
+								// If we have a group that is NOT included in the return data
+								// Set all of the spec values for that group to count=0 and enabled=false
+								coll.each(function (specGroup) {
+									if (!newFiltersMap[specGroup.get('sfid')]) {
+										specGroup.get('specValues').each(function (specValue) {
+											specValue.set('count', 0);
+											specValue.set('enabled', false);
+										})
+									}
+								})
+								// Each item in collection.set is ran through the 'parse' method in CCRZ.models.SpecGroup
+								// The parse method handles merging the original spec groups + spec values, with the new list
+								var previousItems = _.indexBy(coll.toJSON(), 'sfid');
+								var appliedFilterMap = _.indexBy(CCRZ.appliedFilters.toJSON(), 'sfid');
+								coll.set(response.data.prodFilters, {
+									parse: true,
+									remove: false,
+									merge: true,
+									sort: true,
+									appliedFilters: appliedFilterMap,
+									previousItems: previousItems,
+									expandedFilter: response.data.filtersExpanded
+								});
+								callback(response.data.prodFilters);
+							}
+						}, { escape: false, buffer: false, timeout: 120000 });
+					}
+				});
+
+
+
+				CCRZ.views.SpecGroupView = CCRZ.views.SpecGroupView.extend({
+					init: function () {
+						var v = this;
+						this.listenTo(this.model, "change", this.render)
+					},
+					viewAllAction: function () {
+						this.model.set('renderCount', this.model.get('specValues').length);
+						this.model.set('collapsed', true);
+						this.model.set('viewMoreBtn', false);
+						event.preventDefault();
+					},
+					viewMoreAction: function () {
+						this.model.set('renderCount', this.model.get('specValues').length > this.model.get('renderCount') + this.model.get('listSize') ? this.model.get('renderCount') + this.model.get('listSize') : this.model.get('specValues').length);
+						this.model.set('collapsed', true);
+						this.model.set('viewMoreBtn', this.model.get('specValues').length > this.model.get('renderCount'));
+						event.preventDefault();
+					}
+				});
+			});
+
+
+			CCRZ.pubSub.on('view:productListFilterView:refresh', function (theView) {
+				$('#alx-clear-all-filters-pseudo').click(function (event) {
+					event.stopPropagation();
+					$('#alx-clear-all-filters').click();
+				});
+				updateFilterCollapse(screenSize === "mobile");
+			});
+			CCRZ.pubSub.on('action:screen:resize', function (deviceType) {
+				updateFilterCollapse(screenSize === "mobile");
+			});
+
+			function updateFilterCollapse(isCollapsable) {
+				if (!isCollapsable) {
+					$('.alx-filters > a').attr('href', '');
+					$('#alx-plp-filter').removeClass('collapse show');
+				} else {
+					$('.alx-filters > a').attr('href', '#alx-plp-filter').attr("aria-expanded", "false");
+					$('#alx-plp-filter').addClass('collapse');
+				}
+			}
+
+		});
+	</script>
+</apex:component>

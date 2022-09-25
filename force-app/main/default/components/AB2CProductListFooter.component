@@ -1,0 +1,31 @@
+<apex:component >
+    <script id="Product-List-Footer" type="text/template">
+        {{#if bufferHasMore}}
+        <div class="text-center w-100 cc_list_footer">
+            <p class="font-weight-lighter text-secondary">You've viewed {{renderedCount}} of {{prodCount}} products.</p>
+            <button type="button" class="btn btn-outline-dark cc_show_more">Show More</button>
+        </div>
+        {{/if}}
+        <hr>
+    </script>
+
+
+
+
+
+    <script type="text/javascript">
+        CCRZ.pubSub.on('view:productListPageView:refresh', function (theView) {
+            CCRZ.views.PageFooterView = CCRZ.views.PageFooterView.extend({
+                init: function () {
+                    this.listenTo(this.model, "change:pageSize", this.render);
+                    this.listenTo(this.model, "change:prodHasMore", this.render);
+                    this.listenTo(this.model, "change:bufferHasMore", this.render);
+                    this.listenTo(this.model, "change:renderedCount", this.render);
+                    this.render();
+                }
+            });
+        });
+
+    </script>
+
+</apex:component>

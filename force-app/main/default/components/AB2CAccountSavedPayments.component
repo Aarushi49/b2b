@@ -1,0 +1,175 @@
+<apex:component controller="AB2CAccountController">
+    <script id="AccountsStoredPaymentsPartialTemplate" type="text/template">
+        {{#if (initializeStoredPayments .)}}
+        <div class="alx-stored-payments">
+            <div class="alx-loading-circle"></div>   
+        </div>
+        {{/if}}
+    </script>
+
+    <script id="MyAccount-MyWallet-Desktop" type="text/template">
+        <div class="alx-act-card cc_myaccount_mywallet">
+            <div class="d-flex alc-act-card-header">
+                <h2>Saved Credit Cards</h2>
+            </div>
+            <p class="cc_add_address mb-3">
+                <a href="/my-account/cards?pt=sopcc&mode=new" class="btn btn-primary">Add new Credit Card</a>
+            </p>
+            <p class="alx-pd-label">{{storedPayments.length}} result{{#ifGreater storedPayments.length 1}}s{{/ifGreater}} found.</p>
+
+            <table class="table table-responsive-sm">
+                <thead>
+                    <tr>
+                        <th class="w-25">Credit Card Details</th>
+                        <th class="w-25">Payment Type</th>
+                        <th class="w-25">Billing Address</th>
+                        <th class="w-25">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each this.storedPayments}}
+                    <tr>
+                        <td>
+                            {{#with (getPaymentDetails .)}}
+                            <div class="d-flex align-items-center">
+                                <img class="pr-3" src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-{{cardType}}.svg" />
+                                <div class="flex-grow-1">
+                                    <p class="m-0">Ending: {{cardEnding}}</p>
+                                    <p class="m-0">Expiry Date: {{cardExpiry}}</p>
+                                </div>
+                            </div>
+                            {{/with}}
+                        </td>
+                        <td>
+                            {{#if ccrz__Default__c}}
+                            <p>Default payment method</p>
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#with ccpgcs__Address__r}}
+                            <p class="mb-0">{{ccrz__FirstName__c}} {{ccrz__LastName__c}}</p>
+                            <p class="mb-0">{{ccrz__AddressFirstline__c}}</p>
+                            {{#if ccrz__AddressSecondline__c}}<p class="mb-0">{{ccrz__AddressSecondline__c}}</p>{{/if}}
+                            <p class="mb-0">{{ccrz__City__c}}, {{ccrz__StateISOCode__c}}, {{ccrz__PostalCode__c}}</p>
+                            <p class="mb-0">{{ccrz__Country__c}}</p>
+                            {{/with}}
+                        </td>
+                        <td>
+                            <input type="button" class="btn btn-default btn-sm myWalletButton mr-3 paymentEdit cc_payment_edit" data-pid="{{this.Id}}" data-type="sopcc" value="{{pageLabelMap 'Action_Edit'}}"/>
+                            <input type="button" class="btn btn-default btn-sm myWalletButton paymentDelete cc_payment_delete" data-pid="{{this.Id}}" value="Remove"/>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            <div id="modalSec"></div>
+        </div>
+    </script>
+
+    <script id="MyAccount-MyWallet-DeleteDialog" type="text/template">
+        <div class="modal fade alx-modal" id="deleteMod_{{this.pid}}" tabindex="-1" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="flex-grow-1 text-center">
+                            <h5 class="modal-title alx-modal-title" id="modalTitle">Delete Credit Card</h5>
+                        </div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body alx-modal-body d-flex align-items-center justify-content-center">
+                        <span class="alx-ic ic-rouge ic-close pr-3"></span>
+                        <span class="pl-2">Do you want to delete this credit card?</span>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary deletePayment" data-pid="{{this.pid}}">Delete</button>
+                        <button type="button" class="btn btn-link" data-dismiss="modal" data-pid="{{this.pid}}">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        Handlebars.registerHelper('initializeStoredPayments', function (context) {
+            if (context) {
+                CCRZ.myWalletView = new CCRZ.views.myWalletView({
+                    model: new CCRZ.models.StoredPaymentsModel()
+                });
+                return true;
+            }
+            return false;
+        });
+
+        Handlebars.registerHelper('getPaymentDetails', function (storedPayment) {
+            if (storedPayment) {
+                let cardType = 'credit';
+                switch (storedPayment.ccrz__PaymentType__c) {
+                    case '001_sopcc': cardType = 'visa'; break;
+                    case '002_sopcc': cardType = 'mastercard'; break;
+                    case '003_sopcc': cardType = 'amex'; break;
+                }
+                return {
+                    cardType: cardType,
+                    cardEnding: 'xxxx' + storedPayment.ccrz__AccountNumber__c.substr(12),
+                    cardExpiry: storedPayment.ccrz__ExpMonth__c + '/' + storedPayment.ccrz__ExpYear__c
+                };
+            }
+        });
+
+        CCRZ.pubSub.on("ccrz.models:StoredPaymentsModel:defined", function () {
+            CCRZ.models.StoredPaymentsModel = CCRZ.models.StoredPaymentsModel.extend({
+                className: "AB2CAccountController",
+                fetch: function (callback) {
+                    const _this = this;
+                    this.invokeCtx("getStoredPayments",
+                        function (response) {
+                            if (response && response.success) {
+                                _this.set('paymentTypeObjs', []);
+                                _this.set('storedPayments', response.data);
+                                if (callback) {
+                                    callback();
+                                }
+                            }
+                        }, { nmsp: false, buffer: false });
+                }
+            });
+        });
+
+        CCRZ.pubSub.on("ccrz.views:myWalletView:defined", function () {
+            CCRZ.views.myWalletView = CCRZ.views.myWalletView.extend({
+                className: "cc_ctrl_MyAccountStoredPaymentsRD",
+                managedSubView: false,
+                templateSelector: '.alx-stored-payments',
+                init: function () {
+                    const _this = this;
+                    _this.dataModel = _this.model;
+                    _this.initSetup(function () {
+                        _this.render();
+                    });
+                },
+                renderDesktop: function () {
+                    this.setElement(this.templateSelector);
+                    this.$el.html(this.templateDesktop(this.data));
+                },
+                deletePayment: function (event) {
+                    var me = this;
+                    var objLink = $(event.currentTarget);
+                    var pid = objLink.data("pid");
+                    $("#deleteMod_" + pid).modal("hide");
+                    this.invokeContainerLoadingCtx($('body'), "deleteStoredPayment", pid, function (response) {
+                        if (response && response.success) {
+                            me.model.fetch(function () {
+                                me.render();
+                            });
+                        } else {
+                            CCRZ.console.log("deleteStoredPayment response=" + response);
+                            CCRZ.pubSub.trigger("pageMessage", response);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</apex:component>

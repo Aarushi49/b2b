@@ -1,0 +1,745 @@
+<apex:component controller="AB2CCheckoutController">
+	<!-- Main payment container -->
+	<script id="Payment-Desktop" type="text/template">
+		<div class="alx-light-bg-section">
+			<div class="d-flex justify-content-between">
+				<h2 class="m-0">
+					<span class="alx-badge">1</span>
+					Shipping Details
+				</h2>
+				<input class="btn btn-link processBack" type="button" value="{{pageLabelMap 'CheckOut_edit'}}" alt="{{pageLabelMap 'CheckOut_edit'}}" />
+			</div>
+			<p class="m-0 pt-3">
+				{{#with (getShippingAddress)}}
+				{{name}}<br>
+				{{address}} <span class="text-muted">- {{getShippingMethod}}</span><br>
+				{{email}}
+				{{/with}}
+			</p>
+		</div>
+
+		<div class="border p-3 my-3">
+			<h2 class="pb-3">
+				<span class="alx-badge">2</span>
+				Payment Details
+			</h2>
+			<div class="checkoutContainer checkoutPaymentContainer">
+				<div class="alert alert-error messagingSection-Error" style="display: none"></div>
+				<div class="alert alert-info messagingSection-Info" style="display: none"></div>
+				<div class="alert alert-warning messagingSection-Warning" style="display: none"></div>
+				<div class="checkoutPaymentTarget"></div>
+			</div>
+		</div>
+	</script>
+
+	<!-- Saved payments and payment types -->
+	<script id="PaymentProcessor-Desktop" type="text/template">
+		<div class="paymentOuterContainer">
+			<div class="storedpayment-messagingSection-Error" style="display: none"></div>
+			<div class="storedpayment-messagingSection-Info" style="display: none"></div>
+			<div class="storedpayment-messagingSection-Warning" style="display: none"></div>
+			<div class="ccpgcs-messagingSection-Error"></div>
+
+			{{#if (shouldShowSavedPayments)}}
+			<div class="alx-stored-payments">
+				<h3>Other Payment Methods</h3>
+				<div class="alx-payment-method-container mb-3 alx-show-enter-new-credit-card">
+					<img class="pr-3" src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-credit.svg" />
+					<h4 class="m-0 flex-grow-1">New credit card</h4>
+				</div>
+
+				<h3>Pay With Saved Credit Card</h3>				
+				{{#each this.storedPayments}}
+				<div class="alx-payment-method-container storedPaymentContainer {{this.accountType}}" data-payment-id="{{this.sfid}}">
+					{{#with (getPaymentDetails .)}}
+					<img class="pr-3" src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-{{cardType}}.svg" />
+					<div class="flex-grow-1">
+						<h3 class="m-0"><b>Ending in {{cardEnding}}</b></h3>
+						<h4 class="m-0">{{cardName}} {{#if ../isDefault}}<span class="text-muted">(Default payment method)</span>{{/if}}</h4>
+					</div>
+					{{/with}}
+					<span class="storedPaymentSelector {{this.sfid}}">
+						<input type="radio" name="storedPaymentSelection" value="{{this.sfid}}" class="storedPaymentSelection {{this.sfid}}" data-id="{{this.sfid}}" {{#if isDefault}}checked{{/if}}/>
+					</span>
+				</div>
+				{{/each}}
+
+				<small class="text-muted pt-3">* You will not be charged until you have placed the order.</small>
+				<div class="text-center pt-3">
+					<button type="button" class="btn btn-primary useStoredPayment" disabled>Place Order</button>
+				</div>
+			</div>
+			{{/if}}
+
+			<div class="paymentTypeContainer sopcc err" {{#if (shouldShowSavedPayments)}}style="display: none;"{{/if}} data-stored-payments="{{storedPayments.length}}">
+				<div class="alx-loading-circle"></div>
+			</div>
+		</div>
+	</script>
+
+	<!-- Credit card entry -->
+	<script id="PaymentSOPCC-Both" type="text/template">
+		<div class="ccPaymentOuterContainer">
+			<form id="sopccPay" action="#" class="sopccPay">
+				<div class="border p-3">
+					<div class="row">
+						<div class="col-sm-6">
+							<img src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-credit.svg" />
+							<small>Pay by credit card</small>
+						</div>
+						<div class="col-sm-6 alx-pay-with-credit-cards">
+							<img src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-mastercard.svg" />
+							<img src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-visa.svg" />
+							<img src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-amex.svg" />
+						</div>
+					</div>
+				</div>
+				<div class="border p-3">
+					<h3>Credit Card Details</h3>
+					<input type="hidden" name="accountType" value="sopcc"/>
+
+					<div class="form-row">
+						<div class="form-group col-md-6">
+							<label for="first_name">First Name *</label>
+							<input type="text" class="form-control firstName" name="first_name" required />
+						</div>
+						<div class="form-group col-md-6">
+							<label for="last_name">Last Name *</label>
+							<input type="text" class="form-control lastName" name="last_name" required />
+						</div>
+					</div>
+					<div class="form-row">
+						<div class="form-group col-md-6">
+							<label for="card_number">Credit Card Number *</label>
+							<input type="number" name="card_number" class="form-control cardNumber"/>
+						</div>
+						<div class="form-group col-md-6">
+							<label for="card_type">Card Type</label>
+							<select name="card_type" class="form-control cardType">
+								<option value="">Select Card Type</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-row">
+						<div class="form-group col-md-6">
+							<label for="first_name">Expiry Date *</label>
+							<div class="form-row">
+								<div class="form-group col-sm-6">
+									<select name="card_expirationMM" class="form-control cardExpirationMM">
+										<option>MM</option>
+										<option value="01">01</option>
+										<option value="02">02</option>
+										<option value="03">03</option>
+										<option value="04">04</option>
+										<option value="05">05</option>
+										<option value="06">06</option>
+										<option value="07">07</option>
+										<option value="08">08</option>
+										<option value="09">09</option>
+										<option value="10">10</option>
+										<option value="11">11</option>
+										<option value="12">12</option>
+									</select>
+								</div>
+								<div class="form-group col-sm-6">
+									<select name="card_expirationYYYY" class="form-control cardExpirationYYYY">
+										<option>YYYY</option>
+										{{#each (getCreditCardExpiryYears)}}
+										<option value={{this}}>{{this}}</option>
+										{{/each}}
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="form-group col-md-6">
+							<label for="card_cvn">CVN</label>
+							<input type="num" class="form-control cardCvnLabel" name="card_cvn" disabled="disabled" />
+						</div>
+						{{#unless (pagevars 'isGuest')}}
+						<div class="form-group col-md-12">
+							<div class="form-check">
+								<input type="checkbox" name="saveAsStoredPayment" id="saveAsStoredPayment" class="form-check-input saveAsStoredPayment" value="true"/>
+								<label class="form-check-label" for="addressShippingDefault">Save credit card to my account</label>
+							</div>
+						</div>
+						{{/unless}}
+					</div>
+					<small class="text-muted">* You will not be charged until you have placed the order.</small>
+
+					<h3 class="pt-3">Billing Address</h3>
+					<div class="addressBlock"></div>
+				</div>
+				<div class="text-center alx-light-bg-section alx-choose-another-payment p-0 d-none">
+					<input type="button" class="btn btn-link alx-show-stored-credit-cards" value="Choose another method of payment"></input>
+				</div>
+
+				<div class="text-center pt-3">
+					<input type="button" class="btn btn-primary sopccMakePayment" name="sopccMakePayment" id="sopccPayment" data-id="sopccPay" value="Place Order"/>
+				</div>
+			</form>
+			{{> sopccModalPay }}
+		</div>
+		<div id="sopccAddress"></div>
+	</script>
+
+	<script id="SOPCC-Modal-Pay" type="text/template">
+		<div id="sopccModalPay" class="modal fade alx-modal" tabindex="-1" role="dialog" aria-labelledby="sopccModalLabel">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+                        <h4 class="modal-title alx-modal-title" id="sopccModalLabel">
+                            {{pageLabelMap 'ProcessingPayment_sopcc'}}
+                        </h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="{{pageLabelMap 'Modal_Aria_Close'}}">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+					</div>
+					<div class="modal-body alx-modal-body">
+						<iframe id="sopccFrame" class="sopccFrameHide" src="/apex/ccrz__CCBridge?pageKey=ccpgcsf&action={{pageConfigMap 'pgcs.urltransaction'}}&selector=sopccFields&signed=access_key,amount,bill_to_address_city,bill_to_address_country,bill_to_address_line1,bill_to_address_line2,bill_to_address_postal_code,bill_to_address_state,bill_to_email,bill_to_forename,bill_to_phone,bill_to_surname,currency,locale,merchant_defined_data1,merchant_defined_data10,merchant_defined_data11,merchant_defined_data12,merchant_defined_data13,merchant_defined_data14,merchant_defined_data15,merchant_defined_data16,merchant_defined_data17,merchant_defined_data18,merchant_defined_data19,merchant_defined_data2,merchant_defined_data20,merchant_defined_data21,merchant_defined_data22,merchant_defined_data23,merchant_defined_data24,merchant_defined_data25,merchant_defined_data26,merchant_defined_data27,merchant_defined_data28,merchant_defined_data29,merchant_defined_data3,merchant_defined_data30,merchant_defined_data31,merchant_defined_data32,merchant_defined_data33,merchant_defined_data34,merchant_defined_data35,merchant_defined_data36,merchant_defined_data37,merchant_defined_data38,merchant_defined_data39,merchant_defined_data4,merchant_defined_data40,merchant_defined_data41,merchant_defined_data42,merchant_defined_data43,merchant_defined_data44,merchant_defined_data45,merchant_defined_data46,merchant_defined_data47,merchant_defined_data48,merchant_defined_data49,merchant_defined_data5,merchant_defined_data6,merchant_defined_data7,merchant_defined_data8,merchant_defined_data9,override_custom_receipt_page,payment_method,payment_token,profile_id,reference_number,signed_date_time,signed_field_names,transaction_type,transaction_uuid,unsigned_field_names&unsigned=card_cvn,card_expiry_date,card_number,card_type&store=AlexanianStore" border="0"></iframe>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+				</div>
+			</div>
+		</div>
+	</script>
+
+	<!-- Enter address on Credit Card page -->
+	<script id="AddressSOPCC-Both" type="text/template">
+		<div class="addressBlock">
+			{{#if (shouldShowSameAsShipping)}}
+			<div class="form-check">
+				<input type="checkbox" class="form-check-input alx-billing-same-as-shipping" id="alx-billing-same-as-shipping" />
+				<label class="form-check-label" for="alx-billing-same-as-shipping">Same as shipping address</label>
+			</div>
+			{{/if}}
+
+			<div class="alx-shipping-billing-address border text-center p-2 mt-2" style="display: none">
+				{{#with (getShippingAddress)}}
+				<p class="m-0">{{address}}</p>
+				{{/with}}
+			</div>
+
+			<div class="alx-billing-address-select form-group" style="display: none">
+				<label for="address">Billing Address *</label>
+				<div class="d-flex">
+					<select name="address" id="address" class="form-control address mr-3">
+						<option value="">--Select--</option>
+					</select>
+					<input class="btn btn-default addressEnteryToggle w-50" type="button" value="Enter New Address"/>
+				</div>
+			</div>
+
+			<form id="sopcc_FormAddressAdd" class="addressForm alx-new-address-entry-form" style="display: none">
+				<div class="ccpgcs-Address-messagingSection-Error" style="display: none;"></div>
+				<div class="form-group">
+					<label for="billingAddress.countryCode">Country *</label>
+					<div class="d-flex">
+						<select name="billingAddress.countryCode" class="countryListing form-control">
+							<option value="CA" selected>Canada</option>
+							<option value="US">United States</option>
+						</select>
+						<input class="btn btn-link addressEnteryToggle back w-50" type="button" value="Back to saved Addresses"/>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group col-md-12">
+						<label for="billingAddress.address1">Address 1 *</label>
+						<input type="text" class="form-control" maxLength="255" value="" name="billingAddress.address1"/>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group col-md-6">
+						<label for="billingAddress.address2">Apt/Suite</label>
+						<input type="text" class="form-control" placeholder="(Optional)" maxLength="255" value="" name="billingAddress.address2"/>
+					</div>
+					<div class="form-group col-md-6">
+						<label for="billingAddress.city">City *</label>
+						<input type="text" class="form-control" maxLength="255" value="" name="billingAddress.city"/>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group col-md-6">
+						<label for="billingAddress.stateCode">Province *</label>
+						<div class="stateSection"></div>
+					</div>
+					<div class="form-group col-md-6">
+						<label for="billingAddress.postalCode">Postal Code *</label>
+						<input type="text" class="form-control" placeholder="A1B 2C3" maxLength="10" value="" name="billingAddress.postalCode"/>
+					</div>
+				</div>
+			</form>
+		</div>
+	</script>
+
+	<script>
+		Handlebars.registerHelper('getCreditCardExpiryYears', function () {
+			const startYear = new Date().getFullYear();
+			const allYears = [];
+			for (let i = 0; i < 20; i++) allYears.push(startYear + i);
+			return allYears;
+		});
+
+		Handlebars.registerHelper('shouldShowSavedPayments', function () {
+			return !CCRZ.pagevars.isGuest && this.storedPayments;
+		});
+
+		Handlebars.registerHelper('shouldShowSameAsShipping', function () {
+			return CCRZ.cartCheckoutModel.attributes.shippingMethod !== freeInStore;
+		});
+
+		Handlebars.registerHelper("getShippingMethod", function () {
+			const shippingMethod = CCRZ.cartCheckoutModel.get('shippingMethod');
+			return shippingMethod === freeInStore ? "Free in Store" : "Home Delivery";
+		});
+
+		Handlebars.registerHelper('getShippingAddress', function () {
+			const shipping = CCRZ.cartCheckoutModel.attributes.shippingAddress;
+			const name = shipping.firstName ? (shipping.firstName + ' ' + shipping.lastName) : (CCRZ.cartCheckoutModel.attributes.buyerFirstName + ' ' + CCRZ.cartCheckoutModel.attributes.buyerLastName);
+			const address = shipping.address1 + ', ' + shipping.city + ', ' + shipping.state + ', ' + shipping.postalCode + ', ' + shipping.country;
+			const email = CCRZ.cartCheckoutModel.attributes.buyerEmail;
+			return {
+				name: name,
+				address: address,
+				email: email
+			}
+		});
+
+		Handlebars.registerHelper('getPaymentDetails', function (storedPayment) {
+			if (storedPayment) {
+				let cardType = 'credit';
+				let cardName = 'Credit';
+				switch (storedPayment.paymentType) {
+					case '001_sopcc': cardName = 'Visa'; cardType = 'visa'; break;
+					case '002_sopcc': cardName = 'Mastercard'; cardType = 'mastercard'; break;
+					case '003_sopcc': cardName = 'American Express'; cardType = 'amex'; break;
+				}
+				return {
+					cardType: cardType,
+					cardName: cardName,
+					cardEnding: 'xxxx' + storedPayment.accountNumber.substr(12),
+					cardExpiry: storedPayment.expirationMonth + '/' + storedPayment.expirationYear
+				};
+			}
+		});
+
+		CCRZ.pubSub.on("ccrz.views:AddressSOPCCView:defined", function () {
+			CCRZ.models.AB2CCheckoutPaymentAddressModel = CCRZ.CloudCrazeModel.extend({
+				className: 'cc_pgcs_pmt_SOPCC_Address',
+				idAttribute: "sfid",
+				initialize: function (dataList) {
+					this.set(this.parse(dataList));
+					this.set({
+						countryList: getAvailableCountryList(),
+						stateList: CCRZ.geoCodes.stateList.toJSON(),
+						defaultCountry: 'CA',
+						address: ''
+					});
+				},
+				fetch: function (callback) {
+					const _this = this;
+					if (!CCRZ.pagevars.isGuest) { // Only fetch saved addresses for signed in users
+						Visualforce.remoting.Manager.invokeAction('ccpgcs.cc_pgcs_ctrl_pmt_SOPCC_Address.getAddresses',
+							CCRZ.pagevars.remoteContext, '',
+							function (r) {
+								if (r && r.success && r.data) {
+									const uniqueAddressList = new Set();
+									// Filter out duplicate addresses
+									const addressList = _.filter(_this.parse(r.data), function (addr) {
+										const addrKey = CCRZ.payment.views.sopcc.addressView.addressFormatter(addr);
+										const isDuplicate = uniqueAddressList.has(addrKey);
+										uniqueAddressList.add(addrKey);
+										if (!isDuplicate)
+											return addr;
+									});
+									_this.set('addressList', addressList);
+								}
+								if (callback) callback();
+							}, { buffer: false, escape: false });
+					} else {
+						if (callback) callback();
+					}
+				}
+			});
+
+			CCRZ.views.AddressSOPCCView = CCRZ.views.AddressSOPCCView.extend({
+				initialize: function (options) {
+					const _this = this;
+					_this.stateView = new CCPGCS.views.StateView();
+					_this.model = new CCRZ.models.AB2CCheckoutPaymentAddressModel();
+				},
+				validateInfo: function (formSel, fieldData) {
+					$(formSel).validate({
+						invalidHandler: function (event, validator) { },
+						rules: {
+							"billingAddress.address1": { required: true, minlength: 1 },
+							"billingAddress.city": { required: true, minlength: 1 },
+							"billingAddress.postalCode": { required: true, minlength: 1 },
+							"billingAddress.countryCode": { required: true, minlength: 1 },
+							"billingAddress.stateCode": { required: $('form#sopcc_FormAddressAdd select'), minlength: 1 }
+						},
+						messages: {
+							"billingAddress.address1": { required: 'Address is required' },
+							"billingAddress.city": { required: 'City is required' },
+							"billingAddress.postalCode": { required: 'Postal/Zip code is required' },
+							"billingAddress.countryCode": { required: 'Country is required' },
+							"billingAddress.stateCode": { required: 'Province/State is required' }
+						},
+						errorPlacement: function (error, element) {
+							error.addClass('invalid-feedback');
+							element.closest('.form-group').append(error);
+						}
+					});
+					return $(formSel).valid();
+				},
+				renderStates: function (stateVal, countryVal) {
+					this.stateView.render('state', stateVal, 'form-control', CCRZ.geoCodes.filterStates(countryVal).toJSON(), 'billing', '.stateSection');
+					CCRZ.cartCheckoutModel.attributes.billingAddress.countryCode = countryVal;
+				}
+			});
+		});
+
+		CCRZ.pubSub.on("ccrz.views:PaymentView:defined", function () {
+			CCRZ.views.PaymentView = CCRZ.views.PaymentView.extend({
+				events: {
+					"click .alx-show-enter-new-credit-card": "toggleNewCreditCardEntry",
+					"click .storedPaymentContainer": "selectSavedCreditCard"
+				},
+				toggleNewCreditCardEntry: function () {
+					$('.paymentTypeContainer').toggle();
+					$('.alx-stored-payments').toggle();
+					$('form#sopccPay input[name=saveAsStoredPayment]').prop('checked', false);
+				},
+				selectSavedCreditCard: function (event) {
+					$(event.currentTarget).find('input').prop('checked', true);
+					$('button.useStoredPayment').prop('disabled', false);
+				}
+			});
+		});
+
+		CCRZ.pubSub.on("ccrz.views:PaymentsSOPCCView:defined", function () {
+			CCRZ.views.PaymentsSOPCCView = CCRZ.views.PaymentsSOPCCView.extend({
+				events: {
+					'click .sopccMakePayment': 'makePayment',
+					'blur .firstName': 'updateFirstName',
+					'blur .lastName': 'updateLastName',
+					'change .address': 'updateAddress',
+					'change .cardType': 'updateCardType',
+					'blur .cardExpirationMM': 'updateCardExpiration',
+					'blur .cardExpirationYYYY': 'updateCardExpiration',
+					'blur .saveAsStoredPayment': 'updateSaveAsStoredPayment',
+					'blur .displayName': 'updateDisplayName',
+					'click .alx-show-stored-credit-cards': 'toggleNewCreditCardEntry',
+					'change .alx-billing-same-as-shipping': 'setBillingSameAsShipping',
+					'click .addressEnteryToggle': 'toggleEnterNewAddress',
+					'change .countryListing': 'changeStates'
+				},
+				validateInfo: function (formSel) {
+					$(formSel).validate({
+						invalidHandler: function (event, validator) {
+							$('input.sopccMakePayment').attr('disabled', false);
+						},
+						rules: {
+							first_name: { required: true },
+							last_name: { required: true },
+							address: { required: true, minlength: 1 },
+							card_type: { required: true, minlength: 1 },
+							card_number: { required: true, digits: true },
+							card_expirationMM: { required: true, digits: true },
+							card_expirationYYYY: { required: true, digits: true },
+							card_cvn: { required: ('true' == $('form#sopccPay select[name=card_type] option:selected').attr('data-verification')), digits: true }
+						},
+						messages: {
+							first_name: { required: 'First name is required' },
+							last_name: { required: 'Last name is required' },
+							address: { required: 'Address is required' },
+							card_type: { required: 'Card type is required', minlength: 'Card type is too short' },
+							card_number: { required: 'Card number is required' },
+							card_expirationMM: { required: 'Card expiration month is required' },
+							card_expirationYYYY: { required: 'Card expiration year is required' },
+							card_cvn: { required: 'Card CVN is required' }
+						},
+						errorPlacement: function (error, element) {
+							error.addClass('invalid-feedback');
+							element.closest('.form-group').append(error);
+						}
+					});
+					return $(formSel).valid();
+				},
+				toggleNewCreditCardEntry: function () {
+					$('.paymentTypeContainer').toggle();
+					$('.alx-stored-payments').toggle();
+					$('.sopcc input.storedPaymentSelection').prop('checked', false);
+				},
+				setBillingSameAsShipping: function (event) {
+					const isSame = $(event.currentTarget).prop('checked');
+					if (isSame) {
+						Object.assign(CCRZ.cartCheckoutModel.attributes.billingAddress, CCRZ.cartCheckoutModel.attributes.shippingAddress);
+						CCRZ.cartCheckoutModel.attributes.billingAddress.source = 'shipping';
+						CCRZ.cartCheckoutModel.attributes.billingAddress.firstName = $('form#sopccPay input[name=first_name]').val();
+						CCRZ.cartCheckoutModel.attributes.billingAddress.lastName = $('form#sopccPay input[name=last_name]').val();
+						$('.alx-shipping-billing-address').show();
+						$('.alx-new-address-entry-form').hide();
+						$('.alx-billing-address-select').hide();
+					} else {
+						this.showBillingAddressEntry();
+					}
+				},
+				showBillingAddressEntry: function () {
+					$('.alx-shipping-billing-address').hide();
+					if (CCRZ.pagevars.isGuest) {
+						$('.alx-new-address-entry-form').show();
+						$('.addressEnteryToggle.back').hide();
+						CCRZ.cartCheckoutModel.attributes.billingAddress.source = 'newBillingAddress';
+					} else {
+						$('.alx-billing-address-select').show();
+						CCRZ.cartCheckoutModel.attributes.billingAddress.source = 'savedBillingAddress';
+					}
+				},
+				toggleEnterNewAddress: function (event) {
+					if (CCRZ.cartCheckoutModel.attributes.billingAddress.source === 'savedBillingAddress') {
+						$('.alx-new-address-entry-form').show();
+						$('.alx-billing-address-select').hide();
+						if (CCRZ.pagevars.isGuest) {
+							$('.addressEnteryToggle.back').show();
+						}
+						$('form select[name=address]').val(''); // deselect any saved addresses
+						CCRZ.cartCheckoutModel.attributes.billingAddress.source = 'newBillingAddress';
+					} else {
+						$('.alx-new-address-entry-form').hide();
+						$('.alx-billing-address-select').show();
+						CCRZ.cartCheckoutModel.attributes.billingAddress.source = 'savedBillingAddress';
+					}
+				},
+				postRender: function () {
+					if ($('.paymentTypeContainer.sopcc').data('stored-payments') > 0) {
+						$('.alx-choose-another-payment').removeClass('d-none');
+					}
+					CCRZ.pagevars.pageLabels['PaymentType_001_sopcc'] = "Visa";
+					CCRZ.pagevars.pageLabels['PaymentType_002_sopcc'] = "Mastercard";
+					CCRZ.pagevars.pageLabels['PaymentType_003_sopcc'] = "American Express";
+					CCRZ.views.PaymentsSOPCCView.__super__.postRender.call(this);
+					this.showBillingAddressEntry();
+					this.addressView.renderStates('ON', 'CA');
+
+					const iframeUrl = $('#sopccFrame').attr('src');
+					$('#sopccFrame').attr('src', window.location.origin + iframeUrl);
+
+					sendCheckoutEvent(2);
+				},
+				makePayment: function (event) {
+					const _this = this;
+					let processPayment = true;
+					if (CCRZ.cartCheckoutModel.attributes.billingAddress.source === 'newBillingAddress' && !this.updateAddress()) {
+						processPayment = false;
+					}
+
+					if (processPayment) {
+						$('input.sopccMakePayment').attr('disabled', true);
+						CCRZ.cartCheckoutModel.save(function (results) {
+							CCRZ.views.PaymentsSOPCCView.__super__.makePayment.call(_this);
+						});
+					}
+				},
+				updateFields: function (callback) {
+					var _this = this;
+					var spid = $('.sopcc input.storedPaymentSelection:checked').val();
+					if (spid) {
+						_this.model.frameSet(_this.iframe(), 'merchant_defined_data2', spid);
+					} else {
+						_this.updateFirstName();
+						_this.updateLastName();
+						_this.updateCardType();
+						_this.updateCardExpiration();
+						_this.updateAddress();
+						_this.updateSaveAsStoredPayment();
+						_this.updateDisplayName();
+					}
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data4', this.payContext());
+					if (_this.payContext() === 'inv') {
+						var $$inv = $('input.invoicePayAmount');
+						_this.model.frameSet(_this.iframe(), 'merchant_defined_data20', $$inv.data('id'));
+						_this.model.frameSet(_this.iframe(), 'amount', $$inv.val());
+					}
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data10', CCRZ.pagevars.remoteContext.storefront);
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data11', CCRZ.pagevars.remoteContext.portalUserId);
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data12', CCRZ.pagevars.remoteContext.effAccountId);
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data13', CCRZ.pagevars.remoteContext.currentCartId);
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data14', CCRZ.pagevars.remoteContext.priceGroupId);
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data15', CCRZ.pagevars.remoteContext.userIsoCode);
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data16', CCRZ.pagevars.remoteContext.userLocale);
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data17', CCRZ.pagevars.remoteContext.currentPageName);
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data18', window.location.pathname);
+					_this.model.frameSet(_this.iframe(), 'merchant_defined_data24', (CCRZ.currentUser && CCRZ.currentUser.Email && true) ? CCRZ.currentUser.Email : '');
+					var qs = window.location.search.substring(1).split('&');
+					for (var i = 0; i < qs.length; i++) _this.model.frameSet(_this.iframe(), 'merchant_defined_data3' + i, decodeURIComponent(qs[i]));
+					Visualforce.remoting.Manager.invokeAction('ccpgcs.cc_pgcs_ctrl_pmt_SOPCC_Pay.getFormData',
+						CCRZ.pagevars.remoteContext,
+						JSON.stringify($(_this.iframe()).contents().find('input').serializeObject()),
+						function (r) {
+							if (r && r.success && r.data) {
+								const fieldsToOverwrite = ['bill_to_address_city', 'bill_to_address_country', 'bill_to_address_line1', 'bill_to_address_line2', 'bill_to_address_postal_code', 'bill_to_address_state'];
+								$.each(r.data, function (k, v) {
+									if (!fieldsToOverwrite.includes(k) || CCRZ.cartCheckoutModel.attributes.billingAddress.source === 'savedBillingAddress' || CCRZ.cartCheckoutModel.attributes.billingAddress.source === 'savedBillingAddress') {
+										_this.model.frameSet(_this.iframe(), k, v);
+									}
+								});
+
+								// Set transaction type
+								const storePayment = $('form#sopccPay input[name=saveAsStoredPayment]').is(':checked');
+								if (storePayment) {
+									_this.model.frameSet(_this.iframe(), 'transaction_type', 'sale,create_payment_token');
+								} else {
+									_this.model.frameSet(_this.iframe(), 'transaction_type', 'sale');
+								}
+							}
+							if (callback) callback(_this);
+						}, { buffer: false, escape: false });
+					return _this;
+				},
+				updateAddress: function (event) {
+					const _this = this;
+					if (CCRZ.cartCheckoutModel.attributes.billingAddress.source === 'savedBillingAddress') {
+						const selectedAddressId = $('form#sopccPay select[name=address] option:selected').val();
+						if (selectedAddressId) {
+							_this.model.set('address', selectedAddressId);
+							_this.addressView.model.set('address', selectedAddressId);
+							_this.model.frameSet(_this.iframe(), 'merchant_defined_data3', selectedAddressId);
+
+							const selectedAddress = _.find(_this.addressView.model.get('addressList'), function (item) {
+								return item.sfid === selectedAddressId;
+							});
+							if (selectedAddress) {
+								selectedAddress.address1 = selectedAddress.addressFirstline;
+								selectedAddress.address2 = selectedAddress.addressSecondline;
+								selectedAddress.stateCode = selectedAddress.stateISOCode;
+								selectedAddress.countryCode = selectedAddress.countryISOCode;
+								Object.assign(CCRZ.cartCheckoutModel.attributes.billingAddress, selectedAddress);
+							}
+						}
+					} else {
+						if (CCRZ.cartCheckoutModel.attributes.billingAddress.source === 'newBillingAddress') {
+							const billFormData = form2js('sopcc_FormAddressAdd', '.', false, function (node) { }, false, true);
+							if (_this.addressView.validateInfo('form#sopcc_FormAddressAdd', billFormData)) {
+								billFormData.billingAddress.homePhone = CCRZ.cartCheckoutModel.attributes.shippingAddress.homePhone;
+								billFormData.billingAddress.email = CCRZ.cartCheckoutModel.attributes.shippingAddress.email;
+								billFormData.billingAddress.country = $('form#sopcc_FormAddressAdd select[name="billingAddress.countryCode"]  option:selected').text();
+								billFormData.billingAddress.state = $('form#sopcc_FormAddressAdd select[name="billingAddress.stateCode"]  option:selected').text();
+								Object.assign(CCRZ.cartCheckoutModel.attributes.billingAddress, billFormData.billingAddress);
+							} else {
+								return false;
+							}
+						}
+
+						const billingAddress = CCRZ.cartCheckoutModel.get('billingAddress');
+						_this.model.frameSet(_this.iframe(), 'bill_to_address_city', billingAddress.city);
+						_this.model.frameSet(_this.iframe(), 'bill_to_address_country', billingAddress.countryCode);
+						_this.model.frameSet(_this.iframe(), 'bill_to_address_line1', billingAddress.address1);
+						_this.model.frameSet(_this.iframe(), 'bill_to_address_line2', billingAddress.address2);
+						_this.model.frameSet(_this.iframe(), 'bill_to_address_postal_code', billingAddress.postalCode);
+						_this.model.frameSet(_this.iframe(), 'bill_to_address_state', billingAddress.stateCode);
+					}
+					return _this;
+				},
+				updateFirstName: function (event) {
+					const _this = this;
+					CCRZ.cartCheckoutModel.attributes.billingAddress.firstName = $('form#sopccPay input[name=first_name]').val();
+					_this.model.frameSet(_this.iframe(), 'bill_to_forename', CCRZ.cartCheckoutModel.attributes.billingAddress.firstName);
+					return _this;
+				},
+				updateLastName: function (event) {
+					const _this = this;
+					CCRZ.cartCheckoutModel.attributes.billingAddress.lastName = $('form#sopccPay input[name=last_name]').val();
+					_this.model.frameSet(_this.iframe(), 'bill_to_surname', CCRZ.cartCheckoutModel.attributes.billingAddress.lastName);
+					return _this;
+				},
+				updateCardExpiration: function (event) {
+					const _this = this;
+					const mm = $('form#sopccPay select[name=card_expirationMM]').val();
+					const yyyy = $('form#sopccPay select[name=card_expirationYYYY]').val();
+					if (mm && yyyy) {
+						_this.model.frameSet(_this.iframe(), 'card_expiry_date', mm + "-" + yyyy);
+					}
+					return _this;
+				},
+				changeStates: function (event) {
+					const selectedCountry = $(event.target).val();
+					this.addressView.renderStates('', selectedCountry);
+
+					const postalCodeInput = $('input[name="billingAddress.postalCode"]');
+					const provinceLabel = $('label[for="billingAddress.stateCode"]');
+					const postalCodeLabel = $('label[for="billingAddress.postalCode"]');
+					postalCodeInput.val(null);
+					if (!selectedCountry || selectedCountry === 'CA') {
+						provinceLabel.text('Province *');
+						postalCodeLabel.text('Postal Code *');
+						postalCodeInput.attr('placeholder', 'A1B 2C3');
+						postalCodeInput.mask('S0S 0S0');
+					} else if (selectedCountry === 'US') {
+						provinceLabel.text('State *');
+						postalCodeLabel.text('Zip Code *');
+						postalCodeInput.attr('placeholder', '12345');
+						postalCodeInput.mask('00000');
+					} else {
+						provinceLabel.text('State/Province *');
+						postalCodeLabel.text('Postal/Zip Code *');
+						postalCodeInput.attr('placeholder', '');
+						postalCodeInput.unmask();
+					}
+				},
+				updateProductInventory: function (callback) {
+					Visualforce.remoting.Manager.invokeAction('AB2CCheckoutController.updateProductInventory',
+						CCRZ.pagevars.remoteContext, CCRZ.pagevars.currentCartID,
+						function (response) {
+							if (response && response.success) {
+								CCRZ.console.log('Updating product inventory success: ' + response.success);
+							}
+							if (callback) callback();
+						}, { buffer: false, escape: false });
+				},
+				handlePaymentResponse: function (event) {
+					const _this = this;
+					const iframe = document.getElementById('sopccFrame');
+					const eventMethod = window.addEventListener ? "removeEventListener" : "detachEvent";
+					const eventerRemove = window[eventMethod];
+					const messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+					eventerRemove(messageEvent, this, false);
+					$('input.sopccMakePayment').prop('disabled', false).removeClass('disabled');
+					if (event.origin !== window.location.origin) return;
+					const response = JSON.parse(event.data);
+					if (response && response.success) {
+						if (response.data.req_merchant_defined_data4 === 'co') {						
+							// Send Google Analytics event
+							if (response.data.orderId && response.data.req_transaction_type === "sale") {
+								sendTransactionEvent(response.data.orderId);
+							}
+
+							// Payment successful
+							CCRZ.payment.views.sopcc.updateProductInventory(function () {
+								window.location = '/cart/checkout/order-confirmation?o=' + response.data.orderId;
+							});
+						}
+						$('input.sopccMakePayment').prop('disabled', false).removeClass('disabled');
+					} else if (response && response.messages && _.isArray(response.messages) && (response.messages.length > 0)) {
+						CCRZ.pubSub.trigger('pageMessage', response);
+						$('input.sopccMakePayment').prop('disabled', false).removeClass('disabled');
+					} else {
+						CCRZ.pubSub.trigger('pageMessage', {
+							messages: [{
+								type: 'CUSTOM',
+								labelId: 'Checkout_OrderPlaceError',
+								severity: 'ERROR',
+								classToAppend: ($('storedpayment-messagingSection-Error')) ? 'storedpayment-messagingSection-Error' : 'messagingSection-Error'
+							}]
+						});
+					}
+					iframe.src = iframe.src; // reload iframe
+					$('#sopccFrame').removeClass('sopccFrameShow').addClass('sopccFrameHide').animate({ height: '0px' }, 500, 'linear');
+					$('#sopccModalPay').modal('hide');
+					CCRZ.pubSub.trigger('action:sopccFrame:hide', this);
+				},
+			});
+		});
+	</script>
+</apex:component>

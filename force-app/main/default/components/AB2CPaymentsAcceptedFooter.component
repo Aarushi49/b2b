@@ -1,0 +1,19 @@
+<apex:component >
+    <script id="PaymentsAcceptedPartialTemplate" type="text/template">
+        <hr class="mt-4">
+        <div class="row">
+            <div class="col-sm-6">
+                <img class="cybersource-payment-img" src="https://res.cloudinary.com/alexanian/image/upload/v1586206255/prod/static/shared/cyber-source-secure-acceptance.svg" />
+            </div>
+            <div class="col-sm-6 alx-pay-with-credit-cards">
+                <small>Pay with</small>
+                <img src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-mastercard.svg" />
+                <img src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-visa.svg" />
+                <img src="https://res.cloudinary.com/alexanian/image/upload/v1586205258/prod/static/shared/card-amex.svg" />
+            </div>
+        </div>
+    </script>
+    <script type="text/javascript">
+        Handlebars.registerPartial("PaymentsAcceptedPartialTemplate", document.getElementById("PaymentsAcceptedPartialTemplate").innerHTML);
+    </script>
+</apex:component>
